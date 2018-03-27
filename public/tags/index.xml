@@ -59,9 +59,20 @@
     <item>
       <title>Go</title>
       <link>http://hbchen.com/tags/go/</link>
-      <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
+      <pubDate>Tue, 27 Mar 2018 19:09:32 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/go/</guid>
+      
+        <description></description>
+      
+    </item>
+    
+    <item>
+      <title>Go Micro</title>
+      <link>http://hbchen.com/tags/go-micro/</link>
+      <pubDate>Tue, 27 Mar 2018 19:09:32 +0800</pubDate>
+      
+      <guid>http://hbchen.com/tags/go-micro/</guid>
       
         <description></description>
       
@@ -73,6 +84,17 @@
       <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/goaccess/</guid>
+      
+        <description></description>
+      
+    </item>
+    
+    <item>
+      <title>Micro</title>
+      <link>http://hbchen.com/tags/micro/</link>
+      <pubDate>Tue, 27 Mar 2018 19:09:32 +0800</pubDate>
+      
+      <guid>http://hbchen.com/tags/micro/</guid>
       
         <description></description>
       
@@ -205,28 +227,6 @@
       <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/</guid>
-      
-        <description></description>
-      
-    </item>
-    
-    <item>
-      <title>日志</title>
-      <link>http://hbchen.com/tags/%E6%97%A5%E5%BF%97/</link>
-      <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/tags/%E6%97%A5%E5%BF%97/</guid>
-      
-        <description></description>
-      
-    </item>
-    
-    <item>
-      <title>部署</title>
-      <link>http://hbchen.com/tags/%E9%83%A8%E7%BD%B2/</link>
-      <pubDate>Fri, 17 Oct 2014 13:29:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/tags/%E9%83%A8%E7%BD%B2/</guid>
       
         <description></description>
       

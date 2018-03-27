@@ -10,6 +10,13 @@
   </url>
   
   <url>
+    <loc>http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/</loc>
+    <lastmod>2018-03-27T19:09:32+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>http://hbchen.com/post/2014-10-17-centos-vsftp/</loc>
     <lastmod>2014-10-17T16:18:00+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -143,14 +150,21 @@
   
   <url>
     <loc>http://hbchen.com/tags/go/</loc>
-    <lastmod>2013-08-24T09:22:00+08:00</lastmod>
+    <lastmod>2018-03-27T19:09:32+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://hbchen.com/categories/go/</loc>
-    <lastmod>2013-08-24T09:22:00+08:00</lastmod>
+    <lastmod>2018-03-27T19:09:32+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/go-micro/</loc>
+    <lastmod>2018-03-27T19:09:32+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -165,6 +179,13 @@
   <url>
     <loc>http://hbchen.com/</loc>
     <lastmod>2017-08-28T21:41:52+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/micro/</loc>
+    <lastmod>2018-03-27T19:09:32+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -192,7 +213,7 @@
   
   <url>
     <loc>http://hbchen.com/post/</loc>
-    <lastmod>2014-10-17T16:18:00+08:00</lastmod>
+    <lastmod>2018-03-27T19:09:32+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -277,6 +298,13 @@
   <url>
     <loc>http://hbchen.com/categories/%E5%B7%A5%E5%85%B7/</loc>
     <lastmod>2014-04-15T12:09:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/</loc>
+    <lastmod>2018-03-27T19:09:32+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
