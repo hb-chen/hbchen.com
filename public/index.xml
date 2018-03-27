@@ -19,18 +19,20 @@
       
       <guid>http://hbchen.com/about/</guid>
       
-        <description>&lt;p&gt;Hugo is a static site engine written in Go.&lt;/p&gt;
+        <description>
 
-&lt;p&gt;It makes use of a variety of open source projects including:&lt;/p&gt;
+&lt;h4 id=&#34;hobo-s-blog&#34;&gt;Hobo&amp;rsquo;s Blog!&lt;/h4&gt;
+
+&lt;h5 id=&#34;language&#34;&gt;Language&lt;/h5&gt;
+
+&lt;p&gt;&lt;code&gt;Go&lt;/code&gt; &lt;code&gt;PHP&lt;/code&gt; &lt;code&gt;Obj-C&lt;/code&gt;&lt;/p&gt;
+
+&lt;h5 id=&#34;github&#34;&gt;GitHub&lt;/h5&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/spf13/cobra&#34;&gt;Cobra&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/spf13/viper&#34;&gt;Viper&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/spf13/jWalterWeatherman&#34;&gt;J Walter Weatherman&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/spf13/cast&#34;&gt;Cast&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/echo-web&#34;&gt;Echo 实践&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro&#34;&gt;go-micro实践&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-
-&lt;p&gt;Learn more and contribute on &lt;a href=&#34;https://github.com/gohugoio&#34;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
 </description>
       
     </item>
