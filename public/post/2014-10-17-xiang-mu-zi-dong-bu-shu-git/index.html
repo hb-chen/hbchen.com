@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>[转]Git-项目自动部署 - Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+  <link rel="alternate" hreflang="en" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="HB Chen" />
+  <meta name="description" content="Git push后自动更新项目部署，&amp;rdquo;[deploy]&amp;ldquo;部署的分支为master。
+Gist https://gist.github.com/icyleaf/566767
+
+" />
+
+  <meta name="keywords" content="Hobo, HBchen, Blog, Golang, Micro, RPC" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.27.1" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="[转]Git-项目自动部署" />
+<meta property="og:description" content="Git push后自动更新项目部署，&rdquo;[deploy]&ldquo;部署的分支为master。
+
+Gist
+https://gist.github.com/icyleaf/566767
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/" />
+
+
+
+<meta property="article:published_time" content="2014-10-17T13:29:00&#43;08:00"/>
+<meta property="article:modified_time" content="2014-10-17T13:29:00&#43;08:00"/>
+
+
+
+
+
+
+
+
+
+
+
+<meta itemprop="name" content="[转]Git-项目自动部署">
+<meta itemprop="description" content="Git push后自动更新项目部署，&rdquo;[deploy]&ldquo;部署的分支为master。
+
+Gist
+https://gist.github.com/icyleaf/566767
+
+">
+
+
+<meta itemprop="dateModified" content="2014-10-17T13:29:00&#43;08:00" />
+<meta itemprop="wordCount" content="241">
+
+
+
+<meta itemprop="keywords" content="Git,部署," />
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="[转]Git-项目自动部署"/>
+<meta name="twitter:description" content="Git push后自动更新项目部署，&rdquo;[deploy]&ldquo;部署的分支为master。
+
+Gist
+https://gist.github.com/icyleaf/566767
+
+"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">Categories</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">Categories</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">[转]Git-项目自动部署</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2014-10-17 </span>
+        <div class="post-category">
+            
+              <a href="/categories/vcs/"> VCS </a>
+            
+          </div>
+        <span class="more-meta"> 241 words </span>
+        <span class="more-meta"> 1 min read </span>
+      </div>
+    </header>
+
+    
+    
+
+    
+    <div class="post-content">
+      <p>Git push后自动更新项目部署，&rdquo;[deploy]&ldquo;部署的分支为master。</p>
+
+<p>Gist
+</br><a href="https://gist.github.com/icyleaf/566767">https://gist.github.com/icyleaf/566767</a></p>
+
+<p></p>
+
+<pre><code class="language-shell">$ vi post-receive
+
+#!/bin/sh
+#
+# git autodeploy script when it matches the string &quot;[deploy]&quot;
+#
+# @author    icyleaf &lt;icyleaf.cn@gmail.com&gt;
+# @link      http://icyleaf.com
+# @version   0.1
+#
+# Usage:
+#       1. put this into the post-receive hook file itself below
+#       2. `chmod +x post-recive` 
+#       3. Done!
+ 
+# Check the remote git repository whether it is bare
+IS_BARE=$(git rev-parse --is-bare-repository)
+if [ -z &quot;$IS_BARE&quot; ]; then
+	echo &gt;&amp;2 &quot;fatal: post-receive: IS_NOT_BARE&quot;
+	exit 1
+fi
+ 
+# Get the latest commit subject
+SUBJECT=$(git log -1 --pretty=format:&quot;%s&quot;)
+ 
+# Deploy the HEAD sources to publish
+IS_PULL=$(echo &quot;$SUBJECT&quot; | grep &quot;\[deploy\]&quot;)
+if [ -z &quot;$IS_PULL&quot; ]; then
+	echo &gt;&amp;2 &quot;tips: post-receive: IS_NOT_PULL&quot;
+	exit 1
+fi
+ 
+# Check the deploy dir whether it exists
+DEPLOY_DIR=/home/icyleaf/php/icyleaf/
+if [ ! -d $DEPLOY_DIR ] ; then
+	echo &gt;&amp;2 &quot;fatal: post-receive: DEPLOY_DIR_NOT_EXIST: \&quot;$DEPLOY_DIR\&quot;&quot;
+	exit 1
+fi
+ 
+# Check the deploy dir whether it is git repository
+#
+#IS_GIT=$(git rev-parse --git-dir 2&gt;/dev/null)
+#if [ -z &quot;$IS_GIT&quot; ]; then
+#	echo &gt;&amp;2 &quot;fatal: post-receive: IS_NOT_GIT&quot;
+#	exit 1
+#fi
+ 
+# Goto the deploy dir and pull the latest sources
+cd $DEPLOY_DIR
+env -i git reset --hard
+env -i git pull
+</code></pre>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">Author</span>
+    <span class="item-content">HB Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">LastMod</span>
+    <span class="item-content">2014-10-17</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">License</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/git/">Git</a>
+          
+          <a href="/tags/%E9%83%A8%E7%BD%B2/">部署</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+          <a class="prev" href="/post/2014-10-17-mysql-backup/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">MySQL Backup</span>
+            <span class="prev-text nav-mobile">Prev</span>
+          </a>
+        
+          <a class="next" href="/post/2014-04-15-redmine-plugins/">
+            <span class="next-text nav-default">Redmine Plugins</span>
+            <span class="prev-text nav-mobile">Next</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <div id="comments-gitment"></div>
+  <link rel="stylesheet" href="/lib/gitment/gitment-0.0.3.min.css">
+    <script src="/lib/gitment/gitment-0.0.3.min.js"></script>
+  <script type="text/javascript">
+  const gitment = new Gitment({
+    id: '2014-10-17 13:29:00 \x2b0800 CST',
+    title: '[转]Git-项目自动部署',
+    link: decodeURI(location.href),
+    desc: '\x3cp\x3eGit push后自动更新项目部署，\x26rdquo;[deploy]\x26ldquo;部署的分支为master。\x3c\/p\x3e\n\n\x3cp\x3eGist\n\x3c\/br\x3e\x3ca href=\x22https:\/\/gist.github.com\/icyleaf\/566767\x22\x3ehttps:\/\/gist.github.com\/icyleaf\/566767\x3c\/a\x3e\x3c\/p\x3e\n\n\x3cp\x3e\x3c\/p\x3e',
+    owner: 'hobo.chb@gmail.com',
+    repo: 'https:\/\/github.com\/hb-chen\/Blog',
+    oauth: {
+      client_id: '0db80a5eb074f34c9f3a',
+      client_secret: 'e24e8c38bf765dd215fd444cea6ead43345fc9a3'
+    }
+  })
+  gitment.render('comments-gitment')
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://github.com/imsun/gitment">comments powered by gitment.</a></noscript>
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2018
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523547";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

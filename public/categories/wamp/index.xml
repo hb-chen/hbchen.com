@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Wamp on Jane - A super concise theme for Hugo</title>
+    <link>http://localhost:1313/categories/wamp/</link>
+    <description>Recent content in Wamp on Jane - A super concise theme for Hugo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 05 Mar 2014 18:30:00 +0800</lastBuildDate>
+    
+        <atom:link href="http://localhost:1313/categories/wamp/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>WAMP&#43;ThinkPHP配置</title>
+      <link>http://localhost:1313/archives/2014-03-05-wamppei-zhi/</link>
+      <pubDate>Wed, 05 Mar 2014 18:30:00 +0800</pubDate>
+      
+      <guid>http://localhost:1313/archives/2014-03-05-wamppei-zhi/</guid>
+      
+        <description>&lt;p&gt;配置ThinkPHP开发环境
+&lt;/br&gt;1、开启Rewrite支持.htaccess
+&lt;/br&gt;2、自定义工程路径
+&lt;/br&gt;3、自定义本地域名访问&lt;/p&gt;
+
+&lt;p&gt;WAMP安装
+&lt;/br&gt;&lt;a href=&#34;http://www.wampserver.com/en/#download-wrapper&#34;&gt;http://www.wampserver.com/en/#download-wrapper&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;{% codeblock 编辑wamp/bin/apache/Apache2.x.x/conf/httpd.conf lang:ruby %}&lt;/p&gt;
+
+&lt;p&gt;#开启rewrite，支持.htaccess
+#LoadModule rewrite_module modules/mod_rewrite.so去掉注释
+LoadModule rewrite_module modules/mod_rewrite.so&lt;/p&gt;
+
+&lt;p&gt;#开启httpd-vhosts，自定义域名和工程路径
+#Include conf/extra/httpd-vhosts.conf去掉注释
+Include conf/extra/httpd-vhosts.conf&lt;/p&gt;
+
+&lt;p&gt;{% endcodeblock %}
+&lt;/p&gt;
+
+&lt;p&gt;自定义本地域名和工程路径
+{% codeblock 编辑wamp/bin/apache/Apache2.x.x/conf/extra/httpd-vhosts.conf lang:ruby %}&lt;/p&gt;
+
+&lt;p&gt;#自定义工程路径
+#d:projectpath工程路径
+#mylocalhost.com自定义域名
+#注意AllowOverride 是All，与wamp主界面不同
+#可以定义其他端口
+&lt;VirtualHost *:80&gt;&lt;br /&gt;
+  DocumentRoot d:projectpath
+  ServerName myhost.com
+  &lt;Directory &#34;d:projectpath&#34;&gt;
+      Options Indexes FollowSymLinks
+      AllowOverride All
+      Order allow,deny
+      Allow from all
+  &lt;/Directory&gt;
+&lt;/VirtualHost&gt;&lt;/p&gt;
+
+&lt;p&gt;#添加wamp主界面，假设wamp安装在D盘
+&lt;VirtualHost *:80&gt;&lt;br /&gt;
+  DocumentRoot d:wamp/www
+  ServerName wamp.com
+  &lt;Directory &#34;d:wamp/www&#34;&gt;
+      Options Indexes FollowSymLinks
+      AllowOverride None
+      Order allow,deny
+      Allow from all
+  &lt;/Directory&gt;
+&lt;/VirtualHost&gt;&lt;/p&gt;
+
+&lt;p&gt;{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;去掉URL中的index.php
+{% codeblock .htaccess lang:ruby %}&lt;/p&gt;
+
+&lt;p&gt;&lt;IfModule mod_rewrite.c&gt;
+RewriteEngine on
+RewriteCond %{SCRIPT_FILENAME} !-f
+RewriteCond %{SCRIPT_FILENAME} !-d
+RewriteRule ^(.*)$ index.php/$1 [QAS,PT,L]
+&lt;/IfModule&gt;&lt;/p&gt;
+
+&lt;p&gt;{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;{% codeblock 修改系统hosts lang:ruby %}&lt;/p&gt;
+
+&lt;p&gt;127.0.0.1   myhost.com
+127.0.0.1   wamp.com&lt;/p&gt;
+
+&lt;p&gt;{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;重启Apache&lt;/p&gt;
+
+&lt;p&gt;查看成果吧
+&lt;/br&gt;myhost.com
+&lt;/br&gt;wamp.com&lt;/p&gt;</description>
+      
+    </item>
+    
+  </channel>
+</rss>

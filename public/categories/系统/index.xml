@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>系统 on Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+    <link>http://hbchen.com/categories/%E7%B3%BB%E7%BB%9F/</link>
+    <description>Recent content in 系统 on Hobo&#39;s Blog - 在路上~永不停止的脚步</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>HB Studio</copyright>
+    <lastBuildDate>Fri, 17 Oct 2014 16:18:00 +0800</lastBuildDate>
+    
+        <atom:link href="http://hbchen.com/categories/%E7%B3%BB%E7%BB%9F/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Centos VSFTP配置</title>
+      <link>http://hbchen.com/post/2014-10-17-centos-vsftp/</link>
+      <pubDate>Fri, 17 Oct 2014 16:18:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-10-17-centos-vsftp/</guid>
+      
+        <description>&lt;p&gt;安装&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;yum install vsftp
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;配置&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#/etc/vsftpd/vsftpd.conf
+#关闭匿名登录
+#anonymous_enable=NO
+
+user_list中的说明是userlist_deny
+#userlist_enable=NO
+
+FTP root
+#local_root=/mnt/ftp
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;添加登录用户&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;添加用户
+$ useradd Hobo
+设置密码
+$ passwd Hobo
+$加入user_list
+$ echo Hobo &amp;gt;&amp;gt; /etc/vsftpd/user_list
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;重启&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$service vsftpd restart
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>日志统计分析-Shell/Goaccess</title>
+      <link>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</link>
+      <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</guid>
+      
+        <description>&lt;p&gt;对Nginx或其他日志进行简单的统计分析&lt;/p&gt;
+
+&lt;p&gt;Shell
+对某一列进行统计，可以分析Status Code,URL等&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#cat access.log | awk &#39;{print $9}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
+或
+#cat access.log |grep &amp;quot;200&amp;quot; | awk &#39;{print $7}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
+#vi stat.log
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;指定String统计&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#cat access.log|grep &amp;quot;200&amp;quot;|wc -l 
+#cat access.log|grep &amp;quot;www.localhost.com&amp;quot;|wc -l
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Goaccess工具
+&lt;a href=&#34;http://goaccess.io/&#34;&gt;http://goaccess.io/&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#goaccess -f access.log
+#goaccess -f access.log -a -s -b
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Goaccess分析压缩日志&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#zcat access.log-20130123.gz | goaccess
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+  </channel>
+</rss>

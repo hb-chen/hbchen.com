@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mysql on Jane - A super concise theme for Hugo</title>
+    <link>http://localhost:1313/categories/mysql/</link>
+    <description>Recent content in Mysql on Jane - A super concise theme for Hugo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 17 Oct 2014 14:04:00 +0800</lastBuildDate>
+    
+        <atom:link href="http://localhost:1313/categories/mysql/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>MySQL Backup</title>
+      <link>http://localhost:1313/archives/2014-10-17-mysql-backup/</link>
+      <pubDate>Fri, 17 Oct 2014 14:04:00 +0800</pubDate>
+      
+      <guid>http://localhost:1313/archives/2014-10-17-mysql-backup/</guid>
+      
+        <description>&lt;p&gt;MySQL备份脚本，支持mysqldump,mysqlhotcopy,tar三种方式，+定时任务自动备份。&lt;/p&gt;
+
+&lt;p&gt;Gist
+&lt;a href=&#34;https://gist.github.com/Hobo86/effd4b45b50f576bf4d1&#34;&gt;https://gist.github.com/Hobo86/effd4b45b50f576bf4d1&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;{% codeblock crontab lang:ruby %}
+脚本属性设为可执行
+#chmod +x mysql_backup.sh&lt;/p&gt;
+
+&lt;p&gt;编辑定时任务
+#vi /etc/crontab&lt;/p&gt;
+
+&lt;p&gt;如：每天03:01执行备份脚本
+01 3 * * * root /usr/sbin/mysql_backup.sh&lt;/p&gt;
+
+&lt;p&gt;重启定时任务&lt;/p&gt;
+
+&lt;h1 id=&#34;etc-rc-d-init-d-crond-restart&#34;&gt;/etc/rc.d/init.d/crond restart&lt;/h1&gt;
+
+&lt;p&gt;{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;
+Gist
+&lt;a href=&#34;https://gist.github.com/Hobo86/29b27d361a4c59545348&#34;&gt;https://gist.github.com/Hobo86/29b27d361a4c59545348&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;{% codeblock mysql_backup.sh lang:ruby %}
+#!/bin/bash&lt;/p&gt;
+
+&lt;p&gt;DBName=db_name&lt;/p&gt;
+
+&lt;p&gt;DBUser=root&lt;/p&gt;
+
+&lt;p&gt;DBPasswd=123456&lt;/p&gt;
+
+&lt;p&gt;BackupPath=/mnt/backup/&lt;/p&gt;
+
+&lt;p&gt;LogFile=/mnt/backup/db_name.log&lt;/p&gt;
+
+&lt;p&gt;DBPath=/mnt/mysql/&lt;/p&gt;
+
+&lt;p&gt;BackupMethod=mysqldump&lt;/p&gt;
+
+&lt;p&gt;#BackupMethod=mysqlhotcopy&lt;/p&gt;
+
+&lt;p&gt;#BackupMethod=tar&lt;/p&gt;
+
+&lt;p&gt;NewFile=&amp;ldquo;$BackupPath&amp;rdquo;db&lt;em&gt;name&lt;/em&gt;$(date +%y%m%d).tgz&lt;/p&gt;
+
+&lt;p&gt;DumpFile=&amp;ldquo;$BackupPath&amp;rdquo;db&lt;em&gt;name&lt;/em&gt;$(date +%y%m%d)&lt;/p&gt;
+
+&lt;p&gt;OldFile=&amp;ldquo;$BackupPath&amp;rdquo;db&lt;em&gt;name&lt;/em&gt;$(date +%y%m%d &amp;ndash;date=&amp;lsquo;5 days ago&amp;rsquo;).tgz&lt;/p&gt;
+
+&lt;p&gt;#SettingEnd&lt;/p&gt;
+
+&lt;p&gt;echo &amp;ldquo;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;-&amp;rdquo;&amp;gt;&amp;gt;$LogFile
+echo $(date +%Y-%m-%d%t%H:%M:%S)&amp;gt;&amp;gt;$LogFile&lt;/p&gt;
+
+&lt;p&gt;echo &amp;ldquo;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;ndash;&amp;rdquo;&amp;gt;&amp;gt;$LogFile&lt;/p&gt;
+
+&lt;p&gt;#DeleteOldFile
+if [ -f $OldFile ]
+    then
+        rm -f $OldFile&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+        echo &amp;ldquo;[$OldFile]DeleteOldFileSuccess!&amp;ldquo;&amp;gt;&amp;gt;$LogFile
+    else
+        echo &amp;ldquo;[$OldFile]NoOldBackupFile!&amp;ldquo;&amp;gt;&amp;gt;$LogFile
+fi&lt;/p&gt;
+
+&lt;p&gt;if [ -f $NewFile ]
+    then
+        echo &amp;ldquo;[$NewFile]TheBackupFileisexists,Can&amp;rsquo;tBackup!&amp;ldquo;&amp;gt;&amp;gt;$LogFile
+    else
+        case $BackupMethod in
+        mysqldump)
+            if [ -z $DBPasswd ]
+                then
+                    mysqldump -u$DBUser &amp;ndash;opt $DBName&amp;gt;$DumpFile
+                else
+                    mysqldump -u$DBUser -p$DBPasswd &amp;ndash;opt $DBName&amp;gt;$DumpFile
+            fi&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;        tar czvf $NewFile $DumpFile&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+        echo &amp;quot;[$NewFile]BackupSuccess!&amp;quot;&amp;gt;&amp;gt;$LogFile
+        rm -rf $DumpFile
+    ;;
+
+    mysqlhotcopy)
+        rm -rf $DumpFile
+        mkdir $DumpFile
+
+        if [ -z $DBPasswd ] 
+            then
+                mysqlhotcopy -u$DBUser $DBName $DumpFile&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+            else
+                mysqlhotcopy -u$DBUser -p$DBPasswd $DBName $DumpFile&amp;gt;&amp;gt;$LogFile2&amp;gt;&amp;amp;1
+        fi
+
+        tar czvf $NewFile $DumpFile&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+        echo &amp;quot;[$NewFile]BackupSuccess!&amp;quot;&amp;gt;&amp;gt;$LogFile
+        rm -rf $DumpFile
+    ;;
+
+    *)
+        /etc/init.d/mysqldstop&amp;gt;/dev/null2&amp;gt;&amp;amp;1
+        tar czvf $NewFile $DBPath$DBName&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+        /etc/init.d/mysqldstart&amp;gt;/dev/null2&amp;gt;&amp;amp;1
+        echo &amp;quot;[$NewFile]BackupSuccess!&amp;quot;&amp;gt;&amp;gt;$LogFile
+    ;;
+
+    esac
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;fi
+echo &amp;ldquo;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;-&amp;rdquo;&amp;gt;&amp;gt;$LogFile
+{% endcodeblock %}&lt;/p&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>MySql:优化工具</title>
+      <link>http://localhost:1313/archives/2013-11-07-mysql-you-hua-gong-ju/</link>
+      <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
+      
+      <guid>http://localhost:1313/archives/2013-11-07-mysql-you-hua-gong-ju/</guid>
+      
+        <description>&lt;p&gt;脚本优化tuning-primer.sh
+{% codeblock lang:ruby %}
+#cd /etc/   (my.conf所在目录)
+#wget &lt;a href=&#34;http://www.day32.com/MySQL/tuning-primer.sh&#34;&gt;http://www.day32.com/MySQL/tuning-primer.sh&lt;/a&gt;
+#chmod +x tuning-primer.sh
+#./tuning-primer.sh
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;优化工具Mysqltuner
+{% codeblock lang:ruby %}
+安装：
+#yum install -y mysqltuner
+运行：
+#mysqltuner
+{% endcodeblock %}&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>MySQL:常用命令行</title>
+      <link>http://localhost:1313/archives/2013-10-30-mysql-chang-yong-ming-ling-xing/</link>
+      <pubDate>Wed, 30 Oct 2013 08:58:00 +0800</pubDate>
+      
+      <guid>http://localhost:1313/archives/2013-10-30-mysql-chang-yong-ming-ling-xing/</guid>
+      
+        <description>&lt;p&gt;登入
+&lt;/br&gt;mysql -h192.168.1.110  -uroot -ppassword&lt;/p&gt;
+
+&lt;p&gt;登出
+&lt;/br&gt;quit/exit&lt;/p&gt;
+
+&lt;p&gt;查看数据库
+&lt;/br&gt;show databases;&lt;/p&gt;
+
+&lt;p&gt;用户权限
+&lt;/br&gt;添加
+&lt;/br&gt;grant select on db.table to &amp;lsquo;user&amp;rsquo;@&amp;lsquo;host&amp;rsquo;;
+&lt;/br&gt;grant select,update on &lt;em&gt;.&lt;/em&gt; to &amp;lsquo;test&amp;rsquo;@&amp;lsquo;%&amp;rsquo;;
+&lt;/br&gt;撤销
+&lt;/br&gt;revoke all on &lt;em&gt;.&lt;/em&gt; from &amp;lsquo;test&amp;rsquo;@&amp;lsquo;%&amp;rsquo;;
+&lt;/br&gt;查看
+&lt;/br&gt;show grants;
+&lt;/br&gt;show grants for user@localhost&lt;/p&gt;
+
+&lt;p&gt;删除用户
+&lt;/br&gt;delete from mysql.user where user=&amp;rdquo; and host=&amp;ldquo;;&lt;/p&gt;
+
+&lt;p&gt;设置密码
+&lt;/br&gt;update mysql.user set password=PASSWORD(&amp;lsquo;123456&amp;rsquo;) where user=&amp;lsquo;root&amp;rsquo;;&lt;/p&gt;
+
+&lt;p&gt;配置远程连接
+&lt;/br&gt;GRANT ALL PRIVILEGES ON &lt;em&gt;.&lt;/em&gt; TO &amp;lsquo;root&amp;rsquo;@&amp;lsquo;%&amp;rsquo; IDENTIFIED BY &amp;lsquo;password&amp;rsquo; WITH GRANT OPTION;&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;导出&lt;br /&gt;
+&lt;/br&gt;mysqldump -u　用户名 -p 数据库名 &amp;gt; 数据库名.sql
+{% codeblock lang:ruby %}
+mysqldump -u　root -p dbname &amp;gt; filepath.sql&lt;br /&gt;
+#To export tofile(data only)
+mysqldump -u [user]-p[pass]&amp;ndash;no-create-db &amp;ndash;no-create-info mydb &amp;gt; mydb.sql
+#To export tofile(structure only)
+mysqldump -u [user]-p[pass]&amp;ndash;no-data mydb &amp;gt; mydb.sql
+#To import todatabase
+mysql -u [user]-p[pass] mydb &amp;lt; mydb.sql
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;导入
+{% codeblock lang:ruby %}
+mysql&amp;gt; use dbname             #切到要导入的数据库
+mysql&amp;gt; source filepath.sql
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;变量查看/修改
+{% codeblock lang:ruby %}
+show variables like &amp;lsquo;%slow%&amp;rsquo;;
+set global slow_query_log= &amp;lsquo;ON&amp;rsquo;;&lt;/p&gt;
+
+&lt;p&gt;show status like &amp;lsquo;Qca%&amp;rsquo;;&lt;/p&gt;
+
+&lt;p&gt;#查看SQL中select条数
+show status like &amp;lsquo;Com_sel%&amp;lsquo;; #显示的是一次会话的值！
+show global status like &amp;ldquo;Com_select&amp;rdquo;;
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;找回密码？
+&lt;/br&gt;1、kill -TERM mysqld
+&lt;/br&gt;2、conf中加入skip-grant-tables
+&lt;/br&gt;3、service mysqld restart
+&lt;/br&gt;4、mysql -uroot -p
+&lt;/br&gt;5、修改密码
+&lt;/br&gt;6、改回原配置并重启&lt;/p&gt;
+
+&lt;p&gt;Binlog：&lt;a href=&#34;http://dev.mysql.com/doc/refman/5.7/en/mysqlbinlog.html&#34;&gt;http://dev.mysql.com/doc/refman/5.7/en/mysqlbinlog.html&lt;/a&gt;
+&lt;/br&gt;删除mysql-bin日志
+&lt;/br&gt;&lt;a href=&#34;http://dev.mysql.com/doc/refman/5.7/en/purge-binary-logs.html&#34;&gt;http://dev.mysql.com/doc/refman/5.7/en/purge-binary-logs.html&lt;/a&gt;
+&lt;/br&gt;PURGE BINARY LOGS TO &amp;lsquo;mysql-bin.010&amp;rsquo;;
+&lt;/br&gt;PURGE BINARY LOGS BEFORE &amp;lsquo;2008-04-02 22:46:26&amp;rsquo;;&lt;/p&gt;
+
+&lt;p&gt;清空表并使自增归0
+&lt;/br&gt;TRUNCATE TABLE tablename&lt;/p&gt;
+
+&lt;p&gt;Mac无法登陆
+&lt;/br&gt;Can&amp;rsquo;t connect to MySQL server on &amp;lsquo;127.0.0.1&amp;rsquo; (61)
+&lt;/br&gt;StevenMacBookAir:~ Hobo$ sudo su -
+&lt;/br&gt;StevenMacBookAir:~ root# nohup /usr/local/mysql/bin/mysqld_safe &amp;amp;
+&lt;/br&gt;[1] 464
+&lt;/br&gt;StevenMacBookAir:~ root# appending output to nohup.out
+&lt;/br&gt;exit
+&lt;/br&gt;logout
+&lt;/br&gt;StevenMacBookAir:~ Hobo$&lt;/p&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>Go-Revel:Gorp连接MySQL</title>
+      <link>http://localhost:1313/archives/2013-08-24-go-revel-gorplian-jie-mysql/</link>
+      <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
+      
+      <guid>http://localhost:1313/archives/2013-08-24-go-revel-gorplian-jie-mysql/</guid>
+      
+        <description>&lt;p&gt;Revel连接数据库可以参考官方的Booking示例&lt;/p&gt;
+
+&lt;p&gt;除了Revel需要Gorp和MySQL驱动两个库
+{% codeblock lang:ruby %}
+#Gorp
+go get github.com/coopernurse/gorp&lt;/p&gt;
+
+&lt;p&gt;#MySQL驱动
+go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;配置conf/app.conf
+{% codeblock 数据库配置 lang:ruby %}&lt;/p&gt;
+
+&lt;h1 id=&#34;db-username-tcp-yourhost-port-dbname&#34;&gt;DB username:@tcp(yourhost:port)/dbname&lt;/h1&gt;
+
+&lt;p&gt;db.import = github.com/Go-SQL-Driver/mysql
+db.driver = mysql
+db.spec   = root:@tcp(localhost:3306)/db_name
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;创建models/user.go，先只定义几个测试字段
+{% codeblock user.go lang:ruby %}
+package models&lt;/p&gt;
+
+&lt;p&gt;type Post struct {
+    UserId                          int
+    Name                string
+}
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;创建controllers/init.go
+{% codeblock init.go lang:ruby %}
+package controllers&lt;/p&gt;
+
+&lt;p&gt;import &amp;ldquo;github.com/robfig/revel&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;func init() {
+    revel.OnAppStart(Init)
+    revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
+    revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
+    revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
+}
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;创建controllers/gorp.go
+{% codeblock gorp.go lang:ruby %}
+package controllers&lt;/p&gt;
+
+&lt;p&gt;import (
+    &amp;ldquo;database/sql&amp;rdquo;
+    &amp;ldquo;github.com/coopernurse/gorp&amp;rdquo;
+    _ &amp;ldquo;github.com/Go-SQL-Driver/mysql&amp;rdquo;
+    r &amp;ldquo;github.com/robfig/revel&amp;rdquo;
+    &amp;ldquo;github.com/robfig/revel/modules/db/app&amp;rdquo;
+    &amp;ldquo;app_name/app/models&amp;rdquo;
+)&lt;/p&gt;
+
+&lt;p&gt;var (
+    Dbm *gorp.DbMap
+)&lt;/p&gt;
+
+&lt;p&gt;func Init() {
+    db.Init()
+    //MySQL InnoDB UTF8
+    Dbm = &amp;amp;gorp.DbMap{Db: db.Db, Dialect: gorp.MySQLDialect{&amp;ldquo;InnoDB&amp;rdquo;, &amp;ldquo;UTF8&amp;rdquo;}}&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
+    for col, size := range colSizes {
+        t.ColMap(col).MaxSize = size
+    }
+}
+
+//创建一个User测试表
+t := Dbm.AddTable(models.User{}).SetKeys(true, &amp;quot;UserId&amp;quot;)
+setColumnSizes(t, map[string]int{
+    &amp;quot;Name&amp;quot;: 20,
+})
+
+Dbm.TraceOn(&amp;quot;[gorp]&amp;quot;, r.INFO)
+Dbm.CreateTables()
+
+//插入一组测试数据
+demoUser := &amp;amp;models.User{0, &amp;quot;Hobo&amp;quot;}
+if err := Dbm.Insert(demoUser); err != nil {
+    panic(err)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;}&lt;/p&gt;
+
+&lt;p&gt;type GorpController struct {
+    *r.Controller
+    Txn *gorp.Transaction
+}&lt;/p&gt;
+
+&lt;p&gt;func (c *GorpController) Begin() r.Result {
+    txn, err := Dbm.Begin()
+    if err != nil {
+        panic(err)
+    }
+    c.Txn = txn
+    return nil
+}&lt;/p&gt;
+
+&lt;p&gt;func (c *GorpController) Commit() r.Result {
+    if c.Txn == nil {
+        return nil
+    }
+    if err := c.Txn.Commit(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
+        panic(err)
+    }
+    c.Txn = nil
+    return nil
+}&lt;/p&gt;
+
+&lt;p&gt;func (c *GorpController) Rollback() r.Result {
+    if c.Txn == nil {
+        return nil
+    }
+    if err := c.Txn.Rollback(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
+        panic(err)
+    }
+    c.Txn = nil
+    return nil
+}&lt;/p&gt;
+
+&lt;p&gt;{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;修改controllers/app.go
+{% codeblock 修改app.go lang:ruby %}
+#import添加
+    &amp;ldquo;app_name/app/models&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;#包含GorpController
+type App struct {
+    GorpController
+}&lt;/p&gt;
+
+&lt;p&gt;#测试查询
+func (c App) Index() revel.Result {
+    greeting := &amp;ldquo;It works!&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;users, err := c.Txn.Select(models.User{}, &lt;code&gt;select * from user where Name=&amp;quot;Hobo&amp;quot;&lt;/code&gt;)
+  if len(users) == 0 {
+    greeting = &amp;ldquo;Null&amp;rdquo;
+  } else {
+    user := users[0].(*models.User)
+    greeting = user.Name
+  }
+  if err != nil {
+    panic(err)
+  }
+    return c.Render(greeting)
+}&lt;/p&gt;
+
+&lt;p&gt;{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;修改views/App/Index.html
+{% codeblock lang:ruby %}
+#&lt;h1&gt;It works&lt;/h1&gt;
+&lt;h1&gt;/{/{.greeting/}/}&lt;/h1&gt;      #去掉反斜杠
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;运行测试下
+{% codeblock lang:ruby %}
+go run app_name
+{% endcodeblock %}&lt;/p&gt;</description>
+      
+    </item>
+    
+  </channel>
+</rss>

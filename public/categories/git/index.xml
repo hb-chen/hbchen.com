@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Git on Jane - A super concise theme for Hugo</title>
+    <link>http://localhost:1313/categories/git/</link>
+    <description>Recent content in Git on Jane - A super concise theme for Hugo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 17 Oct 2014 13:29:00 +0800</lastBuildDate>
+    
+        <atom:link href="http://localhost:1313/categories/git/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[转]Git-项目自动部署</title>
+      <link>http://localhost:1313/archives/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</link>
+      <pubDate>Fri, 17 Oct 2014 13:29:00 +0800</pubDate>
+      
+      <guid>http://localhost:1313/archives/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</guid>
+      
+        <description>&lt;p&gt;Git push后自动更新项目部署，&amp;rdquo;[deploy]&amp;ldquo;部署的分支为master。&lt;/p&gt;
+
+&lt;p&gt;Gist
+&lt;/br&gt;&lt;a href=&#34;https://gist.github.com/icyleaf/566767&#34;&gt;https://gist.github.com/icyleaf/566767&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;{% codeblock post-receive lang:ruby %}
+#!/bin/sh
+#&lt;/p&gt;
+
+&lt;h1 id=&#34;git-autodeploy-script-when-it-matches-the-string-deploy&#34;&gt;git autodeploy script when it matches the string &amp;ldquo;[deploy]&amp;rdquo;&lt;/h1&gt;
+
+&lt;p&gt;#&lt;/p&gt;
+
+&lt;h1 id=&#34;author-icyleaf-icyleaf-cn-gmail-com&#34;&gt;@author    icyleaf &lt;a href=&#34;mailto:icyleaf.cn@gmail.com&#34;&gt;icyleaf.cn@gmail.com&lt;/a&gt;&lt;/h1&gt;
+
+&lt;h1 id=&#34;link-http-icyleaf-com&#34;&gt;@link      &lt;a href=&#34;http://icyleaf.com&#34;&gt;http://icyleaf.com&lt;/a&gt;&lt;/h1&gt;
+
+&lt;h1 id=&#34;version-0-1&#34;&gt;@version   0.1&lt;/h1&gt;
+
+&lt;p&gt;#&lt;/p&gt;
+
+&lt;h1 id=&#34;usage&#34;&gt;Usage:&lt;/h1&gt;
+
+&lt;h1 id=&#34;1-put-this-into-the-post-receive-hook-file-itself-below&#34;&gt;1. put this into the post-receive hook file itself below&lt;/h1&gt;
+
+&lt;h1 id=&#34;2-chmod-x-post-recive&#34;&gt;2. &lt;code&gt;chmod +x post-recive&lt;/code&gt;&lt;/h1&gt;
+
+&lt;h1 id=&#34;3-done&#34;&gt;3. Done!&lt;/h1&gt;
+
+&lt;h1 id=&#34;check-the-remote-git-repository-whether-it-is-bare&#34;&gt;Check the remote git repository whether it is bare&lt;/h1&gt;
+
+&lt;p&gt;IS_BARE=$(git rev-parse &amp;ndash;is-bare-repository)
+if [ -z &amp;ldquo;$IS_BARE&amp;rdquo; ]; then
+    echo &amp;gt;&amp;amp;2 &amp;ldquo;fatal: post-receive: IS_NOT_BARE&amp;rdquo;
+    exit 1
+fi&lt;/p&gt;
+
+&lt;h1 id=&#34;get-the-latest-commit-subject&#34;&gt;Get the latest commit subject&lt;/h1&gt;
+
+&lt;p&gt;SUBJECT=$(git log -1 &amp;ndash;pretty=format:&amp;ldquo;%s&amp;rdquo;)&lt;/p&gt;
+
+&lt;h1 id=&#34;deploy-the-head-sources-to-publish&#34;&gt;Deploy the HEAD sources to publish&lt;/h1&gt;
+
+&lt;p&gt;IS_PULL=$(echo &amp;ldquo;$SUBJECT&amp;rdquo; | grep &amp;ldquo;[deploy]&amp;rdquo;)
+if [ -z &amp;ldquo;$IS_PULL&amp;rdquo; ]; then
+    echo &amp;gt;&amp;amp;2 &amp;ldquo;tips: post-receive: IS_NOT_PULL&amp;rdquo;
+    exit 1
+fi&lt;/p&gt;
+
+&lt;h1 id=&#34;check-the-deploy-dir-whether-it-exists&#34;&gt;Check the deploy dir whether it exists&lt;/h1&gt;
+
+&lt;p&gt;DEPLOY_DIR=/home/icyleaf/php/icyleaf/
+if [ ! -d $DEPLOY_DIR ] ; then
+    echo &amp;gt;&amp;amp;2 &amp;ldquo;fatal: post-receive: DEPLOY_DIR_NOT_EXIST: \&amp;ldquo;$DEPLOY_DIR\&amp;ldquo;&amp;rdquo;
+    exit 1
+fi&lt;/p&gt;
+
+&lt;h1 id=&#34;check-the-deploy-dir-whether-it-is-git-repository&#34;&gt;Check the deploy dir whether it is git repository&lt;/h1&gt;
+
+&lt;p&gt;#
+#IS_GIT=$(git rev-parse &amp;ndash;git-dir 2&amp;gt;/dev/null)
+#if [ -z &amp;ldquo;$IS_GIT&amp;rdquo; ]; then&lt;/p&gt;
+
+&lt;h1 id=&#34;echo-2-fatal-post-receive-is-not-git&#34;&gt;echo &amp;gt;&amp;amp;2 &amp;ldquo;fatal: post-receive: IS_NOT_GIT&amp;rdquo;&lt;/h1&gt;
+
+&lt;h1 id=&#34;exit-1&#34;&gt;exit 1&lt;/h1&gt;
+
+&lt;p&gt;#fi&lt;/p&gt;
+
+&lt;h1 id=&#34;goto-the-deploy-dir-and-pull-the-latest-sources&#34;&gt;Goto the deploy dir and pull the latest sources&lt;/h1&gt;
+
+&lt;p&gt;cd $DEPLOY_DIR
+env -i git reset &amp;ndash;hard
+env -i git pull
+{% endcodeblock %}&lt;/p&gt;</description>
+      
+    </item>
+    
+  </channel>
+</rss>

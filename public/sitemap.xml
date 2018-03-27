@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="http://hbchen.com/sitemap.xsl"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://hbchen.com/about/</loc>
+    <lastmod>2017-08-28T21:41:52+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2014-10-17-centos-vsftp/</loc>
+    <lastmod>2014-10-17T16:18:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2014-10-17-mysql-backup/</loc>
+    <lastmod>2014-10-17T14:04:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</loc>
+    <lastmod>2014-10-17T13:29:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2014-04-15-redmine-plugins/</loc>
+    <lastmod>2014-04-15T12:09:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2014-03-11-mac-mongodb-rockmongo/</loc>
+    <lastmod>2014-03-11T18:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2014-03-06-bae-redisshi-xian-thinkphpcache/</loc>
+    <lastmod>2014-03-06T19:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2014-03-05-wamppei-zhi/</loc>
+    <lastmod>2014-03-05T18:30:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2013-11-07-mysql-you-hua-gong-ju/</loc>
+    <lastmod>2013-11-07T18:36:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</loc>
+    <lastmod>2013-11-07T18:36:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2013-11-07-svnshi-yong/</loc>
+    <lastmod>2013-11-07T18:15:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2013-10-30-mysql-chang-yong-ming-ling-xing/</loc>
+    <lastmod>2013-10-30T08:58:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/</loc>
+    <lastmod>2013-08-24T09:22:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</loc>
+    <lastmod>2013-08-20T16:38:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/bae/</loc>
+    <lastmod>2014-03-06T19:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/cache/</loc>
+    <lastmod>2014-03-06T19:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/categories/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/categories/db/</loc>
+    <lastmod>2014-10-17T14:04:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/git/</loc>
+    <lastmod>2014-10-17T13:29:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/gitolite/</loc>
+    <lastmod>2014-04-15T12:09:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/go/</loc>
+    <lastmod>2013-08-24T09:22:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/categories/go/</loc>
+    <lastmod>2013-08-24T09:22:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/goaccess/</loc>
+    <lastmod>2013-11-07T18:36:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/</loc>
+    <lastmod>2017-08-28T21:41:52+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/mongodb/</loc>
+    <lastmod>2014-03-11T18:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/mysql/</loc>
+    <lastmod>2013-11-07T18:36:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/categories/php/</loc>
+    <lastmod>2014-03-06T19:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/</loc>
+    <lastmod>2014-10-17T16:18:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/redis/</loc>
+    <lastmod>2014-03-06T19:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/redmine/</loc>
+    <lastmod>2014-04-15T12:09:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/revel/</loc>
+    <lastmod>2013-08-24T09:22:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/rockmongo/</loc>
+    <lastmod>2014-03-11T18:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/shell/</loc>
+    <lastmod>2013-11-07T18:36:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/svn/</loc>
+    <lastmod>2013-11-07T18:15:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/</loc>
+    <lastmod>2014-03-06T19:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/thinkphp/</loc>
+    <lastmod>2014-03-06T19:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/categories/vcs/</loc>
+    <lastmod>2014-10-17T13:29:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/wamp/</loc>
+    <lastmod>2014-03-05T18:30:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/%E4%BC%98%E5%8C%96/</loc>
+    <lastmod>2013-11-07T18:36:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/categories/%E5%B7%A5%E5%85%B7/</loc>
+    <lastmod>2014-04-15T12:09:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/</loc>
+    <lastmod>2013-08-24T09:22:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/%E6%97%A5%E5%BF%97/</loc>
+    <lastmod>2013-11-07T18:36:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/categories/%E7%B3%BB%E7%BB%9F/</loc>
+    <lastmod>2014-10-17T16:18:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/%E9%83%A8%E7%BD%B2/</loc>
+    <lastmod>2014-10-17T13:29:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/%E9%85%8D%E7%BD%AE/</loc>
+    <lastmod>2013-11-07T18:15:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+</urlset>

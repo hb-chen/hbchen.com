@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Itemizeds on Jane - A super concise theme for Hugo</title>
+    <link>http://localhost:1313/itemized/</link>
+    <description>Recent content in Itemizeds on Jane - A super concise theme for Hugo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Thu, 22 Jun 2017 00:00:00 +0000</lastBuildDate>
+    
+        <atom:link href="http://localhost:1313/itemized/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Fancy App 1</title>
+      <link>http://localhost:1313/itemized/item1/</link>
+      <pubDate>Thu, 22 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/itemized/item1/</guid>
+      
+        <description>
+
+&lt;h2 id=&#34;app-1&#34;&gt;App 1&lt;/h2&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>Fancy App 2</title>
+      <link>http://localhost:1313/itemized/item2/</link>
+      <pubDate>Thu, 22 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/itemized/item2/</guid>
+      
+        <description>
+
+&lt;h2 id=&#34;app-2&#34;&gt;App 2&lt;/h2&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>Fancy App 3</title>
+      <link>http://localhost:1313/itemized/item3/</link>
+      <pubDate>Thu, 22 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/itemized/item3/</guid>
+      
+        <description>
+
+&lt;h2 id=&#34;app-3&#34;&gt;App 3&lt;/h2&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>Fancy App 4</title>
+      <link>http://localhost:1313/itemized/item4/</link>
+      <pubDate>Thu, 22 Jun 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/itemized/item4/</guid>
+      
+        <description>
+
+&lt;h2 id=&#34;app-4&#34;&gt;App 4&lt;/h2&gt;
+</description>
+      
+    </item>
+    
+  </channel>
+</rss>

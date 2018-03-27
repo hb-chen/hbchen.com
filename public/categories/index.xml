@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Categories on Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+    <link>http://hbchen.com/categories/</link>
+    <description>Recent content in Categories on Hobo&#39;s Blog - 在路上~永不停止的脚步</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>HB Studio</copyright>
+    
+        <atom:link href="http://hbchen.com/categories/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Db</title>
+      <link>http://hbchen.com/categories/db/</link>
+      <pubDate>Fri, 17 Oct 2014 14:04:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/categories/db/</guid>
+      
+        <description></description>
+      
+    </item>
+    
+    <item>
+      <title>Go</title>
+      <link>http://hbchen.com/categories/go/</link>
+      <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/categories/go/</guid>
+      
+        <description></description>
+      
+    </item>
+    
+    <item>
+      <title>Php</title>
+      <link>http://hbchen.com/categories/php/</link>
+      <pubDate>Thu, 06 Mar 2014 19:00:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/categories/php/</guid>
+      
+        <description></description>
+      
+    </item>
+    
+    <item>
+      <title>Vcs</title>
+      <link>http://hbchen.com/categories/vcs/</link>
+      <pubDate>Fri, 17 Oct 2014 13:29:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/categories/vcs/</guid>
+      
+        <description></description>
+      
+    </item>
+    
+    <item>
+      <title>工具</title>
+      <link>http://hbchen.com/categories/%E5%B7%A5%E5%85%B7/</link>
+      <pubDate>Tue, 15 Apr 2014 12:09:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/categories/%E5%B7%A5%E5%85%B7/</guid>
+      
+        <description></description>
+      
+    </item>
+    
+    <item>
+      <title>系统</title>
+      <link>http://hbchen.com/categories/%E7%B3%BB%E7%BB%9F/</link>
+      <pubDate>Fri, 17 Oct 2014 16:18:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/categories/%E7%B3%BB%E7%BB%9F/</guid>
+      
+        <description></description>
+      
+    </item>
+    
+  </channel>
+</rss>

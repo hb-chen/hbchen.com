@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>配置 on Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+    <link>http://hbchen.com/tags/%E9%85%8D%E7%BD%AE/</link>
+    <description>Recent content in 配置 on Hobo&#39;s Blog - 在路上~永不停止的脚步</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>HB Studio</copyright>
+    <lastBuildDate>Thu, 07 Nov 2013 18:15:00 +0800</lastBuildDate>
+    
+        <atom:link href="http://hbchen.com/tags/%E9%85%8D%E7%BD%AE/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>SVN:使用</title>
+      <link>http://hbchen.com/post/2013-11-07-svnshi-yong/</link>
+      <pubDate>Thu, 07 Nov 2013 18:15:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2013-11-07-svnshi-yong/</guid>
+      
+        <description>&lt;h4 id=&#34;1-系统&#34;&gt;1.系统&lt;/h4&gt;
+
+&lt;p&gt;Centos 6.4&lt;/p&gt;
+
+&lt;h4 id=&#34;2-安装svn&#34;&gt;2.安装svn&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;#yum install subversion
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;3-建立版本库&#34;&gt;3.建立版本库&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;#mkdir /mnt/svndata
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;启动服务&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#svnserve -d -r /mnt/svndata
+#svnadmin create /mnt/svndata/svn
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;4-修改配置&#34;&gt;4.修改配置&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;#cd /mnt/svndata/svn/conf
+#vi svnserve.conf
+anon-access=none
+auth-access=write
+password-db=passwd
+
+#vi passwd
+[users]
+hobo=123456
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;5-实现svn与web同步&#34;&gt;5.实现SVN与WEB同步&lt;/h4&gt;
+
+&lt;p&gt;1)checkout一个test项目&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#svn co svn://localhost/svn /mnt/www/webroot/test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;2)修改权限为WEB用户&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#chown -R apache:apache /mnt/www/webroot/test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;3)建立同步脚本&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#cd /mnt/svndata/svn/hooks/
+#cp post-commit.tmpl post-commit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;4)编辑post-commit，添加同步脚本&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#vi post-commit
+export LANG=en_US.UTF-8
+SVN=/usr/bin/svn
+WEB_TEST=/mnt/www/webroot/test
+$SVN update $WEB_TEST –username hobo –password 123456
+chown -R apache:apache $WEB
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;5)增加脚本执行权限&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#chmod +x post-commit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Mac下Versions中.a包无法上传问题&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;cd filepath
+svn add libMobClickLibrary.a 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;删除版本控制 / 删除多级.svn文件&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#find . -type d -name &amp;quot;.svn&amp;quot;|xargs rm -rf;
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+  </channel>
+</rss>

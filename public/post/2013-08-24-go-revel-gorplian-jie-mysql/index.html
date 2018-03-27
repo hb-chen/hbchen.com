@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Go-Revel:Gorp连接MySQL - Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+  <link rel="alternate" hreflang="en" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="HB Chen" /><meta name="description" content="Revel使用gorp连接MySQL数据库" />
+
+  <meta name="keywords" content="Hobo, HBchen, Blog, Golang, Micro, RPC" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.27.1" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="Go-Revel:Gorp连接MySQL" />
+<meta property="og:description" content="Revel使用gorp连接MySQL数据库" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/" />
+
+
+
+<meta property="article:published_time" content="2013-08-24T09:22:00&#43;08:00"/>
+<meta property="article:modified_time" content="2013-08-24T09:22:00&#43;08:00"/>
+
+
+
+
+
+
+
+
+
+
+
+<meta itemprop="name" content="Go-Revel:Gorp连接MySQL">
+<meta itemprop="description" content="Revel使用gorp连接MySQL数据库">
+
+
+<meta itemprop="dateModified" content="2013-08-24T09:22:00&#43;08:00" />
+<meta itemprop="wordCount" content="564">
+
+
+
+<meta itemprop="keywords" content="Go,Revel,数据库,MySQL," />
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Go-Revel:Gorp连接MySQL"/>
+<meta name="twitter:description" content="Revel使用gorp连接MySQL数据库"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">Categories</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">Categories</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">Go-Revel:Gorp连接MySQL</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2013-08-24 </span>
+        <div class="post-category">
+            
+              <a href="/categories/go/"> Go </a>
+            
+              <a href="/categories/db/"> DB </a>
+            
+          </div>
+        <span class="more-meta"> 564 words </span>
+        <span class="more-meta"> 2 min read </span>
+      </div>
+    </header>
+
+    
+    
+
+    
+    <div class="post-content">
+      <p>Revel连接数据库可以参考官方的Booking示例</p>
+
+<p>除了Revel需要Gorp和MySQL驱动两个库</p>
+
+<pre><code class="language-shell">#Gorp
+go get github.com/coopernurse/gorp
+
+#MySQL驱动
+go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
+</code></pre>
+
+<p>创建一个新的Revel工程app_name</p>
+
+<p></p>
+
+<p>配置conf/app.conf</p>
+
+<pre><code># DB username:@tcp(yourhost:port)/dbname
+db.import = github.com/Go-SQL-Driver/mysql
+db.driver = mysql
+db.spec   = root:@tcp(localhost:3306)/db_name
+</code></pre>
+
+<p>创建models/user.go，先只定义几个测试字段</p>
+
+<pre><code class="language-go">package models
+
+type User struct {
+	UserId							int
+	Name               	string
+}
+</code></pre>
+
+<p>创建controllers/init.go</p>
+
+<pre><code class="language-go">package controllers
+
+import &quot;github.com/robfig/revel&quot;
+
+func init() {
+	revel.OnAppStart(Init)
+	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
+	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
+	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
+}
+</code></pre>
+
+<p>创建controllers/gorp.go</p>
+
+<pre><code class="language-go">package controllers
+
+import (
+	&quot;database/sql&quot;
+	&quot;github.com/coopernurse/gorp&quot;
+	_ &quot;github.com/Go-SQL-Driver/mysql&quot;
+	r &quot;github.com/robfig/revel&quot;
+	&quot;github.com/robfig/revel/modules/db/app&quot;
+	&quot;app_name/app/models&quot;
+)
+
+var (
+	Dbm *gorp.DbMap
+)
+
+func Init() {
+	db.Init()
+	//MySQL InnoDB UTF8
+	Dbm = &amp;gorp.DbMap{Db: db.Db, Dialect: gorp.MySQLDialect{&quot;InnoDB&quot;, &quot;UTF8&quot;}}
+
+	setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
+		for col, size := range colSizes {
+			t.ColMap(col).MaxSize = size
+		}
+	}
+
+	//创建一个User测试表
+	t := Dbm.AddTable(models.User{}).SetKeys(true, &quot;UserId&quot;)
+	setColumnSizes(t, map[string]int{
+		&quot;Name&quot;: 20,
+	})
+
+	Dbm.TraceOn(&quot;[gorp]&quot;, r.INFO)
+	Dbm.CreateTables()
+
+	//插入一组测试数据
+	demoUser := &amp;models.User{0, &quot;Hobo&quot;}
+	if err := Dbm.Insert(demoUser); err != nil {
+		panic(err)
+	}
+
+}
+
+type GorpController struct {
+	*r.Controller
+	Txn *gorp.Transaction
+}
+
+func (c *GorpController) Begin() r.Result {
+	txn, err := Dbm.Begin()
+	if err != nil {
+		panic(err)
+	}
+	c.Txn = txn
+	return nil
+}
+
+func (c *GorpController) Commit() r.Result {
+	if c.Txn == nil {
+		return nil
+	}
+	if err := c.Txn.Commit(); err != nil &amp;&amp; err != sql.ErrTxDone {
+		panic(err)
+	}
+	c.Txn = nil
+	return nil
+}
+
+func (c *GorpController) Rollback() r.Result {
+	if c.Txn == nil {
+		return nil
+	}
+	if err := c.Txn.Rollback(); err != nil &amp;&amp; err != sql.ErrTxDone {
+		panic(err)
+	}
+	c.Txn = nil
+	return nil
+}
+
+</code></pre>
+
+<p>修改controllers/app.go</p>
+
+<pre><code class="language-go">#import添加
+&quot;app_name/app/models&quot;
+
+#包含GorpController
+type App struct {
+	GorpController
+}
+
+#测试查询
+func (c App) Index() revel.Result {
+	greeting := &quot;It works!&quot;
+
+	users, err := c.Txn.Select(models.User{}, `select * from user where Name=&quot;Hobo&quot;`)
+	if len(users) == 0 {
+		greeting = &quot;Null&quot;
+	} else {
+		user := users[0].(*models.User)
+		greeting = user.Name
+	}
+	if err != nil {
+		panic(err)
+	}
+	return c.Render(greeting)
+}
+
+</code></pre>
+
+<p>修改views/App/Index.html</p>
+
+<pre><code>#&lt;h1&gt;It works&lt;/h1&gt;
+&lt;h1&gt;/{/{.greeting/}/}&lt;/h1&gt;		#去掉反斜杠
+</code></pre>
+
+<p>运行测试下</p>
+
+<pre><code>go run app_name
+</code></pre>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">Author</span>
+    <span class="item-content">HB Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">LastMod</span>
+    <span class="item-content">2013-08-24</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">License</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/go/">Go</a>
+          
+          <a href="/tags/revel/">Revel</a>
+          
+          <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>
+          
+          <a href="/tags/mysql/">MySQL</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+          <a class="prev" href="/post/2013-10-30-mysql-chang-yong-ming-ling-xing/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">MySQL:常用命令行</span>
+            <span class="prev-text nav-mobile">Prev</span>
+          </a>
+        
+          <a class="next" href="/post/2013-08-20-go-revel-kai-fa-huan-jing/">
+            <span class="next-text nav-default">Go-Revel:开发环境</span>
+            <span class="prev-text nav-mobile">Next</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <div id="comments-gitment"></div>
+  <link rel="stylesheet" href="/lib/gitment/gitment-0.0.3.min.css">
+    <script src="/lib/gitment/gitment-0.0.3.min.js"></script>
+  <script type="text/javascript">
+  const gitment = new Gitment({
+    id: '2013-08-24 09:22:00 \x2b0800 CST',
+    title: 'Go-Revel:Gorp连接MySQL',
+    link: decodeURI(location.href),
+    desc: '\x3cp\x3eRevel连接数据库可以参考官方的Booking示例\x3c\/p\x3e\n\n\x3cp\x3e除了Revel需要Gorp和MySQL驱动两个库\x3c\/p\x3e\n\n\x3cpre\x3e\x3ccode class=\x22language-shell\x22\x3e#Gorp\ngo get github.com\/coopernurse\/gorp\n\n#MySQL驱动\ngo get github.com\/go-sql-driver\/mysql  #也可以用其他的驱动库\n\x3c\/code\x3e\x3c\/pre\x3e\n\n\x3cp\x3e创建一个新的Revel工程app_name\x3c\/p\x3e\n\n\x3cp\x3e\x3c\/p\x3e',
+    owner: 'hobo.chb@gmail.com',
+    repo: 'https:\/\/github.com\/hb-chen\/Blog',
+    oauth: {
+      client_id: '0db80a5eb074f34c9f3a',
+      client_secret: 'e24e8c38bf765dd215fd444cea6ead43345fc9a3'
+    }
+  })
+  gitment.render('comments-gitment')
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://github.com/imsun/gitment">comments powered by gitment.</a></noscript>
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2018
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523547";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

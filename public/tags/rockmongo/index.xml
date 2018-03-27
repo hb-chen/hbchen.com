@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rockmongo on Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+    <link>http://hbchen.com/tags/rockmongo/</link>
+    <description>Recent content in Rockmongo on Hobo&#39;s Blog - 在路上~永不停止的脚步</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>HB Studio</copyright>
+    <lastBuildDate>Tue, 11 Mar 2014 18:00:00 +0800</lastBuildDate>
+    
+        <atom:link href="http://hbchen.com/tags/rockmongo/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Mac安装配置MongoDB&#43;RockMongo</title>
+      <link>http://hbchen.com/post/2014-03-11-mac-mongodb-rockmongo/</link>
+      <pubDate>Tue, 11 Mar 2014 18:00:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-03-11-mac-mongodb-rockmongo/</guid>
+      
+        <description>&lt;p&gt;MongoDB安装
+&lt;/br&gt;使用brew安装很方便
+&lt;/br&gt;&lt;a href=&#34;http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/&#34;&gt;http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;安装完成后可以选择修改配置文件&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#mongod.conf
+#dbpath,logpath,bind_ip
+vi /usr/local/etc/mongod.conf
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;启动配置&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#为了方便使用配置.bash_profile
+vi ~/.bash_profile
+
+#添加以下内容
+export PATH=$PATH:/usr/local/opt/mongodb/bin
+alias mongodb_start=&#39;sudo launchctl load -w /usr/local/Cellar/mongodb/2.4.9/homebrew.mxcl.mongodb.plist&#39;
+alias mongodb_stop=&#39;sudo launchctl unload -w /usr/local/Cellar/mongodb/2.4.9/homebrew.mxcl.mongodb.plist&#39;
+alias mongodb_restart=&#39;mongodb_stop; mongodb_start;&#39;
+
+#这样直接使用mongodb_start,mongodb_stop,mongodb_restart很方便
+
+#启动
+mongodb_start
+
+#配置用户名密码
+mongo
+db show
+use test
+db.addUser(&amp;quot;root&amp;quot;, &amp;quot;123456&amp;quot;)
+
+#重启
+mongodb_restart
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;管理工具RockMongo，下载后根据自己的PHP环境配置
+&lt;/br&gt;&lt;a href=&#34;http://rockmongo.com/downloads&#34;&gt;http://rockmongo.com/downloads&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;安装php-mongo&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#我用的php54，记下安装后的路径
+brew php54-mongo
+
+#配置php.ini
+#添加或者修改extension=&amp;quot;mongo.so&amp;quot;
+extension=&amp;quot;/usr/local/Cellar/php54-mongo/1.4.5/mongo.so&amp;quot;
+
+#启动/重启Php环境
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rockmongo on Jane - A super concise theme for Hugo</title>
+    <link>http://localhost:1313/categories/rockmongo/</link>
+    <description>Recent content in Rockmongo on Jane - A super concise theme for Hugo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Tue, 11 Mar 2014 18:00:00 +0800</lastBuildDate>
+    
+        <atom:link href="http://localhost:1313/categories/rockmongo/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Mac安装配置MongoDB&#43;RockMongo</title>
+      <link>http://localhost:1313/archives/2014-03-11-mac-mongodb-rockmongo/</link>
+      <pubDate>Tue, 11 Mar 2014 18:00:00 +0800</pubDate>
+      
+      <guid>http://localhost:1313/archives/2014-03-11-mac-mongodb-rockmongo/</guid>
+      
+        <description>&lt;p&gt;MongoDB安装
+&lt;/br&gt;使用brew安装很方便
+&lt;/br&gt;&lt;a href=&#34;http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/&#34;&gt;http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;安装完成后可以选择修改配置文件
+{% codeblock mongod.conf lang:ruby %}
+#dbpath,logpath,bind_ip
+vi /usr/local/etc/mongod.conf&lt;/p&gt;
+
+&lt;p&gt;{% endcodeblock %}
+&lt;/p&gt;
+
+&lt;p&gt;启动配置
+{% codeblock 启动配置 lang:ruby %}
+#为了方便使用配置.bash_profile
+vi ~/.bash_profile&lt;/p&gt;
+
+&lt;p&gt;#添加以下内容
+export PATH=$PATH:/usr/local/opt/mongodb/bin
+alias mongodb_start=&amp;lsquo;sudo launchctl load -w /usr/local/Cellar/mongodb/2.4.9/homebrew.mxcl.mongodb.plist&amp;rsquo;
+alias mongodb_stop=&amp;lsquo;sudo launchctl unload -w /usr/local/Cellar/mongodb/2.4.9/homebrew.mxcl.mongodb.plist&amp;rsquo;
+alias mongodb_restart=&amp;lsquo;mongodb_stop; mongodb_start;&amp;rsquo;&lt;/p&gt;
+
+&lt;p&gt;#这样直接使用mongodb_start,mongodb_stop,mongodb_restart很方便&lt;/p&gt;
+
+&lt;p&gt;#启动
+mongodb_start&lt;/p&gt;
+
+&lt;p&gt;#配置用户名密码
+mongo
+db show
+use test
+db.addUser(&amp;ldquo;root&amp;rdquo;, &amp;ldquo;123456&amp;rdquo;)&lt;/p&gt;
+
+&lt;p&gt;#重启
+mongodb_restart
+{% endcodeblock %}&lt;/p&gt;
+
+&lt;p&gt;管理工具RockMongo，下载后根据自己的PHP环境配置
+&lt;/br&gt;&lt;a href=&#34;http://rockmongo.com/downloads&#34;&gt;http://rockmongo.com/downloads&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;安装php-mongo
+{% codeblock php-mongo lang:ruby %}
+#我用的php54，记下安装后的路径
+brew php54-mongo&lt;/p&gt;
+
+&lt;p&gt;#配置php.ini
+#添加或者修改extension=&amp;ldquo;mongo.so&amp;rdquo;
+extension=&amp;ldquo;/usr/local/Cellar/php54-mongo/1.4.5/mongo.so&amp;rdquo;&lt;/p&gt;
+
+&lt;p&gt;#启动/重启Php环境
+{% endcodeblock %}&lt;/p&gt;</description>
+      
+    </item>
+    
+  </channel>
+</rss>

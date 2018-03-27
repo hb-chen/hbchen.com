@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Git on Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+    <link>http://hbchen.com/tags/git/</link>
+    <description>Recent content in Git on Hobo&#39;s Blog - 在路上~永不停止的脚步</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>HB Studio</copyright>
+    <lastBuildDate>Fri, 17 Oct 2014 13:29:00 +0800</lastBuildDate>
+    
+        <atom:link href="http://hbchen.com/tags/git/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[转]Git-项目自动部署</title>
+      <link>http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</link>
+      <pubDate>Fri, 17 Oct 2014 13:29:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</guid>
+      
+        <description>&lt;p&gt;Git push后自动更新项目部署，&amp;rdquo;[deploy]&amp;ldquo;部署的分支为master。&lt;/p&gt;
+
+&lt;p&gt;Gist
+&lt;/br&gt;&lt;a href=&#34;https://gist.github.com/icyleaf/566767&#34;&gt;https://gist.github.com/icyleaf/566767&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ vi post-receive
+
+#!/bin/sh
+#
+# git autodeploy script when it matches the string &amp;quot;[deploy]&amp;quot;
+#
+# @author    icyleaf &amp;lt;icyleaf.cn@gmail.com&amp;gt;
+# @link      http://icyleaf.com
+# @version   0.1
+#
+# Usage:
+#       1. put this into the post-receive hook file itself below
+#       2. `chmod +x post-recive` 
+#       3. Done!
+ 
+# Check the remote git repository whether it is bare
+IS_BARE=$(git rev-parse --is-bare-repository)
+if [ -z &amp;quot;$IS_BARE&amp;quot; ]; then
+	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: IS_NOT_BARE&amp;quot;
+	exit 1
+fi
+ 
+# Get the latest commit subject
+SUBJECT=$(git log -1 --pretty=format:&amp;quot;%s&amp;quot;)
+ 
+# Deploy the HEAD sources to publish
+IS_PULL=$(echo &amp;quot;$SUBJECT&amp;quot; | grep &amp;quot;\[deploy\]&amp;quot;)
+if [ -z &amp;quot;$IS_PULL&amp;quot; ]; then
+	echo &amp;gt;&amp;amp;2 &amp;quot;tips: post-receive: IS_NOT_PULL&amp;quot;
+	exit 1
+fi
+ 
+# Check the deploy dir whether it exists
+DEPLOY_DIR=/home/icyleaf/php/icyleaf/
+if [ ! -d $DEPLOY_DIR ] ; then
+	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: DEPLOY_DIR_NOT_EXIST: \&amp;quot;$DEPLOY_DIR\&amp;quot;&amp;quot;
+	exit 1
+fi
+ 
+# Check the deploy dir whether it is git repository
+#
+#IS_GIT=$(git rev-parse --git-dir 2&amp;gt;/dev/null)
+#if [ -z &amp;quot;$IS_GIT&amp;quot; ]; then
+#	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: IS_NOT_GIT&amp;quot;
+#	exit 1
+#fi
+ 
+# Goto the deploy dir and pull the latest sources
+cd $DEPLOY_DIR
+env -i git reset --hard
+env -i git pull
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,1264 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+    <link>http://hbchen.com/post/</link>
+    <description>Recent content in Posts on Hobo&#39;s Blog - 在路上~永不停止的脚步</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>HB Studio</copyright>
+    <lastBuildDate>Fri, 17 Oct 2014 16:18:00 +0800</lastBuildDate>
+    
+        <atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Centos VSFTP配置</title>
+      <link>http://hbchen.com/post/2014-10-17-centos-vsftp/</link>
+      <pubDate>Fri, 17 Oct 2014 16:18:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-10-17-centos-vsftp/</guid>
+      
+        <description>&lt;p&gt;安装&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;yum install vsftp
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;配置&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#/etc/vsftpd/vsftpd.conf
+#关闭匿名登录
+#anonymous_enable=NO
+
+user_list中的说明是userlist_deny
+#userlist_enable=NO
+
+FTP root
+#local_root=/mnt/ftp
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;添加登录用户&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;添加用户
+$ useradd Hobo
+设置密码
+$ passwd Hobo
+$加入user_list
+$ echo Hobo &amp;gt;&amp;gt; /etc/vsftpd/user_list
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;重启&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$service vsftpd restart
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>MySQL Backup</title>
+      <link>http://hbchen.com/post/2014-10-17-mysql-backup/</link>
+      <pubDate>Fri, 17 Oct 2014 14:04:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-10-17-mysql-backup/</guid>
+      
+        <description>&lt;p&gt;MySQL备份脚本，支持mysqldump,mysqlhotcopy,tar三种方式，+定时任务自动备份。&lt;/p&gt;
+
+&lt;p&gt;Gist
+&lt;a href=&#34;https://gist.github.com/Hobo86/effd4b45b50f576bf4d1&#34;&gt;https://gist.github.com/Hobo86/effd4b45b50f576bf4d1&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#脚本属性设为可执行
+$ chmod +x mysql_backup.sh
+ 
+#编辑定时任务
+$ vi /etc/crontab
+ 
+如：每天03:01执行备份脚本
+01 3 * * * root /usr/sbin/mysql_backup.sh
+ 
+#重启定时任务
+$ /etc/rc.d/init.d/crond restart
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Gist
+&lt;a href=&#34;https://gist.github.com/Hobo86/29b27d361a4c59545348&#34;&gt;https://gist.github.com/Hobo86/29b27d361a4c59545348&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#mysql_backup.sh
+#!/bin/bash
+ 
+DBName=db_name
+ 
+DBUser=root
+ 
+DBPasswd=123456
+ 
+BackupPath=/mnt/backup/
+ 
+LogFile=/mnt/backup/db_name.log
+ 
+DBPath=/mnt/mysql/
+ 
+BackupMethod=mysqldump
+ 
+#BackupMethod=mysqlhotcopy
+ 
+#BackupMethod=tar
+ 
+ 
+NewFile=&amp;quot;$BackupPath&amp;quot;db_name_$(date +%y%m%d).tgz
+ 
+DumpFile=&amp;quot;$BackupPath&amp;quot;db_name_$(date +%y%m%d)
+ 
+OldFile=&amp;quot;$BackupPath&amp;quot;db_name_$(date +%y%m%d --date=&#39;5 days ago&#39;).tgz
+ 
+#SettingEnd
+ 
+echo &amp;quot;-------------------------------------------&amp;quot;&amp;gt;&amp;gt;$LogFile
+echo $(date +%Y-%m-%d%t%H:%M:%S)&amp;gt;&amp;gt;$LogFile
+ 
+echo &amp;quot;--------------------------&amp;quot;&amp;gt;&amp;gt;$LogFile
+ 
+#DeleteOldFile
+if [ -f $OldFile ]
+	then
+		rm -f $OldFile&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+		echo &amp;quot;[$OldFile]DeleteOldFileSuccess!&amp;quot;&amp;gt;&amp;gt;$LogFile
+	else
+		echo &amp;quot;[$OldFile]NoOldBackupFile!&amp;quot;&amp;gt;&amp;gt;$LogFile
+fi
+ 
+if [ -f $NewFile ] 
+	then
+		echo &amp;quot;[$NewFile]TheBackupFileisexists,Can&#39;tBackup!&amp;quot;&amp;gt;&amp;gt;$LogFile
+	else
+		case $BackupMethod in
+		mysqldump)
+ 			if [ -z $DBPasswd ] 
+				then
+					mysqldump -u$DBUser --opt $DBName&amp;gt;$DumpFile
+				else
+					mysqldump -u$DBUser -p$DBPasswd --opt $DBName&amp;gt;$DumpFile
+			fi
+ 
+			tar czvf $NewFile $DumpFile&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+			echo &amp;quot;[$NewFile]BackupSuccess!&amp;quot;&amp;gt;&amp;gt;$LogFile
+ 			rm -rf $DumpFile
+		;;
+ 
+		mysqlhotcopy)
+ 			rm -rf $DumpFile
+ 			mkdir $DumpFile
+ 
+			if [ -z $DBPasswd ] 
+				then
+					mysqlhotcopy -u$DBUser $DBName $DumpFile&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+				else
+					mysqlhotcopy -u$DBUser -p$DBPasswd $DBName $DumpFile&amp;gt;&amp;gt;$LogFile2&amp;gt;&amp;amp;1
+			fi
+ 
+			tar czvf $NewFile $DumpFile&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+			echo &amp;quot;[$NewFile]BackupSuccess!&amp;quot;&amp;gt;&amp;gt;$LogFile
+			rm -rf $DumpFile
+		;;
+ 
+		*)
+			/etc/init.d/mysqldstop&amp;gt;/dev/null2&amp;gt;&amp;amp;1
+			tar czvf $NewFile $DBPath$DBName&amp;gt;&amp;gt;$LogFile 2&amp;gt;&amp;amp;1
+			/etc/init.d/mysqldstart&amp;gt;/dev/null2&amp;gt;&amp;amp;1
+			echo &amp;quot;[$NewFile]BackupSuccess!&amp;quot;&amp;gt;&amp;gt;$LogFile
+		;;
+ 
+		esac
+fi
+echo &amp;quot;-------------------------------------------&amp;quot;&amp;gt;&amp;gt;$LogFile
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>[转]Git-项目自动部署</title>
+      <link>http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</link>
+      <pubDate>Fri, 17 Oct 2014 13:29:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</guid>
+      
+        <description>&lt;p&gt;Git push后自动更新项目部署，&amp;rdquo;[deploy]&amp;ldquo;部署的分支为master。&lt;/p&gt;
+
+&lt;p&gt;Gist
+&lt;/br&gt;&lt;a href=&#34;https://gist.github.com/icyleaf/566767&#34;&gt;https://gist.github.com/icyleaf/566767&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ vi post-receive
+
+#!/bin/sh
+#
+# git autodeploy script when it matches the string &amp;quot;[deploy]&amp;quot;
+#
+# @author    icyleaf &amp;lt;icyleaf.cn@gmail.com&amp;gt;
+# @link      http://icyleaf.com
+# @version   0.1
+#
+# Usage:
+#       1. put this into the post-receive hook file itself below
+#       2. `chmod +x post-recive` 
+#       3. Done!
+ 
+# Check the remote git repository whether it is bare
+IS_BARE=$(git rev-parse --is-bare-repository)
+if [ -z &amp;quot;$IS_BARE&amp;quot; ]; then
+	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: IS_NOT_BARE&amp;quot;
+	exit 1
+fi
+ 
+# Get the latest commit subject
+SUBJECT=$(git log -1 --pretty=format:&amp;quot;%s&amp;quot;)
+ 
+# Deploy the HEAD sources to publish
+IS_PULL=$(echo &amp;quot;$SUBJECT&amp;quot; | grep &amp;quot;\[deploy\]&amp;quot;)
+if [ -z &amp;quot;$IS_PULL&amp;quot; ]; then
+	echo &amp;gt;&amp;amp;2 &amp;quot;tips: post-receive: IS_NOT_PULL&amp;quot;
+	exit 1
+fi
+ 
+# Check the deploy dir whether it exists
+DEPLOY_DIR=/home/icyleaf/php/icyleaf/
+if [ ! -d $DEPLOY_DIR ] ; then
+	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: DEPLOY_DIR_NOT_EXIST: \&amp;quot;$DEPLOY_DIR\&amp;quot;&amp;quot;
+	exit 1
+fi
+ 
+# Check the deploy dir whether it is git repository
+#
+#IS_GIT=$(git rev-parse --git-dir 2&amp;gt;/dev/null)
+#if [ -z &amp;quot;$IS_GIT&amp;quot; ]; then
+#	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: IS_NOT_GIT&amp;quot;
+#	exit 1
+#fi
+ 
+# Goto the deploy dir and pull the latest sources
+cd $DEPLOY_DIR
+env -i git reset --hard
+env -i git pull
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>Redmine Plugins</title>
+      <link>http://hbchen.com/post/2014-04-15-redmine-plugins/</link>
+      <pubDate>Tue, 15 Apr 2014 12:09:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-04-15-redmine-plugins/</guid>
+      
+        <description>&lt;p&gt;Git版本库工具-&lt;a href=&#34;https://github.com/CtrlC-Root/redmine-gitolite/&#34;&gt;Gitolite&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;知识积累工具-&lt;a href=&#34;https://github.com/alexbevi/redmine_knowledgebase/&#34;&gt;Knowledgebase&lt;/a&gt;&lt;/p&gt;
+</description>
+      
+    </item>
+    
+    <item>
+      <title>Mac安装配置MongoDB&#43;RockMongo</title>
+      <link>http://hbchen.com/post/2014-03-11-mac-mongodb-rockmongo/</link>
+      <pubDate>Tue, 11 Mar 2014 18:00:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-03-11-mac-mongodb-rockmongo/</guid>
+      
+        <description>&lt;p&gt;MongoDB安装
+&lt;/br&gt;使用brew安装很方便
+&lt;/br&gt;&lt;a href=&#34;http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/&#34;&gt;http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;安装完成后可以选择修改配置文件&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#mongod.conf
+#dbpath,logpath,bind_ip
+vi /usr/local/etc/mongod.conf
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;启动配置&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#为了方便使用配置.bash_profile
+vi ~/.bash_profile
+
+#添加以下内容
+export PATH=$PATH:/usr/local/opt/mongodb/bin
+alias mongodb_start=&#39;sudo launchctl load -w /usr/local/Cellar/mongodb/2.4.9/homebrew.mxcl.mongodb.plist&#39;
+alias mongodb_stop=&#39;sudo launchctl unload -w /usr/local/Cellar/mongodb/2.4.9/homebrew.mxcl.mongodb.plist&#39;
+alias mongodb_restart=&#39;mongodb_stop; mongodb_start;&#39;
+
+#这样直接使用mongodb_start,mongodb_stop,mongodb_restart很方便
+
+#启动
+mongodb_start
+
+#配置用户名密码
+mongo
+db show
+use test
+db.addUser(&amp;quot;root&amp;quot;, &amp;quot;123456&amp;quot;)
+
+#重启
+mongodb_restart
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;管理工具RockMongo，下载后根据自己的PHP环境配置
+&lt;/br&gt;&lt;a href=&#34;http://rockmongo.com/downloads&#34;&gt;http://rockmongo.com/downloads&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;安装php-mongo&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#我用的php54，记下安装后的路径
+brew php54-mongo
+
+#配置php.ini
+#添加或者修改extension=&amp;quot;mongo.so&amp;quot;
+extension=&amp;quot;/usr/local/Cellar/php54-mongo/1.4.5/mongo.so&amp;quot;
+
+#启动/重启Php环境
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>BAE Cache&amp;Redis实现ThinkPHP的Cache驱动</title>
+      <link>http://hbchen.com/post/2014-03-06-bae-redisshi-xian-thinkphpcache/</link>
+      <pubDate>Thu, 06 Mar 2014 19:00:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-03-06-bae-redisshi-xian-thinkphpcache/</guid>
+      
+        <description>&lt;p&gt;在BAE环境下有单独的Cache，同时也有Redis，可以同时用来做不同的Cache服务，先从Redis开始&lt;/p&gt;
+
+&lt;p&gt;1、Redis相关配置&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;//conf.php
+#BAE API Key与Secret Key
+&#39;BAE_AK&#39; 	=&amp;gt; &#39;XXX&#39;,
+&#39;BAE_SK&#39;	=&amp;gt; &#39;XXX&#39;,
+
+#BAE Redis扩展配置
+&#39;BAE_REDIS_HOST&#39;   =&amp;gt;	&#39;redis.duapp.com&#39;,
+&#39;BAE_REDIS_PORT&#39;   =&amp;gt;	80,
+&#39;BAE_REDIS_DBNAME&#39; =&amp;gt;	&#39;XXX&#39;,
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;可以选择将Redis是否设为默认缓存，如果不是，使用时注意切换&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$cache = Cache::getInstance(&#39;Baeredis&#39;,array());
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;2、Redis Cache 驱动&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;//CacheBaeredis.class.php
+#根据CacheRedis.class.php修改
+
+&amp;lt;?php
+
+defined(&#39;THINK_PATH&#39;) or exit();
+
+
+class CacheBaeredis extends Cache {
+	 /**
+	 * 架构函数
+     * @param array $options 缓存参数
+     * @access public
+     */
+    public function __construct($options=array()) {
+        if ( !extension_loaded(&#39;redis&#39;) ) {
+            throw_exception(L(&#39;_NOT_SUPPERT_&#39;).&#39;:redis&#39;);
+        }
+        if(empty($options)) {
+            $options = array (
+                &#39;host&#39;          =&amp;gt; C(&#39;BAE_REDIS_HOST&#39;) ? C(&#39;BAE_REDIS_HOST&#39;) : &#39;127.0.0.1&#39;,
+                &#39;port&#39;          =&amp;gt; C(&#39;BAE_REDIS_PORT&#39;) ? C(&#39;BAE_REDIS_PORT&#39;) : 80,
+                &#39;timeout&#39;       =&amp;gt; C(&#39;DATA_CACHE_TIMEOUT&#39;) ? C(&#39;DATA_CACHE_TIMEOUT&#39;) : false,
+                &#39;persistent&#39;    =&amp;gt; false,
+            );
+        }
+        $this-&amp;gt;options =  $options;
+        $this-&amp;gt;options[&#39;expire&#39;] =  isset($options[&#39;expire&#39;])?  $options[&#39;expire&#39;]  :   C(&#39;DATA_CACHE_TIME&#39;);
+        $this-&amp;gt;options[&#39;prefix&#39;] =  isset($options[&#39;prefix&#39;])?  $options[&#39;prefix&#39;]  :   C(&#39;DATA_CACHE_PREFIX&#39;);        
+        $this-&amp;gt;options[&#39;length&#39;] =  isset($options[&#39;length&#39;])?  $options[&#39;length&#39;]  :   0;        
+            
+        try {
+            /*建立连接后，在进行集合操作前，需要先进行auth验证*/
+            $this-&amp;gt;handler = new Redis();
+            $ret;
+            if ($options[&#39;timeout&#39;] === false) {
+                $ret = $this-&amp;gt;handler-&amp;gt;connect($options[&#39;host&#39;], $options[&#39;port&#39;]);
+            }
+            else {
+                $ret = $this-&amp;gt;handler-&amp;gt;connect($options[&#39;host&#39;], $options[&#39;port&#39;], $options[&#39;timeout&#39;]);
+            }
+
+            if ($ret === false) {
+                throw new RedisException($this-&amp;gt;handler-&amp;gt;getLastError());
+            }
+
+            $user = C(&#39;BAE_AK&#39;);
+            $pwd = C(&#39;BAE_SK&#39;);
+            $dbname = C(&#39;BAE_REDIS_DBNAME&#39;);
+
+            $ret = $this-&amp;gt;handler-&amp;gt;auth($user . &amp;quot;-&amp;quot; . $pwd . &amp;quot;-&amp;quot; . $dbname);
+            if ($ret === false) {
+                throw new RedisException($this-&amp;gt;handler-&amp;gt;getLastError());
+            }
+         
+        } catch (RedisException $e) {
+            throw_exception(&#39;BAE Redis:&#39;.$e-&amp;gt;getMessage());
+        }
+
+
+    }
+
+    /**
+     * 读取缓存
+     * @access public
+     * @param string $name 缓存变量名
+     * @return mixed
+     */
+    public function get($name) {
+        N(&#39;cache_read&#39;,1);
+        $value = $this-&amp;gt;handler-&amp;gt;get($this-&amp;gt;options[&#39;prefix&#39;].$name);
+        $jsonData  = json_decode( $value, true );
+        return ($jsonData === NULL) ? $value : $jsonData;	//检测是否为JSON数据 true 返回JSON解析数组, false返回源数据
+    }
+
+    /**
+     * 写入缓存
+     * @access public
+     * @param string $name 缓存变量名
+     * @param mixed $value  存储数据
+     * @param integer $expire  有效时间（秒）
+     * @return boolen
+     */
+    public function set($name, $value, $expire = null) {
+        N(&#39;cache_write&#39;,1);
+        if(is_null($expire)) {
+            $expire  =  $this-&amp;gt;options[&#39;expire&#39;];
+        }
+        $name   =   $this-&amp;gt;options[&#39;prefix&#39;].$name;
+        //对数组/对象数据进行缓存处理，保证数据完整性
+        $value  =  (is_object($value) || is_array($value)) ? json_encode($value) : $value;
+
+        //相对CacheRedis的驱动增加了expire&amp;gt;0的判断
+        if(is_int($expire) &amp;amp; $expire &amp;gt; 0) {
+            $result = $this-&amp;gt;handler-&amp;gt;setex($name, $expire, $value);
+        }else{
+            $result = $this-&amp;gt;handler-&amp;gt;set($name, $value);
+        }
+        if($result &amp;amp;&amp;amp; $this-&amp;gt;options[&#39;length&#39;]&amp;gt;0) {
+            // 记录缓存队列
+            $this-&amp;gt;queue($name);
+        }
+        return $result;
+    }
+
+    /**
+     * 删除缓存
+     * @access public
+     * @param string $name 缓存变量名
+     * @return boolen
+     */
+    public function rm($name) {
+        return $this-&amp;gt;handler-&amp;gt;delete($this-&amp;gt;options[&#39;prefix&#39;].$name);
+    }
+
+    /**
+     * 清除缓存
+     * @access public
+     * @return boolen
+     */
+    public function clear() {
+        return $this-&amp;gt;handler-&amp;gt;flushDB();
+    }
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;3、BAE Cache驱动及配置&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;#配置
+#BAE API Key与Secret Key，前面已经有配置
+&#39;BAE_AK&#39; 	=&amp;gt; &#39;XXX&#39;,
+&#39;BAE_SK&#39;	=&amp;gt; &#39;XXX&#39;,
+
+#设置自己的CacheID（资源名称）、Host和Port
+&#39;DATA_CACHE_TYPE&#39; 	=&amp;gt; &#39;Bae&#39;,		//设为默认
+&#39;DATA_CACHE_ID&#39;		=&amp;gt;	&#39;XXX&#39;,
+&#39;MEMCACHE_HOST&#39;		=&amp;gt;	&#39;cache.duapp.com&#39;,
+&#39;MEMCACHE_PORT&#39;		=&amp;gt;	000,
+
+
+#require_once(BAE_API_ROOT_PATH . &#39;BaeMemcache.class.php&#39;);
+#需要BAE相关的驱动文件，可以在index.php入口中添加Root Path方便使用，也可以自己修改定义
+define(&#39;BAE_API_ROOT_PATH&#39;, &#39;你的BAE驱动文件路径&#39;);
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;//CacheBae.class.php
+&amp;lt;?php
+class CacheBae extends Cache {
+
+    static $_cache;
+    private $_handler;
+   
+    /**
+     +----------------------------------------------------------
+     * 架构函数
+     +----------------------------------------------------------
+     * @access public
+     +----------------------------------------------------------
+     */
+    public function __construct($options=&#39;&#39;) {
+        if(!empty($options)) {
+            $this-&amp;gt;options =  $options;
+        }
+        $this-&amp;gt;options[&#39;expire&#39;] = isset($options[&#39;expire&#39;])?$options[&#39;expire&#39;]:C(&#39;DATA_CACHE_TIME&#39;);
+        $this-&amp;gt;options[&#39;length&#39;]  =  isset($options[&#39;length&#39;])?$options[&#39;length&#39;]:0;
+        $this-&amp;gt;options[&#39;queque&#39;]  =  &#39;bae&#39;;
+        $this-&amp;gt;init();
+    }
+
+    /**
+     +----------------------------------------------------------
+     * 初始化检查
+     +----------------------------------------------------------
+     * @access private
+     +----------------------------------------------------------
+     * @return boolen
+     +----------------------------------------------------------
+     */
+    private function init() {
+    	require_once(BAE_API_ROOT_PATH . &#39;BaeMemcache.class.php&#39;);
+    	/*Cache配置信息，可查询Cache详情页*/
+    	$cacheid = C(&#39;DATA_CACHE_ID&#39;);
+    	$host = C(&#39;MEMCACHE_HOST&#39;);
+    	$port = C(&#39;MEMCACHE_PORT&#39;);
+    	$user = C(&#39;BAE_AK&#39;);
+    	$pwd = C(&#39;BAE_SK&#39;);
+
+		$this-&amp;gt;_handler = new BaeMemcache($cacheid,$host. &#39;: &#39;. $port, $user, $pwd);
+		$this-&amp;gt;connected = true;
+    }
+
+    /**
+     +----------------------------------------------------------
+     * 是否连接
+     +----------------------------------------------------------
+     * @access public
+     +----------------------------------------------------------
+     * @return boolen
+     +----------------------------------------------------------
+     */
+    private function isConnected() {
+        return $this-&amp;gt;connected;
+    }
+    /**
+     +----------------------------------------------------------
+     * 读取缓存
+     +----------------------------------------------------------
+     * @access public
+     +----------------------------------------------------------
+     * @param string $name 缓存变量名
+     +----------------------------------------------------------
+     * @return mixed
+     +----------------------------------------------------------
+     */
+    public function get($name) {
+        N(&#39;cache_read&#39;,1);
+	$content = $this-&amp;gt;_handler-&amp;gt;get($name);
+	if(false !== $content ){
+            if(C(&#39;DATA_CACHE_COMPRESS&#39;) &amp;amp;&amp;amp; function_exists(&#39;gzcompress&#39;)) {
+		$content = substr($content,0,-1);  //remvoe \0 in the end
+	    }
+            if(C(&#39;DATA_CACHE_CHECK&#39;)) {//开启数据校验
+                $check  =  substr($content,0, 32);
+                $content   =  substr($content,32);
+                if($check != md5($content)) {//校验错误
+                    return false;
+                }
+            }
+            if(C(&#39;DATA_CACHE_COMPRESS&#39;) &amp;amp;&amp;amp; function_exists(&#39;gzcompress&#39;)) {
+                //启用数据压缩
+                $content   =   gzuncompress($content);
+            }
+            $content    =   unserialize($content);
+	    return $content;
+        }
+        else {
+            return false;
+        }
+    }
+
+    /**
+     +----------------------------------------------------------
+     * 写入缓存
+     +----------------------------------------------------------
+     * @access public
+     +----------------------------------------------------------
+     * @param string $name 缓存变量名
+     * @param mixed $value  存储数据
+     * @param int $expire  有效时间 0为永久
+     +----------------------------------------------------------
+     * @return boolen
+     +----------------------------------------------------------
+     */
+    public function set($name,$value,$expire=null) {
+        N(&#39;cache_write&#39;,1);
+        if(is_null($expire)) {
+            $expire =  $this-&amp;gt;options[&#39;expire&#39;];
+        }
+        $data   =   serialize($value);
+        if( C(&#39;DATA_CACHE_COMPRESS&#39;) &amp;amp;&amp;amp; function_exists(&#39;gzcompress&#39;)) {
+            //数据压缩
+        //    $data   =   gzcompress($data,3);
+	      $data =  gzencode($data) . &amp;quot;\0&amp;quot;;
+        }
+        if(C(&#39;DATA_CACHE_CHECK&#39;)) {//开启数据校验
+            $check  =  md5($data);
+        }else {
+            $check  =  &#39;&#39;;
+        }
+	$data = $check.$data;
+	$result =  $this-&amp;gt;_handler-&amp;gt;set($name,$data,0,intval($expire));
+        if($result) {
+            if($this-&amp;gt;options[&#39;length&#39;]&amp;gt;0) {
+                // 记录缓存队列
+                $this-&amp;gt;queue($name);
+            }
+	    return true;
+        }else {
+            return false;
+        }
+    }
+
+    /**
+     +----------------------------------------------------------
+     * 删除缓存
+     +----------------------------------------------------------
+     * @access public
+     +----------------------------------------------------------
+     * @param string $name 缓存变量名
+     +----------------------------------------------------------
+     * @return boolen
+     +----------------------------------------------------------
+     */
+    public function rm($name) {
+        return $this-&amp;gt;_handler-&amp;gt;delete($name);
+    }
+    static function queueSet($name,$value)
+    {
+	$h = new BaeMemcache();
+	if ( $h-&amp;gt;set($name,$value) ){
+		self::$_cache = array($name =&amp;gt; $value);
+	}
+    }
+    static function queueGet($name)
+    {
+	if(isset(self::$_cache[$name]))
+		return self::$_cache[$name];
+	$h = new BaeMemcache();
+	$r = $h-&amp;gt;get($name);
+	if ( false === $r ){
+		return false;
+	}
+	self::$_cache[$name] = $r;
+	return $r;
+    }
+
+}
+
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>WAMP&#43;ThinkPHP配置</title>
+      <link>http://hbchen.com/post/2014-03-05-wamppei-zhi/</link>
+      <pubDate>Wed, 05 Mar 2014 18:30:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2014-03-05-wamppei-zhi/</guid>
+      
+        <description>&lt;p&gt;配置ThinkPHP开发环境&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;开启Rewrite支持.htaccess&lt;/li&gt;
+&lt;li&gt;自定义工程路径&lt;/li&gt;
+&lt;li&gt;自定义本地域名访问&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;WAMP安装
+&lt;a href=&#34;http://www.wampserver.com/en/#download-wrapper&#34;&gt;http://www.wampserver.com/en/#download-wrapper&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#编辑wamp/bin/apache/Apache2.x.x/conf/httpd.conf
+#开启rewrite，支持.htaccess
+#LoadModule rewrite_module modules/mod_rewrite.so去掉注释
+LoadModule rewrite_module modules/mod_rewrite.so
+
+#开启httpd-vhosts，自定义域名和工程路径
+#Include conf/extra/httpd-vhosts.conf去掉注释
+Include conf/extra/httpd-vhosts.conf
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;自定义本地域名和工程路径&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#编辑wamp/bin/apache/Apache2.x.x/conf/extra/httpd-vhosts.conf
+#自定义工程路径
+#d:projectpath工程路径
+#mylocalhost.com自定义域名
+#注意AllowOverride 是All，与wamp主界面不同
+#可以定义其他端口
+&amp;lt;VirtualHost *:80&amp;gt;  
+  DocumentRoot d:projectpath 
+  ServerName myhost.com 
+  &amp;lt;Directory &amp;quot;d:projectpath&amp;quot;&amp;gt; 
+      Options Indexes FollowSymLinks 
+      AllowOverride All 
+      Order allow,deny 
+      Allow from all 
+  &amp;lt;/Directory&amp;gt; 
+&amp;lt;/VirtualHost&amp;gt;
+
+#添加wamp主界面，假设wamp安装在D盘
+&amp;lt;VirtualHost *:80&amp;gt;  
+  DocumentRoot d:wamp/www 
+  ServerName wamp.com 
+  &amp;lt;Directory &amp;quot;d:wamp/www&amp;quot;&amp;gt; 
+      Options Indexes FollowSymLinks 
+      AllowOverride None 
+      Order allow,deny 
+      Allow from all 
+  &amp;lt;/Directory&amp;gt; 
+&amp;lt;/VirtualHost&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;去掉URL中的index.php&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#.htaccess
+&amp;lt;IfModule mod_rewrite.c&amp;gt;
+RewriteEngine on
+RewriteCond %{SCRIPT_FILENAME} !-f
+RewriteCond %{SCRIPT_FILENAME} !-d
+RewriteRule ^(.*)$ index.php/$1 [QAS,PT,L]
+&amp;lt;/IfModule&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;#修改系统hosts
+127.0.0.1 	myhost.com
+127.0.0.1 	wamp.com
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;重启Apache&lt;/p&gt;
+
+&lt;p&gt;查看成果吧&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;myhost.com
+wamp.com
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>MySql:优化工具</title>
+      <link>http://hbchen.com/post/2013-11-07-mysql-you-hua-gong-ju/</link>
+      <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2013-11-07-mysql-you-hua-gong-ju/</guid>
+      
+        <description>&lt;p&gt;脚本优化tuning-primer.sh&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#cd /etc/   (my.conf所在目录)
+#wget http://www.day32.com/MySQL/tuning-primer.sh
+#chmod +x tuning-primer.sh
+#./tuning-primer.sh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;优化工具Mysqltuner&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;安装：
+#yum install -y mysqltuner
+运行：
+#mysqltuner
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>日志统计分析-Shell/Goaccess</title>
+      <link>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</link>
+      <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</guid>
+      
+        <description>&lt;p&gt;对Nginx或其他日志进行简单的统计分析&lt;/p&gt;
+
+&lt;p&gt;Shell
+对某一列进行统计，可以分析Status Code,URL等&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#cat access.log | awk &#39;{print $9}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
+或
+#cat access.log |grep &amp;quot;200&amp;quot; | awk &#39;{print $7}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
+#vi stat.log
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;指定String统计&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#cat access.log|grep &amp;quot;200&amp;quot;|wc -l 
+#cat access.log|grep &amp;quot;www.localhost.com&amp;quot;|wc -l
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Goaccess工具
+&lt;a href=&#34;http://goaccess.io/&#34;&gt;http://goaccess.io/&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#goaccess -f access.log
+#goaccess -f access.log -a -s -b
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Goaccess分析压缩日志&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#zcat access.log-20130123.gz | goaccess
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>SVN:使用</title>
+      <link>http://hbchen.com/post/2013-11-07-svnshi-yong/</link>
+      <pubDate>Thu, 07 Nov 2013 18:15:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2013-11-07-svnshi-yong/</guid>
+      
+        <description>&lt;h4 id=&#34;1-系统&#34;&gt;1.系统&lt;/h4&gt;
+
+&lt;p&gt;Centos 6.4&lt;/p&gt;
+
+&lt;h4 id=&#34;2-安装svn&#34;&gt;2.安装svn&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;#yum install subversion
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;3-建立版本库&#34;&gt;3.建立版本库&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;#mkdir /mnt/svndata
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;启动服务&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#svnserve -d -r /mnt/svndata
+#svnadmin create /mnt/svndata/svn
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;4-修改配置&#34;&gt;4.修改配置&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;#cd /mnt/svndata/svn/conf
+#vi svnserve.conf
+anon-access=none
+auth-access=write
+password-db=passwd
+
+#vi passwd
+[users]
+hobo=123456
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;5-实现svn与web同步&#34;&gt;5.实现SVN与WEB同步&lt;/h4&gt;
+
+&lt;p&gt;1)checkout一个test项目&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#svn co svn://localhost/svn /mnt/www/webroot/test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;2)修改权限为WEB用户&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#chown -R apache:apache /mnt/www/webroot/test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;3)建立同步脚本&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#cd /mnt/svndata/svn/hooks/
+#cp post-commit.tmpl post-commit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;4)编辑post-commit，添加同步脚本&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#vi post-commit
+export LANG=en_US.UTF-8
+SVN=/usr/bin/svn
+WEB_TEST=/mnt/www/webroot/test
+$SVN update $WEB_TEST –username hobo –password 123456
+chown -R apache:apache $WEB
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;5)增加脚本执行权限&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#chmod +x post-commit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Mac下Versions中.a包无法上传问题&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;cd filepath
+svn add libMobClickLibrary.a 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;删除版本控制 / 删除多级.svn文件&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#find . -type d -name &amp;quot;.svn&amp;quot;|xargs rm -rf;
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>MySQL:常用命令行</title>
+      <link>http://hbchen.com/post/2013-10-30-mysql-chang-yong-ming-ling-xing/</link>
+      <pubDate>Wed, 30 Oct 2013 08:58:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2013-10-30-mysql-chang-yong-ming-ling-xing/</guid>
+      
+        <description>&lt;h4 id=&#34;登入&#34;&gt;登入&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;mysql -h192.168.1.110  -uroot -ppassword
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;登出&#34;&gt;登出&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;quit/exit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;查看数据库&#34;&gt;查看数据库&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;show databases;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;用户权限&#34;&gt;用户权限&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;#添加
+grant select on db.table to &#39;user&#39;@&#39;host&#39;;
+grant select,update on *.* to &#39;test&#39;@&#39;%&#39;;
+#撤销
+revoke all on *.* from &#39;test&#39;@&#39;%&#39;;
+#查看
+show grants;
+show grants for user@localhost
+ 
+#删除用户
+delete from mysql.user where user=&#39;&#39; and host=&#39;&#39;;
+
+#设置密码
+update mysql.user set password=PASSWORD(&#39;123456&#39;) where user=&#39;root&#39;;
+ 
+#配置远程连接
+GRANT ALL PRIVILEGES ON *.* TO &#39;root&#39;@&#39;%&#39; IDENTIFIED BY &#39;password&#39; WITH GRANT OPTION; 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;导出&#34;&gt;导出&lt;/h4&gt;
+
+&lt;p&gt;mysqldump -u　用户名 -p 数据库名 &amp;gt; 数据库名.sql&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;mysqldump -u　root -p dbname &amp;gt; filepath.sql  
+#To export tofile(data only)
+mysqldump -u [user]-p[pass]--no-create-db --no-create-info mydb &amp;gt; mydb.sql
+#To export tofile(structure only)
+mysqldump -u [user]-p[pass]--no-data mydb &amp;gt; mydb.sql
+#To import todatabase
+mysql -u [user]-p[pass] mydb &amp;lt; mydb.sql
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;导入&#34;&gt;导入&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;mysql&amp;gt; use dbname             #切到要导入的数据库
+mysql&amp;gt; source filepath.sql
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;变量查看-修改&#34;&gt;变量查看/修改&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;show variables like &#39;%slow%&#39;;
+set global slow_query_log= &#39;ON&#39;;
+
+show status like &#39;Qca%&#39;;
+ 
+#查看SQL中select条数
+show status like &#39;Com_sel%&#39;; #显示的是一次会话的值！
+show global status like &amp;quot;Com_select&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;找回密码&#34;&gt;找回密码？&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;1、kill -TERM mysqld
+2、conf中加入skip-grant-tables
+3、service mysqld restart
+4、mysql -uroot -p
+5、修改密码
+6、改回原配置并重启
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;binlog-http-dev-mysql-com-doc-refman-5-7-en-mysqlbinlog-html&#34;&gt;&lt;a href=&#34;http://dev.mysql.com/doc/refman/5.7/en/mysqlbinlog.html&#34;&gt;Binlog&lt;/a&gt;&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://dev.mysql.com/doc/refman/5.7/en/purge-binary-logs.html&#34;&gt;删除mysql-bin日志&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;PURGE BINARY LOGS TO &#39;mysql-bin.010&#39;;
+PURGE BINARY LOGS BEFORE &#39;2008-04-02 22:46:26&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;清空表并使自增归0&#34;&gt;清空表并使自增归0&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;TRUNCATE TABLE tablename
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;mac无法登陆&#34;&gt;Mac无法登陆&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code&gt;Can&#39;t connect to MySQL server on &#39;127.0.0.1&#39; (61)
+StevenMacBookAir:~ Hobo$ sudo su -
+StevenMacBookAir:~ root# nohup /usr/local/mysql/bin/mysqld_safe &amp;amp;
+[1] 464
+StevenMacBookAir:~ root# appending output to nohup.out
+exit
+logout
+StevenMacBookAir:~ Hobo$ 
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>Go-Revel:Gorp连接MySQL</title>
+      <link>http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/</link>
+      <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/</guid>
+      
+        <description>&lt;p&gt;Revel连接数据库可以参考官方的Booking示例&lt;/p&gt;
+
+&lt;p&gt;除了Revel需要Gorp和MySQL驱动两个库&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#Gorp
+go get github.com/coopernurse/gorp
+
+#MySQL驱动
+go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;配置conf/app.conf&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# DB username:@tcp(yourhost:port)/dbname
+db.import = github.com/Go-SQL-Driver/mysql
+db.driver = mysql
+db.spec   = root:@tcp(localhost:3306)/db_name
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;创建models/user.go，先只定义几个测试字段&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package models
+
+type User struct {
+	UserId							int
+	Name               	string
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;创建controllers/init.go&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package controllers
+
+import &amp;quot;github.com/robfig/revel&amp;quot;
+
+func init() {
+	revel.OnAppStart(Init)
+	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
+	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
+	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;创建controllers/gorp.go&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package controllers
+
+import (
+	&amp;quot;database/sql&amp;quot;
+	&amp;quot;github.com/coopernurse/gorp&amp;quot;
+	_ &amp;quot;github.com/Go-SQL-Driver/mysql&amp;quot;
+	r &amp;quot;github.com/robfig/revel&amp;quot;
+	&amp;quot;github.com/robfig/revel/modules/db/app&amp;quot;
+	&amp;quot;app_name/app/models&amp;quot;
+)
+
+var (
+	Dbm *gorp.DbMap
+)
+
+func Init() {
+	db.Init()
+	//MySQL InnoDB UTF8
+	Dbm = &amp;amp;gorp.DbMap{Db: db.Db, Dialect: gorp.MySQLDialect{&amp;quot;InnoDB&amp;quot;, &amp;quot;UTF8&amp;quot;}}
+
+	setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
+		for col, size := range colSizes {
+			t.ColMap(col).MaxSize = size
+		}
+	}
+
+	//创建一个User测试表
+	t := Dbm.AddTable(models.User{}).SetKeys(true, &amp;quot;UserId&amp;quot;)
+	setColumnSizes(t, map[string]int{
+		&amp;quot;Name&amp;quot;: 20,
+	})
+
+	Dbm.TraceOn(&amp;quot;[gorp]&amp;quot;, r.INFO)
+	Dbm.CreateTables()
+
+	//插入一组测试数据
+	demoUser := &amp;amp;models.User{0, &amp;quot;Hobo&amp;quot;}
+	if err := Dbm.Insert(demoUser); err != nil {
+		panic(err)
+	}
+
+}
+
+type GorpController struct {
+	*r.Controller
+	Txn *gorp.Transaction
+}
+
+func (c *GorpController) Begin() r.Result {
+	txn, err := Dbm.Begin()
+	if err != nil {
+		panic(err)
+	}
+	c.Txn = txn
+	return nil
+}
+
+func (c *GorpController) Commit() r.Result {
+	if c.Txn == nil {
+		return nil
+	}
+	if err := c.Txn.Commit(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
+		panic(err)
+	}
+	c.Txn = nil
+	return nil
+}
+
+func (c *GorpController) Rollback() r.Result {
+	if c.Txn == nil {
+		return nil
+	}
+	if err := c.Txn.Rollback(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
+		panic(err)
+	}
+	c.Txn = nil
+	return nil
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;修改controllers/app.go&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;#import添加
+&amp;quot;app_name/app/models&amp;quot;
+
+#包含GorpController
+type App struct {
+	GorpController
+}
+
+#测试查询
+func (c App) Index() revel.Result {
+	greeting := &amp;quot;It works!&amp;quot;
+
+	users, err := c.Txn.Select(models.User{}, `select * from user where Name=&amp;quot;Hobo&amp;quot;`)
+	if len(users) == 0 {
+		greeting = &amp;quot;Null&amp;quot;
+	} else {
+		user := users[0].(*models.User)
+		greeting = user.Name
+	}
+	if err != nil {
+		panic(err)
+	}
+	return c.Render(greeting)
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;修改views/App/Index.html&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#&amp;lt;h1&amp;gt;It works&amp;lt;/h1&amp;gt;
+&amp;lt;h1&amp;gt;/{/{.greeting/}/}&amp;lt;/h1&amp;gt;		#去掉反斜杠
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;运行测试下&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;go run app_name
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
+      <title>Go-Revel:开发环境</title>
+      <link>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</link>
+      <pubDate>Tue, 20 Aug 2013 16:38:00 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</guid>
+      
+        <description>&lt;p&gt;环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享&lt;/p&gt;
+
+&lt;p&gt;Go&lt;br&gt;
+英文&lt;a href=&#34;http://golang.org/doc/install#osx&#34;&gt;http://golang.org/doc/install#osx&lt;/a&gt; （墙）&lt;br&gt;
+中文&lt;a href=&#34;http://zh.golanger.com/doc/install#osx&#34;&gt;http://zh.golanger.com/doc/install#osx&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Revel&lt;br&gt;
+&lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;Revel配置过程中GOPATH和Revel command的配置可以直接编辑.bash_profile，个人感觉这样更简单直接&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#编辑.bash_profile
+$ vi ~/.bash_profile
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#添加两行
+export GOPATH=gocode_path 			#gocode_path自己的工作目录
+export PATH=$PATH:$GOPATH/bin		#PATH可能原来也有其他的配置，继续追加就行，&amp;quot;:&amp;quot;分割
+
+#编辑完成，重启终端
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;开发工具我还是喜欢Sublime Text 2，LiteIDE也试过，感觉一般&lt;br&gt;
+&lt;a href=&#34;http://www.sublimetext.com/&#34;&gt;http://www.sublimetext.com/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;再推荐个Mac小工具Go2Shell，安装后添加到Finder的工具栏上，直接在当前目录下启动终端，没用过的同学可以装下，很方便&lt;br&gt;
+&lt;a href=&#34;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&#34;&gt;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&lt;/a&gt;&lt;/p&gt;</description>
+      
+    </item>
+    
+  </channel>
+</rss>
