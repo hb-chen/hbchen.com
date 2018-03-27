@@ -105,8 +105,8 @@ copyright = "HB Studio"            # default: author.name ↓        # 默认为
     gitmentCSS = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitment@0.0.3/style/default.min.css" crossorigin="anonymous">'
 
   [params.gitment]          # Gitment is a comment system based on GitHub issues. see https://github.com/imsun/gitment
-    owner = "hobo.chb@gmail.com"              # Your GitHub ID
-    repo = "https://github.com/hb-chen/Blog"               # The repo to store comments
+    owner = "hb-chen"              # Your GitHub ID
+    repo = "hbchen.com"               # The repo to store comments
     clientId = "0db80a5eb074f34c9f3a"           # Your client ID
     clientSecret = "e24e8c38bf765dd215fd444cea6ead43345fc9a3"       # Your client secret
 
