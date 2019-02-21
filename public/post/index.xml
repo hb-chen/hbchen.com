@@ -7,10 +7,153 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Wed, 24 Oct 2018 16:23:46 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 21 Feb 2019 16:59:37 +0800</lastBuildDate>
     
         <atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>go-micro加入Istio服务网格</title>
+      <link>http://hbchen.com/post/2019-01-08-go-micro%E5%8A%A0%E5%85%A5istio%E6%9C%8D%E5%8A%A1%E7%BD%91%E6%A0%BC/</link>
+      <pubDate>Thu, 21 Feb 2019 16:59:37 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2019-01-08-go-micro%E5%8A%A0%E5%85%A5istio%E6%9C%8D%E5%8A%A1%E7%BD%91%E6%A0%BC/</guid>
+      
+        <description>&lt;p&gt;将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp;amp; client插件，去掉在istio中不需要的组件依赖。&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro-istio.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/hb-go/micro-plugins&#34;&gt;hb-go/micro-plugins&lt;/a&gt;实现了gRPC、http的Istio版本Plugin，下面介绍如何使用。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;完整示例参考&lt;a href=&#34;https://github.com/hb-go/micro/tree/master/istio&#34;&gt;hb-go/micro/istio&lt;/a&gt;，示例包括http、gRPC&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h5 id=&#34;命令行参数&#34;&gt;命令行参数&lt;/h5&gt;
+
+&lt;p&gt;方便服务运行时指定端口，在命令行获取服务server、client端口配置，参数根据具体情况自行设计&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;在服务网格中我倾向统一上下游服务端口，避免不必要的配置以及因此引发的冲突问题&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Client端服务地址&lt;code&gt;CallOptions.Address&lt;/code&gt;解析规则：
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;:&lt;/code&gt;开头，将&lt;code&gt;service.Name&lt;/code&gt;中&lt;code&gt;.&lt;/code&gt;替换为&lt;code&gt;-&lt;/code&gt;，加&lt;code&gt;CallOptions.Address&lt;/code&gt;，如&lt;code&gt;go.micro.api.sample&lt;/code&gt; &lt;code&gt;:9080&lt;/code&gt; =&amp;gt; &lt;code&gt;go-micro-api-sample:9080&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;非&lt;code&gt;:&lt;/code&gt;开头，固定地址&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var (
+	serverAddr string
+	callAddr   string
+	cmdHelp    bool
+)
+
+func init() {
+	flag.StringVar(&amp;amp;serverAddr, &amp;quot;server_address&amp;quot;, &amp;quot;0.0.0.0:9080&amp;quot;, &amp;quot;server address.&amp;quot;)
+	flag.StringVar(&amp;amp;callAddr, &amp;quot;client_call_address&amp;quot;, &amp;quot;:9080&amp;quot;, &amp;quot;client call options address.&amp;quot;)
+	flag.Parse()
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&#34;自定义server-client插件-创建服务&#34;&gt;自定义server、client插件，创建服务&lt;/h5&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;由于micro框架对命令行的解析问题，创建服务时需要增加&lt;code&gt;micro.Flags(...)&lt;/code&gt;，兼容自定义参数，如:&lt;code&gt;client_call_address&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;import (
+	httpClient &amp;quot;github.com/hb-go/micro-plugins/client/istio_http&amp;quot;
+	httpServer &amp;quot;github.com/hb-go/micro-plugins/server/istio_http&amp;quot;
+)
+
+func main() {
+	c := httpClient.NewClient(
+		client.ContentType(&amp;quot;application/json&amp;quot;),
+		func(o *client.Options) {
+			o.CallOptions.Address = callAddr
+		},
+	)
+	s := httpServer.NewApiServer(
+		server.Address(serverAddr),
+	)
+
+	// New Service
+	service := micro.NewService(
+		micro.Name(&amp;quot;go.micro.api.sample&amp;quot;),
+		micro.Version(&amp;quot;latest&amp;quot;),
+		micro.Registry(noop.NewRegistry()),
+		micro.Client(c),
+		micro.Server(s),
+
+		// 兼容micro cmd parse
+		micro.Flags(cli.StringFlag{
+			Name:   &amp;quot;client_call_address&amp;quot;,
+			EnvVar: &amp;quot;MICRO_CLIENT_CALL_ADDRESS&amp;quot;,
+			Usage:  &amp;quot; Invalid!!!&amp;quot;,
+		}),
+	)
+
+	service.Options().Cmd.Init()
+	
+	// ……
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h5 id=&#34;服务部署-yaml&#34;&gt;服务部署.yaml&lt;/h5&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;其它Istio相关.yaml参考完整示例&lt;a href=&#34;https://github.com/hb-go/micro/tree/master/istio/k8s&#34;&gt;hb-go/micro/istio/k8s&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;######################################################################################
+# API service
+######################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-micro-api-sample
+  labels:
+    app: go-micro-api-sample
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: go-micro-api-sample
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: go-micro-api-sample-v1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: go-micro-api-sample
+        version: v1
+    spec:
+      containers:
+      - name: go-micro-api-sample
+        command: [
+          &amp;quot;/sample&amp;quot;,
+          &amp;quot;-server_address=0.0.0.0:9080&amp;quot;,
+          &amp;quot;-client_call_address=:9080&amp;quot;,
+        ]
+        image: hbchen/go-micro-istio-api-sample:v0.0.5
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9080
+---
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
     
     <item>
       <title>Spark &#43; Elasticsearch构建推荐系统</title>
@@ -19,7 +162,7 @@
       
       <guid>http://hbchen.com/post/2018-10-24-spark-elasticsearch-recommender/</guid>
       
-        <description>&lt;p&gt;Github &lt;a href=&#34;http://github.com/hb-chen/spark-elasticsearch-recommender&#34;&gt;hb-chen/spark-elasticsearch-recommender&lt;/a&gt;&lt;/p&gt;
+        <description>&lt;p&gt;Github &lt;a href=&#34;https://github.com/hb-chen/spark-elasticsearch-recommender&#34;&gt;hb-chen/spark-elasticsearch-recommender&lt;/a&gt;&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt;Zeppelin &lt;code&gt;0.8.0&lt;/code&gt;&lt;/li&gt;
@@ -184,7 +327,7 @@ artifact /{elasticsearch-hadoop-path}/elasticsearch-hadoop-6.3.2/dist/elasticsea
 
 &lt;p&gt;go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/micro.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;/p&gt;
 

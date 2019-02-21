@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>go-micro框架介绍 - Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+  <title>go-micro加入Istio服务网格 - Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
   <link rel="alternate" hreflang="en" href="http://hbchen.com" />
 
 <meta name="renderer" content="webkit" />
@@ -19,7 +19,7 @@
 
 
 <meta name="author" content="HB Chen" />
-  <meta name="description" content="go-micro go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展
+  <meta name="description" content="将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp;amp; client插件，去掉在istio中不需要的组件依赖。
 
 " />
 
@@ -33,7 +33,7 @@
 <meta name="generator" content="Hugo 0.27.1" />
 
 
-<link rel="canonical" href="http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/" />
+<link rel="canonical" href="http://hbchen.com/post/2019-01-08-go-micro%E5%8A%A0%E5%85%A5istio%E6%9C%8D%E5%8A%A1%E7%BD%91%E6%A0%BC/" />
 
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -51,25 +51,17 @@
 
 
 
-<meta property="og:title" content="go-micro框架介绍" />
-<meta property="og:description" content="go-micro
-
-go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展
-
-
+<meta property="og:title" content="go-micro加入Istio服务网格" />
+<meta property="og:description" content="将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp; client插件，去掉在istio中不需要的组件依赖。
 
 " />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/" />
+<meta property="og:url" content="http://hbchen.com/post/2019-01-08-go-micro%E5%8A%A0%E5%85%A5istio%E6%9C%8D%E5%8A%A1%E7%BD%91%E6%A0%BC/" />
 
 
 
-<meta property="article:published_time" content="2018-03-27T19:09:32&#43;08:00"/>
-<meta property="article:modified_time" content="2018-03-27T19:09:32&#43;08:00"/>
-
-
-
-
+<meta property="article:published_time" content="2019-02-21T16:59:37&#43;08:00"/>
+<meta property="article:modified_time" content="2019-02-21T16:59:37&#43;08:00"/>
 
 
 
@@ -77,28 +69,24 @@ go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服�
 
 
 
-<meta itemprop="name" content="go-micro框架介绍">
-<meta itemprop="description" content="go-micro
-
-go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展
 
 
+
+
+<meta itemprop="name" content="go-micro加入Istio服务网格">
+<meta itemprop="description" content="将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp; client插件，去掉在istio中不需要的组件依赖。
 
 ">
 
 
-<meta itemprop="dateModified" content="2018-03-27T19:09:32&#43;08:00" />
-<meta itemprop="wordCount" content="944">
+<meta itemprop="dateModified" content="2019-02-21T16:59:37&#43;08:00" />
+<meta itemprop="wordCount" content="711">
 
 
 
-<meta itemprop="keywords" content="微服务,Go,go-micro," />
-<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="go-micro框架介绍"/>
-<meta name="twitter:description" content="go-micro
-
-go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展
-
-
+<meta itemprop="keywords" content="微服务,Service Mesh,istio,go-micro," />
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="go-micro加入Istio服务网格"/>
+<meta name="twitter:description" content="将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp; client插件，去掉在istio中不需要的组件依赖。
 
 "/>
 
@@ -175,18 +163,18 @@ go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服�
           <article class="post bg-white">
     
     <header class="post-header">
-      <h1 class="post-title">go-micro框架介绍</h1>
+      <h1 class="post-title">go-micro加入Istio服务网格</h1>
 
       <div class="post-meta">
-        <span class="post-time"> 2018-03-27 </span>
+        <span class="post-time"> 2019-02-21 </span>
         <div class="post-category">
             
               <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
             
-              <a href="/categories/go/"> Go </a>
+              <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 944 words </span>
+        <span class="more-meta"> 711 words </span>
         <span class="more-meta"> 2 min read </span>
       </div>
     </header>
@@ -196,99 +184,139 @@ go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服�
 
     
     <div class="post-content">
-      <h2 id="go-micro-https-github-com-micro-go-micro"><a href="https://github.com/micro/go-micro">go-micro</a></h2>
-
-<p>go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展</p>
-
-<p><img src="/img/go-micro.jpg" alt="go-micro" /></p>
+      <p>将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp; client插件，去掉在istio中不需要的组件依赖。</p>
 
 <p></p>
 
-<p>主要有以下组件构成:</p>
+<p><img src="/img/go-micro-istio.jpg" alt="go-micro" /></p>
+
+<p><a href="https://github.com/hb-go/micro-plugins">hb-go/micro-plugins</a>实现了gRPC、http的Istio版本Plugin，下面介绍如何使用。</p>
+
+<blockquote>
+<p>完整示例参考<a href="https://github.com/hb-go/micro/tree/master/istio">hb-go/micro/istio</a>，示例包括http、gRPC</p>
+</blockquote>
+
+<h5 id="命令行参数">命令行参数</h5>
+
+<p>方便服务运行时指定端口，在命令行获取服务server、client端口配置，参数根据具体情况自行设计</p>
+
+<blockquote>
+<p>在服务网格中我倾向统一上下游服务端口，避免不必要的配置以及因此引发的冲突问题</p>
+</blockquote>
 
 <ul>
-<li><p>Registry</p>
-
-<blockquote>
-<p>提供一套服务注册、发现、注销、监测机制，服务注册中心支持consul、etcd2/3、zookeeper、gossip、k8s、eureka等</p>
-</blockquote></li>
-
-<li><p>Selector</p>
-
-<blockquote>
-<p>选择器提供了负载均衡，可以通过过滤方法对微服务进行过滤，并通过不同路由算法选择微服务，以及缓存等</p>
-</blockquote></li>
-
-<li><p>Transport</p>
-
-<blockquote>
-<p>微服务间同步请求/响应通信方式，相对Go标准net包做了更高的抽象，支持更多的传输方式，如http、grpc、tcp、udp、Rabbitmq等</p>
-</blockquote></li>
-
-<li><p>Broker</p>
-
-<blockquote>
-<p>微服务间异步发布/订阅通信方式，更好的处理分布式系统解耦问题，默认使用http方式，生产环境通常会使用消息中间件，如Kafka、RabbitMQ、NSQ等</p>
-</blockquote></li>
-
-<li><p>Codec</p>
-
-<blockquote>
-<p>服务间消息的编解码，支持json、protobuf、bson、msgpack等，与普通编码格式不同都是支持RPC格式</p>
-</blockquote></li>
-
-<li><p>Server</p>
-
-<blockquote>
-<p>用于启动服务，为服务命名、注册Handler、添加中间件等</p>
-</blockquote></li>
-
-<li><p>Client</p>
-
-<blockquote>
-<p>提供微服务客户端，通过Registry、Selector、Transport、Broker实现以服务名来查找服务、负载均衡、同步通信、异步消息等</p>
-</blockquote></li>
-</ul>
-
-<h2 id="micro-https-github-com-micro-micro"><a href="https://github.com/micro/micro">micro</a></h2>
-
-<p>Micro的工具包，主要由以下部分构成:</p>
+<li>Client端服务地址<code>CallOptions.Address</code>解析规则：
 
 <ul>
-<li><p>API</p>
-
-<blockquote>
-<p>API网关提供HTTP服务，并将请求路由到指定的微服务，是Micro的统一入口，可以用作反向代理，或者将HTTP请求转到RPC</p>
-</blockquote></li>
-
-<li><p>Web</p>
-
-<blockquote>
-<p>为Micro提供一套仪表盘，并可作为Web应用的反向代理，有别于普通API将Web应用作为了Micro的一等公民，其实和API差不多，但同时提供了对socket的支持</p>
-</blockquote></li>
-
-<li><p>Sidecar</p>
-
-<blockquote>
-<p>通过HTTP的方式实现go-micro全部功能的RPC代理，通过Sidecar可以方便的将其他语言集成到Micro框架中，方便解决解决应用的异构框架问题</p>
-</blockquote></li>
-
-<li><p>CLI</p>
-
-<blockquote>
-<p>提供一套命令行工具，可以方便的与Micro服务进行交互，并且可以通过Sidecar代理CLI命令</p>
-</blockquote></li>
-
-<li><p>Bot</p>
-
-<blockquote>
-<p>通过Bot可以在Micro环境中方便的与Slack、HipChat、XMPP等进行集成，通过消息的方式模仿CLI功能</p>
-</blockquote></li>
+<li><code>:</code>开头，将<code>service.Name</code>中<code>.</code>替换为<code>-</code>，加<code>CallOptions.Address</code>，如<code>go.micro.api.sample</code> <code>:9080</code> =&gt; <code>go-micro-api-sample:9080</code></li>
+<li>非<code>:</code>开头，固定地址</li>
+</ul></li>
 </ul>
 
-<h3 id="go-plugins-https-github-com-micro-go-plugins"><a href="https://github.com/micro/go-plugins">go-plugins</a></h3>
+<pre><code class="language-go">var (
+	serverAddr string
+	callAddr   string
+	cmdHelp    bool
+)
 
-<p>go-plugins是Micro的插件库，除go-micro相应组件的扩展外，还有其他如Trace、KV存储、监控等</p>
+func init() {
+	flag.StringVar(&amp;serverAddr, &quot;server_address&quot;, &quot;0.0.0.0:9080&quot;, &quot;server address.&quot;)
+	flag.StringVar(&amp;callAddr, &quot;client_call_address&quot;, &quot;:9080&quot;, &quot;client call options address.&quot;)
+	flag.Parse()
+}
+</code></pre>
+
+<h5 id="自定义server-client插件-创建服务">自定义server、client插件，创建服务</h5>
+
+<blockquote>
+<p>由于micro框架对命令行的解析问题，创建服务时需要增加<code>micro.Flags(...)</code>，兼容自定义参数，如:<code>client_call_address</code></p>
+</blockquote>
+
+<pre><code class="language-go">import (
+	httpClient &quot;github.com/hb-go/micro-plugins/client/istio_http&quot;
+	httpServer &quot;github.com/hb-go/micro-plugins/server/istio_http&quot;
+)
+
+func main() {
+	c := httpClient.NewClient(
+		client.ContentType(&quot;application/json&quot;),
+		func(o *client.Options) {
+			o.CallOptions.Address = callAddr
+		},
+	)
+	s := httpServer.NewApiServer(
+		server.Address(serverAddr),
+	)
+
+	// New Service
+	service := micro.NewService(
+		micro.Name(&quot;go.micro.api.sample&quot;),
+		micro.Version(&quot;latest&quot;),
+		micro.Registry(noop.NewRegistry()),
+		micro.Client(c),
+		micro.Server(s),
+
+		// 兼容micro cmd parse
+		micro.Flags(cli.StringFlag{
+			Name:   &quot;client_call_address&quot;,
+			EnvVar: &quot;MICRO_CLIENT_CALL_ADDRESS&quot;,
+			Usage:  &quot; Invalid!!!&quot;,
+		}),
+	)
+
+	service.Options().Cmd.Init()
+	
+	// ……
+}
+</code></pre>
+
+<h5 id="服务部署-yaml">服务部署.yaml</h5>
+
+<blockquote>
+<p>其它Istio相关.yaml参考完整示例<a href="https://github.com/hb-go/micro/tree/master/istio/k8s">hb-go/micro/istio/k8s</a></p>
+</blockquote>
+
+<pre><code class="language-yaml">######################################################################################
+# API service
+######################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-micro-api-sample
+  labels:
+    app: go-micro-api-sample
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: go-micro-api-sample
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: go-micro-api-sample-v1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: go-micro-api-sample
+        version: v1
+    spec:
+      containers:
+      - name: go-micro-api-sample
+        command: [
+          &quot;/sample&quot;,
+          &quot;-server_address=0.0.0.0:9080&quot;,
+          &quot;-client_call_address=:9080&quot;,
+        ]
+        image: hbchen/go-micro-istio-api-sample:v0.0.5
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9080
+---
+</code></pre>
     </div>
 
     
@@ -300,7 +328,7 @@ go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服�
   </p>
   <p class="copyright-item">
     <span class="item-title">LastMod</span>
-    <span class="item-content">2018-03-27</span>
+    <span class="item-content">2019-02-21</span>
   </p>
   
   <p class="copyright-item">
@@ -317,7 +345,9 @@ go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服�
           
           <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a>
           
-          <a href="/tags/go/">Go</a>
+          <a href="/tags/service-mesh/">Service Mesh</a>
+          
+          <a href="/tags/istio/">istio</a>
           
           <a href="/tags/go-micro/">go-micro</a>
           
@@ -326,14 +356,9 @@ go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服�
       
       <nav class="post-nav">
         
-          <a class="prev" href="/post/2018-10-24-spark-elasticsearch-recommender/">
-            <i class="iconfont icon-left"></i>
-            <span class="prev-text nav-default">Spark &#43; Elasticsearch构建推荐系统</span>
-            <span class="prev-text nav-mobile">Prev</span>
-          </a>
         
-          <a class="next" href="/post/2014-10-17-centos-vsftp/">
-            <span class="next-text nav-default">Centos VSFTP配置</span>
+          <a class="next" href="/post/2018-10-24-spark-elasticsearch-recommender/">
+            <span class="next-text nav-default">Spark &#43; Elasticsearch构建推荐系统</span>
             <span class="prev-text nav-mobile">Next</span>
             <i class="iconfont icon-right"></i>
           </a>
@@ -350,10 +375,10 @@ go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服�
     <script src="/lib/gitment/gitment-0.0.3.min.js"></script>
   <script type="text/javascript">
   const gitment = new Gitment({
-    id: '2018-03-27 19:09:32 \x2b0800 CST',
-    title: 'go-micro框架介绍',
+    id: '2019-02-21 16:59:37 \x2b0800 CST',
+    title: 'go-micro加入Istio服务网格',
     link: decodeURI(location.href),
-    desc: '\x3ch2 id=\x22go-micro-https-github-com-micro-go-micro\x22\x3e\x3ca href=\x22https:\/\/github.com\/micro\/go-micro\x22\x3ego-micro\x3c\/a\x3e\x3c\/h2\x3e\n\n\x3cp\x3ego-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步\/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展\x3c\/p\x3e\n\n\x3cp\x3e\x3cimg src=\x22\/img\/go-micro.jpg\x22 alt=\x22go-micro\x22 \/\x3e\x3c\/p\x3e\n\n\x3cp\x3e\x3c\/p\x3e',
+    desc: '\x3cp\x3e将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server \x26amp; client插件，去掉在istio中不需要的组件依赖。\x3c\/p\x3e\n\n\x3cp\x3e\x3c\/p\x3e',
     owner: 'hb-chen',
     repo: 'hbchen.com',
     oauth: {

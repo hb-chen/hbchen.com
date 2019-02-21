@@ -14,7 +14,7 @@ tags: [
 ]
 ---
 
-Github [hb-chen/spark-elasticsearch-recommender](http://github.com/hb-chen/spark-elasticsearch-recommender)
+Github [hb-chen/spark-elasticsearch-recommender](https://github.com/hb-chen/spark-elasticsearch-recommender)
 
 - Zeppelin `0.8.0`
 - Spark `2.3.2`
