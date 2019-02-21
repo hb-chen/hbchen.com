@@ -47,6 +47,11 @@ copyright = "HB Studio"            # default: author.name ↓        # 默认为
   weight = 40
   identifier = "categories"
   url = "/categories/"
+[[menu.main]]
+  name = "GitHub"
+  weight = 50
+  identifier = "github"
+  url = "https://github.com/hb-chen"
 
 [params]
   debug = false             # If true, load `eruda.min.js`. See https://github.com/liriliri/eruda

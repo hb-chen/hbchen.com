@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Spark &#43; Elasticsearch构建推荐系统 - Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+  <link rel="alternate" hreflang="en" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="HB Chen" />
+  <meta name="description" content="Github hb-chen/spark-elasticsearch-recommender
+ Zeppelin 0.8.0 Spark 2.3.2 Elasticsearch 6.3.2  
+" />
+
+  <meta name="keywords" content="Hobo, HBchen, Blog, Golang, Micro, RPC" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.27.1" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/2018-10-24-spark-elasticsearch-recommender/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="Spark &#43; Elasticsearch构建推荐系统" />
+<meta property="og:description" content="Github hb-chen/spark-elasticsearch-recommender
+
+
+Zeppelin 0.8.0
+Spark 2.3.2
+Elasticsearch 6.3.2
+
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/2018-10-24-spark-elasticsearch-recommender/" />
+
+
+
+<meta property="article:published_time" content="2018-10-24T16:23:46&#43;08:00"/>
+<meta property="article:modified_time" content="2018-10-24T16:23:46&#43;08:00"/>
+
+
+
+
+
+
+
+
+
+
+
+<meta itemprop="name" content="Spark &#43; Elasticsearch构建推荐系统">
+<meta itemprop="description" content="Github hb-chen/spark-elasticsearch-recommender
+
+
+Zeppelin 0.8.0
+Spark 2.3.2
+Elasticsearch 6.3.2
+
+
+">
+
+
+<meta itemprop="dateModified" content="2018-10-24T16:23:46&#43;08:00" />
+<meta itemprop="wordCount" content="458">
+
+
+
+<meta itemprop="keywords" content="Spark,Elasticsearch,Zeppelin," />
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Spark &#43; Elasticsearch构建推荐系统"/>
+<meta name="twitter:description" content="Github hb-chen/spark-elasticsearch-recommender
+
+
+Zeppelin 0.8.0
+Spark 2.3.2
+Elasticsearch 6.3.2
+
+
+"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">Categories</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">Categories</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">Spark &#43; Elasticsearch构建推荐系统</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2018-10-24 </span>
+        <div class="post-category">
+            
+              <a href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/"> 推荐系统 </a>
+            
+              <a href="/categories/spark/"> Spark </a>
+            
+              <a href="/categories/elastic/"> Elastic </a>
+            
+          </div>
+        <span class="more-meta"> 458 words </span>
+        <span class="more-meta"> 1 min read </span>
+      </div>
+    </header>
+
+    
+    
+
+    
+    <div class="post-content">
+      <p>Github <a href="github.com/hb-chen/spark-elasticsearch-recommender">hb-chen/spark-elasticsearch-recommender</a></p>
+
+<ul>
+<li>Zeppelin <code>0.8.0</code></li>
+<li>Spark <code>2.3.2</code></li>
+<li>Elasticsearch <code>6.3.2</code></li>
+</ul>
+
+<p></p>
+
+<h4 id="1-环境准备">1.环境准备</h4>
+
+<blockquote>
+<p>Mac OSX</p>
+</blockquote>
+
+<h5 id="zeppeline">Zeppeline</h5>
+
+<pre><code class="language-bash"># http://www.apache.org/dyn/closer.cgi/zeppelin/zeppelin-0.8.0/zeppelin-0.8.0-bin-netinst.tgz
+$ wget http://mirrors.shu.edu.cn/apache/zeppelin/zeppelin-0.8.0/zeppelin-0.8.0-bin-netinst.tgz
+$ tar -zxf zeppelin-0.8.0-bin-netinst.tgz
+$ cd zeppelin-0.8.0-bin-netinst
+
+# 安装必要interpreter
+$ ./bin/install-interpreter.sh --name md,elasticsearch
+$ ./bin/zeppelin-daemon.sh start
+</code></pre>
+
+<h5 id="spark">Spark</h5>
+
+<pre><code class="language-bash"># http://spark.apache.org/downloads.html
+$ wget https://www.apache.org/dyn/closer.lua/spark/spark-2.3.2/spark-2.3.2-bin-hadoop2.7.tgz
+$ tar -zxf spark-2.3.2-bin-hadoop2.7.tgz
+</code></pre>
+
+<h5 id="elasticsearch">Elasticsearch</h5>
+
+<pre><code class="language-bash"># https://www.elastic.co/downloads/past-releases
+# Elasticsearch + 6.3.2
+$ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.3.2.zip
+$ unzip elasticsearch-6.3.2.zip
+
+# ES-Hadoop + 6.3.2
+$ wget https://artifacts.elastic.co/downloads/elasticsearch-hadoop/elasticsearch-hadoop-6.3.2.zip
+$ unzip elasticsearch-hadoop-6.3.2.zip
+</code></pre>
+
+<h6 id="elasticsearch-矢量评分插件">Elasticsearch 矢量评分插件</h6>
+
+<ul>
+<li><a href="https://github.com/muhleder/elasticsearch-vector-scoring">muhleder/elasticsearch-vector-scoring</a></li>
+</ul>
+
+<pre><code class="language-bash"># 修改build.gradle，这样不必Checkout Elasticsearch 
+# https://github.com/muhleder/elasticsearch-vector-scoring/issues/1#issuecomment-415267767
+buildscript {
+  repositories {
+    jcenter()
+    mavenLocal()
+  }
+  dependencies {
+    classpath &quot;org.elasticsearch.gradle:build-tools:6.3.2&quot;
+  }
+}
+
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'elasticsearch.esplugin'
+
+licenseFile = rootProject.file('LICENSE')
+noticeFile = rootProject.file('NOTICE')
+
+esplugin {
+  name 'elasticsearch-vector-scoring'
+  description 'Provides a fast vector multiplication script.'
+  classname 'com.gosololaw.elasticsearch.VectorScoringPlugin'
+}
+
+dependencies {
+  compile &quot;org.elasticsearch:elasticsearch:6.3.2&quot;
+}
+</code></pre>
+
+<pre><code class="language-bash"># 插件安装
+$ ./bin/elasticsearch-plugin install {file:///path/to/plugin.zip}
+</code></pre>
+
+<h5 id="python依赖库">Python依赖库</h5>
+
+<pre><code class="language-bash">$ pip install elasticsearch
+$ pip install numpy
+$ pip install tmdbsimple # 忽略，暂时未使用
+</code></pre>
+
+<h5 id="movielens数据集-https-grouplens-org-datasets-movielens-下载"><a href="https://grouplens.org/datasets/movielens/">Movielens数据集</a>下载</h5>
+
+<pre><code class="language-bash">$ cd data # 与zeppelin-0.8.0-bin-netinst同Path，note中配置PATH_TO_DATA = &quot;../data/ml-latest-small&quot;
+$ wget http://files.grouplens.org/datasets/movielens/ml-latest-small.zip
+$ unzip ml-latest-small.zip
+</code></pre>
+
+<h4 id="2-启动服务">2.启动服务</h4>
+
+<h5 id="elasticsearch启动">Elasticsearch启动</h5>
+
+<pre><code class="language-bash">$ ./bin/elasticsearch
+</code></pre>
+
+<h5 id="zeppelin配置及启动">Zeppelin配置及启动</h5>
+
+<pre><code class="language-bash">$ cp conf/shiro.ini.template conf/shiro.ini
+$ vim conf/shiro.ini
+# 管理员账户密码
+[users]
+admin = 123456, admin
+
+$ cp conf/zeppelin-env.sh.template conf/zeppelin-env.sh
+$ vim conf/zeppelin-env.sh
+# Spark配置
+export SPARK_HOME=/{apache-spark-path}/spark-2.3.2-bin-hadoop2.7
+export SPARK_SUBMIT_OPTIONS=&quot;--driver-memory 2G&quot;
+
+$ cp conf/zeppelin-site.xml.template conf/zeppelin-site.xml
+$ vim conf/zeppelin-site.xml
+# 根据需要可以修改zeppelin.server.port等配置
+
+# 启动
+$ ./bin/zeppelin-daemon.sh start
+</code></pre>
+
+<h4 id="3-notebook">3.Notebook</h4>
+
+<p><a href="http://localhost:8080">http://localhost:8080</a></p>
+
+<pre><code class="language-bash"># Create new interpreter
+# md
+
+# elasticsearch
+elasticsearch.client.type http
+elasticsearch.port	9200
+
+# spark
+# 添加Dependencies
+artifact /{elasticsearch-hadoop-path}/elasticsearch-hadoop-6.3.2/dist/elasticsearch-spark-20_2.11-6.3.2.jar
+</code></pre>
+
+<h4 id="参考">参考</h4>
+
+<ul>
+<li><a href="https://github.com/IBM/elasticsearch-spark-recommender">使用 Apache Spark 和 Elasticsearch 构建一个推荐系统</a></li>
+</ul>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">Author</span>
+    <span class="item-content">HB Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">LastMod</span>
+    <span class="item-content">2018-10-24</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">License</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/spark/">Spark</a>
+          
+          <a href="/tags/elasticsearch/">Elasticsearch</a>
+          
+          <a href="/tags/zeppelin/">Zeppelin</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/">
+            <span class="next-text nav-default">go-micro框架介绍</span>
+            <span class="prev-text nav-mobile">Next</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <div id="comments-gitment"></div>
+  <link rel="stylesheet" href="/lib/gitment/gitment-0.0.3.min.css">
+    <script src="/lib/gitment/gitment-0.0.3.min.js"></script>
+  <script type="text/javascript">
+  const gitment = new Gitment({
+    id: '2018-10-24 16:23:46 \x2b0800 CST',
+    title: 'Spark \x2b Elasticsearch构建推荐系统',
+    link: decodeURI(location.href),
+    desc: '\x3cp\x3eGithub \x3ca href=\x22github.com\/hb-chen\/spark-elasticsearch-recommender\x22\x3ehb-chen\/spark-elasticsearch-recommender\x3c\/a\x3e\x3c\/p\x3e\n\n\x3cul\x3e\n\x3cli\x3eZeppelin \x3ccode\x3e0.8.0\x3c\/code\x3e\x3c\/li\x3e\n\x3cli\x3eSpark \x3ccode\x3e2.3.2\x3c\/code\x3e\x3c\/li\x3e\n\x3cli\x3eElasticsearch \x3ccode\x3e6.3.2\x3c\/code\x3e\x3c\/li\x3e\n\x3c\/ul\x3e\n\n\x3cp\x3e\x3c\/p\x3e',
+    owner: 'hb-chen',
+    repo: 'hbchen.com',
+    oauth: {
+      client_id: '0db80a5eb074f34c9f3a',
+      client_secret: 'e24e8c38bf765dd215fd444cea6ead43345fc9a3'
+    }
+  })
+  gitment.render('comments-gitment')
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://github.com/imsun/gitment">comments powered by gitment.</a></noscript>
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>
