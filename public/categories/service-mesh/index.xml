@@ -7,10 +7,268 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Thu, 21 Feb 2019 16:59:37 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 05 Mar 2019 20:44:07 +0800</lastBuildDate>
     
         <atom:link href="http://hbchen.com/categories/service-mesh/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>如何自定义Istio Mixer Adapter</title>
+      <link>http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/</link>
+      <pubDate>Tue, 05 Mar 2019 20:44:07 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/</guid>
+      
+        <description>&lt;blockquote&gt;
+&lt;p&gt;快速开始:&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth&#34;&gt;micro-mesh/examples/adapter/auth&lt;/a&gt;源码传送门&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
+
+&lt;p&gt;结合&lt;a href=&#34;https://github.com/hb-go/micro-mesh&#34;&gt;micro-mesh&lt;/a&gt;的实践场景，需要在&lt;code&gt;ingressgateway&lt;/code&gt;与&lt;code&gt;API service&lt;/code&gt;间加入认证&amp;amp;鉴权(JWT&amp;amp;RBAC)，自然考虑Istio提供的&lt;a href=&#34;https://istio.io/zh/docs/concepts/security/&#34;&gt;安全&lt;/a&gt;方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;密码修改、终端连接限制等场景下无法踢除&lt;/li&gt;
+&lt;li&gt;访问控制策略无法实时生效&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;默认方案只是在一些场景下不合适，根据具体需求考虑&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;基于这样的场景可以自定义Adapter来实现，目标:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Token-JWT
+
+&lt;ul&gt;
+&lt;li&gt;服务端验证token有效性&lt;/li&gt;
+&lt;li&gt;应对密码修改、终端数量限制等场景&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;ACL-&lt;a href=&#34;http://github.com/casbin/casbin&#34;&gt;Casbin&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;服务端获取用户角色，做API访问控制&lt;/li&gt;
+&lt;li&gt;用户角色及接口授权策略实时生效
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;以下示例对token验证、访问控制不做具体设计，重点介绍如何自定义一个&lt;code&gt;auth-adapter&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;自定义adapter介绍&#34;&gt;自定义Adapter介绍&lt;/h2&gt;
+
+&lt;p&gt;配置关系及执行流程如图：
+&lt;img src=&#34;http://hbchen.com/img/auth-adapter.jpg&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;属性：使用&lt;code&gt;istio&lt;/code&gt;的&lt;code&gt;attributes&lt;/code&gt;，&lt;code&gt;istio/mixer/testdata/config/attributes.yaml&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;属性与适配器输入映射模板：使用&lt;code&gt;istio&lt;/code&gt;的&lt;code&gt;authorization&lt;/code&gt;模板，&lt;code&gt;istio/mixer/template/authorization/template.yaml&lt;/code&gt;，通过&lt;code&gt;template.proto&lt;/code&gt;查看协议内容&lt;/li&gt;
+&lt;li&gt;适配器，&lt;code&gt;micro-mesh/examples/adapter/auth/config/auth-adapter.yaml&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;go generate ./...&lt;/code&gt;自动生成&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;适配器服务启动配置，&lt;code&gt;micro-mesh/examples/adapter/auth/config/config.proto&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;适配器服务实例，&lt;code&gt;micro-mesh/examples/adapter/auth/operatorconfig/cluster-service.yaml&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;适配器配置，&lt;code&gt;micro-mesh/examples/adapter/auth/operatorconfig/operator-cfg.yaml&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&#34;目录结构&#34;&gt;目录结构&lt;/h5&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;bin                         执行文件
+cmd                         
+  └ main.go                 适配器入口
+config                      配置协议
+  ├ adapter.auth.config.pb.html                 #go generate ./... 自动生成
+  ├ auth-adapter.yaml       适配器描述文件       #go generate ./... 自动生成
+  ├ config.pb.go                                #go generate ./... 自动生成
+  ├ config.proto            适配器服务启动配置
+  └ config.proto_descriptor                     #go generate ./... 自动生成
+operatorconfig              k8s配置
+  ├ attributes.yaml         属性                  #copy istio/mixer/testdata/config/attributes.yaml
+  ├ cluster-service.yaml    适配器服务实例
+  ├ operator-cfg.yaml       适配器配置
+  └ template.yaml           属性与适配器输入模板    #copy istio/mixer/template/authorization/template.yaml
+testdata                    测试配置
+  ├ attributes.yaml         属性                  #copy istio/mixer/testdata/config/attributes.yaml
+  ├ auth-adapter.yaml       适配器描述文件         #copy config/auth-adapter.yaml
+  ├ operator-cfg.yaml       适配器配置
+  └ template.yaml           属性与适配器输入模板    #copy istio/mixer/template/authorization/template.yaml
+auth.go                     适配器服务实现
+Dockerfile                  Docker镜像
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;有3处与适配器实现相关：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;适配器服务启动配置&lt;code&gt;config/config.proto&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;适配器服务实现&lt;code&gt;auth.go&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;适配器入口&lt;code&gt;cmd/main.go&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;接下来使用&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth&#34;&gt;micro-mesh/examples/adapter/auth&lt;/a&gt;源码按步骤操作，实现本地及&lt;code&gt;K8S&lt;/code&gt;环境的测试部署&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;步骤&#34;&gt;步骤&lt;/h2&gt;
+
+&lt;p&gt;开发环境&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;OSX&lt;/p&gt;
+
+&lt;p&gt;Go &lt;strong&gt;1.11.1&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;protoc &lt;strong&gt;libprotoc 3.6.1&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Istio &lt;strong&gt;1.0.6&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&#34;1-istio源码&#34;&gt;1.Istio源码&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;mkdir -p $GOPATH/src/istio.io/
+cd $GOPATH/src/istio.io/
+git clone https://github.com/istio/istio.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;2-micro-mesh源码&#34;&gt;2.micro-mesh源码&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;git clone https://github.com/hb-go/micro-mesh.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;3-mixer开发工具&#34;&gt;3.Mixer开发工具&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# build mixer server &amp;amp; client 
+cd istio
+make mixs
+make mixc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;在&lt;code&gt;$GOPATH/out/darwin_amd64/release/&lt;/code&gt;生成&lt;code&gt;mixs&lt;/code&gt;、&lt;code&gt;mixc&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;4-构建auth-adapter项目-optional&#34;&gt;4.构建Auth adapter项目(optional)&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# copy auth adapter example
+cp {micro-mesh path}/examples/adapter/auth mixer/adapter/auth
+
+cd mixer/adapter/auth
+
+# 可以删除`config`目录除`config.proto`外的其他文件，看执行go generate后的结果
+go generate ./...
+go build ./...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;go generate&lt;/code&gt;根据&lt;code&gt;config/config.proto&lt;/code&gt;以及&lt;code&gt;auth.go&lt;/code&gt;的注释自动生成&lt;code&gt;config&lt;/code&gt;目录下的其他文件:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;config.pb.go&lt;/li&gt;
+&lt;li&gt;config.proto_descriptor&lt;/li&gt;
+&lt;li&gt;auth-adapter.yaml&lt;/li&gt;
+&lt;li&gt;adapter.auth.config.pb.html&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;根据&lt;code&gt;auth.go&lt;/code&gt;的以下注释，&lt;code&gt;mixer_codegen.sh&lt;/code&gt;使用&lt;code&gt;authorization&lt;/code&gt;模板生成&lt;code&gt;name&lt;/code&gt;为&lt;code&gt;auth-adapter&lt;/code&gt;的适配器&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// nolint:lll
+// Generates the auth adapter&#39;s resource yaml. It contains the adapter&#39;s configuration, name, supported template
+// names (metric in this case), and whether it is session or no-session based.
+//go:generate $GOPATH/src/istio.io/istio/bin/mixer_codegen.sh -a mixer/adapter/auth/config/config.proto -x &amp;quot;-s=false -n auth-adapter -t authorization&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;5-本地测试&#34;&gt;5.本地测试&lt;/h3&gt;
+
+&lt;p&gt;本地测试使用testdata下的配置，其中&lt;code&gt;operator-cfg.yaml&lt;/code&gt;有几处与正式部署不同：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;handler&lt;/code&gt;的&lt;code&gt;address&lt;/code&gt;使用本地服务&lt;code&gt;&amp;quot;[::]:44225&amp;quot;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;为了方便测试&lt;code&gt;instance&lt;/code&gt;的&lt;code&gt;params&lt;/code&gt;参数以及&lt;code&gt;rule&lt;/code&gt;的&lt;code&gt;math&lt;/code&gt;条件做了简化&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 启动适配器服务
+go run cmd/main.go 44225
+
+# 使用testdata下配置启动mixer server
+$GOPATH/out/darwin_amd64/release/mixs server \
+--configStoreURL=fs://$GOPATH/src/istio.io/istio/mixer/adapter/auth/testdata \
+--log_output_level=attributes:debug
+
+# 测试Adapter是否生效
+$GOPATH/out/darwin_amd64/release/mixc check -s request.host=&amp;quot;localhost&amp;quot; --stringmap_attributes &amp;quot;request.headers=x-custom-token:efg&amp;quot;
+# Check RPC completed successfully. Check status was PERMISSION_DENIED (mm-example-auth.handler.istio-system:Unauthorized...)
+
+$GOPATH/out/darwin_amd64/release/mixc check -s request.host=&amp;quot;localhost&amp;quot; --stringmap_attributes &amp;quot;request.headers=x-custom-token:abc&amp;quot;
+# Check RPC completed successfully. Check status was OK
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;6-打包镜像&#34;&gt;6.打包镜像&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# build执行文件
+CGO_ENABLED=0 GOOS=linux \
+    go build -a -installsuffix cgo -v -o bin/auth ./cmd/
+    
+# docker镜像
+docker build -t hbchen/micro-mesh-example-adapter-auth:v0.0.1 .
+docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;7-istio环境部署&#34;&gt;7.Istio环境部署&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 属性、模板
+# attributes.yaml -&amp;gt; istio/mixer/testdata/config/attributes.yaml 
+# template.yaml -&amp;gt; istio/mixer/template/authorization/template.yaml
+kubectl apply -f examples/adapter/auth/testdata/attributes.yaml -f examples/adapter/auth/testdata/template.yaml
+
+# 适配器
+kubectl apply -f examples/adapter/auth/config/auth-adapter.yaml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;这里是以&lt;a href=&#34;https://github.com/hb-go/micro-mesh&#34;&gt;micro-mesh&lt;/a&gt;示例为基础的配置，如果使用&lt;code&gt;bookinfo&lt;/code&gt;或者自己的服务需要做相应的修改&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;code&gt;operator-cfg.yaml&lt;/code&gt;与本地测试配置不同：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;handler&lt;/code&gt;的&lt;code&gt;address&lt;/code&gt;使用集群服务&lt;code&gt;&amp;quot;mm-example-auth-adapter-service:44225&amp;quot;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;instance&lt;/code&gt;的&lt;code&gt;params&lt;/code&gt;根据&lt;code&gt;authorization&lt;/code&gt;模板及&lt;code&gt;auth-adapter&lt;/code&gt;服务的需求配置&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;rule&lt;/code&gt;的&lt;code&gt;match&lt;/code&gt;条件使用&lt;code&gt;destination.service == &amp;quot;mm-example-api.default.svc.cluster.local&amp;quot;&lt;/code&gt;，仅对&lt;code&gt;mm-example-api&lt;/code&gt;服务生效&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 适配器服务实例部署
+kubectl apply -f examples/adapter/auth/operatorconfig/cluser-service.yaml
+
+# 适配器配置
+kubectl apply -f examples/adapter/auth/operatorconfig/operator-cfg.yaml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;8-istio环境部署测试&#34;&gt;8.Istio环境部署测试&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;如果没有开Gateway的JWT验证可以忽略&lt;code&gt;Authorization&lt;/code&gt;，其实做了自定义Auth后是多余的😂&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;TOKEN=$(curl https://raw.githubusercontent.com/istio/istio/release-1.1/security/tools/jwt/samples/demo.jwt -s)
+
+curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-token: efg&amp;quot; -X GET http://35.193.180.18/v1/example/call/Hobo
+curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-token: abc&amp;quot; -X GET http://35.193.180.18/v1/example/call/Hobo
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;参考&#34;&gt;参考&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/istio/istio/wiki/Mixer-Out-of-Process-Adapter-Walkthrough&#34;&gt;Mixer Out of Process Adapter Walkthrough&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://medium.com/google-cloud/simple-istio-mixer-out-of-process-authorization-adapter-5f9363cd9bbc&#34;&gt;Simple Istio Mixer Out of Process Authorization Adapter&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description>
+      
+    </item>
     
     <item>
       <title>go-micro加入Istio服务网格</title>

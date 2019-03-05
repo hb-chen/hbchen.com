@@ -10,12 +10,15 @@ comment: false
 mathjax: false
 ---
 
-#### Hobo's Blog!
+Hobo's Blog!
+---
+**微信**
 
-##### Language
-`Go` `PHP` `Obj-C`
+![微信](/img/wechat.jpg)
 
-##### GitHub
+[GitHub](https://github.com/hb-chen)
+------
 * [Echo 实践](https://github.com/hb-go/echo-web)
 * [go-micro实践](https://github.com/hb-go/micro)
+* [Istio微服务架构实践](https://github.com/hb-go/micro-mesh)
 
