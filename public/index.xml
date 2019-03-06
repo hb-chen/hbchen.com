@@ -87,7 +87,7 @@
 &lt;h2 id=&#34;自定义adapter介绍&#34;&gt;自定义Adapter介绍&lt;/h2&gt;
 
 &lt;p&gt;配置关系及执行流程如图：
-&lt;img src=&#34;http://hbchen.com/img/auth-adapter.jpg&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
+&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/auth-adapter.jpg&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt;属性：使用&lt;code&gt;istio&lt;/code&gt;的&lt;code&gt;attributes&lt;/code&gt;，&lt;code&gt;istio/mixer/testdata/config/attributes.yaml&lt;/code&gt;&lt;/li&gt;

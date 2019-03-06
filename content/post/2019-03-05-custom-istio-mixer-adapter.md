@@ -41,7 +41,7 @@ tags: [
 自定义Adapter介绍
 ---
 配置关系及执行流程如图：
-![auth-adapter](/img/auth-adapter.jpg)
+![auth-adapter](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/auth-adapter.jpg)
 
 - 属性：使用`istio`的`attributes`，`istio/mixer/testdata/config/attributes.yaml`
 - 属性与适配器输入映射模板：使用`istio`的`authorization`模板，`istio/mixer/template/authorization/template.yaml`，通过`template.proto`查看协议内容
