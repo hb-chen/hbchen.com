@@ -1,5 +1,5 @@
 ---
-title: "如何自定义Istio Mixer Adapter"
+title: "如何自定义Istio Mixer Adapter【源码】"
 date: 2019-03-05T20:44:07+08:00
 comments: true
 categories: [
@@ -20,7 +20,7 @@ tags: [
 
 背景
 ---
-结合[micro-mesh](https://github.com/hb-go/micro-mesh)的实践场景，需要在`ingressgateway`与`API service`间加入认证&鉴权(JWT&RBAC)，自然考虑Istio提供的[安全](https://istio.io/zh/docs/concepts/security/)方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:
+结合[micro-mesh](https://github.com/hb-go/micro-mesh#micro-mesh)的实践场景，需要在`ingressgateway`与`API service`间加入认证&鉴权(JWT&RBAC)，自然考虑Istio提供的[安全](https://istio.io/zh/docs/concepts/security/)方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:
 
 - 密码修改、终端连接限制等场景下无法踢除
 - 访问控制策略无法实时生效
