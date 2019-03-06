@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Sat, 24 Aug 2013 09:22:00 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/tags/revel/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/tags/revel/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,8 +18,7 @@
       <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/</guid>
-      
-        <description>&lt;p&gt;Revel连接数据库可以参考官方的Booking示例&lt;/p&gt;
+      <description>&lt;p&gt;Revel连接数据库可以参考官方的Booking示例&lt;/p&gt;
 
 &lt;p&gt;除了Revel需要Gorp和MySQL驱动两个库&lt;/p&gt;
 
@@ -30,165 +29,7 @@ go get github.com/coopernurse/gorp
 go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;配置conf/app.conf&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;# DB username:@tcp(yourhost:port)/dbname
-db.import = github.com/Go-SQL-Driver/mysql
-db.driver = mysql
-db.spec   = root:@tcp(localhost:3306)/db_name
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建models/user.go，先只定义几个测试字段&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package models
-
-type User struct {
-	UserId							int
-	Name               	string
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建controllers/init.go&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package controllers
-
-import &amp;quot;github.com/robfig/revel&amp;quot;
-
-func init() {
-	revel.OnAppStart(Init)
-	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
-	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
-	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建controllers/gorp.go&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package controllers
-
-import (
-	&amp;quot;database/sql&amp;quot;
-	&amp;quot;github.com/coopernurse/gorp&amp;quot;
-	_ &amp;quot;github.com/Go-SQL-Driver/mysql&amp;quot;
-	r &amp;quot;github.com/robfig/revel&amp;quot;
-	&amp;quot;github.com/robfig/revel/modules/db/app&amp;quot;
-	&amp;quot;app_name/app/models&amp;quot;
-)
-
-var (
-	Dbm *gorp.DbMap
-)
-
-func Init() {
-	db.Init()
-	//MySQL InnoDB UTF8
-	Dbm = &amp;amp;gorp.DbMap{Db: db.Db, Dialect: gorp.MySQLDialect{&amp;quot;InnoDB&amp;quot;, &amp;quot;UTF8&amp;quot;}}
-
-	setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
-		for col, size := range colSizes {
-			t.ColMap(col).MaxSize = size
-		}
-	}
-
-	//创建一个User测试表
-	t := Dbm.AddTable(models.User{}).SetKeys(true, &amp;quot;UserId&amp;quot;)
-	setColumnSizes(t, map[string]int{
-		&amp;quot;Name&amp;quot;: 20,
-	})
-
-	Dbm.TraceOn(&amp;quot;[gorp]&amp;quot;, r.INFO)
-	Dbm.CreateTables()
-
-	//插入一组测试数据
-	demoUser := &amp;amp;models.User{0, &amp;quot;Hobo&amp;quot;}
-	if err := Dbm.Insert(demoUser); err != nil {
-		panic(err)
-	}
-
-}
-
-type GorpController struct {
-	*r.Controller
-	Txn *gorp.Transaction
-}
-
-func (c *GorpController) Begin() r.Result {
-	txn, err := Dbm.Begin()
-	if err != nil {
-		panic(err)
-	}
-	c.Txn = txn
-	return nil
-}
-
-func (c *GorpController) Commit() r.Result {
-	if c.Txn == nil {
-		return nil
-	}
-	if err := c.Txn.Commit(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
-		panic(err)
-	}
-	c.Txn = nil
-	return nil
-}
-
-func (c *GorpController) Rollback() r.Result {
-	if c.Txn == nil {
-		return nil
-	}
-	if err := c.Txn.Rollback(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
-		panic(err)
-	}
-	c.Txn = nil
-	return nil
-}
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;修改controllers/app.go&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;#import添加
-&amp;quot;app_name/app/models&amp;quot;
-
-#包含GorpController
-type App struct {
-	GorpController
-}
-
-#测试查询
-func (c App) Index() revel.Result {
-	greeting := &amp;quot;It works!&amp;quot;
-
-	users, err := c.Txn.Select(models.User{}, `select * from user where Name=&amp;quot;Hobo&amp;quot;`)
-	if len(users) == 0 {
-		greeting = &amp;quot;Null&amp;quot;
-	} else {
-		user := users[0].(*models.User)
-		greeting = user.Name
-	}
-	if err != nil {
-		panic(err)
-	}
-	return c.Render(greeting)
-}
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;修改views/App/Index.html&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#&amp;lt;h1&amp;gt;It works&amp;lt;/h1&amp;gt;
-&amp;lt;h1&amp;gt;/{/{.greeting/}/}&amp;lt;/h1&amp;gt;		#去掉反斜杠
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;运行测试下&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;go run app_name
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
+&lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -197,37 +38,14 @@ func (c App) Index() revel.Result {
       <pubDate>Tue, 20 Aug 2013 16:38:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</guid>
-      
-        <description>&lt;p&gt;环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享&lt;/p&gt;
+      <description>&lt;p&gt;环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享&lt;/p&gt;
 
 &lt;p&gt;Go&lt;br&gt;
 英文&lt;a href=&#34;http://golang.org/doc/install#osx&#34;&gt;http://golang.org/doc/install#osx&lt;/a&gt; （墙）&lt;br&gt;
 中文&lt;a href=&#34;http://zh.golanger.com/doc/install#osx&#34;&gt;http://zh.golanger.com/doc/install#osx&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;Revel&lt;br&gt;
-&lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;Revel配置过程中GOPATH和Revel command的配置可以直接编辑.bash_profile，个人感觉这样更简单直接&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#编辑.bash_profile
-$ vi ~/.bash_profile
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#添加两行
-export GOPATH=gocode_path 			#gocode_path自己的工作目录
-export PATH=$PATH:$GOPATH/bin		#PATH可能原来也有其他的配置，继续追加就行，&amp;quot;:&amp;quot;分割
-
-#编辑完成，重启终端
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;开发工具我还是喜欢Sublime Text 2，LiteIDE也试过，感觉一般&lt;br&gt;
-&lt;a href=&#34;http://www.sublimetext.com/&#34;&gt;http://www.sublimetext.com/&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;再推荐个Mac小工具Go2Shell，安装后添加到Finder的工具栏上，直接在当前目录下启动终端，没用过的同学可以装下，很方便&lt;br&gt;
-&lt;a href=&#34;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&#34;&gt;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&lt;/a&gt;&lt;/p&gt;</description>
-      
+&lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     
   </channel>

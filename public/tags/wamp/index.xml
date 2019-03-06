@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Wed, 05 Mar 2014 18:30:00 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/tags/wamp/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/tags/wamp/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,90 +18,13 @@
       <pubDate>Wed, 05 Mar 2014 18:30:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2014-03-05-wamppei-zhi/</guid>
-      
-        <description>&lt;p&gt;配置ThinkPHP开发环境&lt;/p&gt;
+      <description>&lt;p&gt;配置ThinkPHP开发环境&lt;/p&gt;
 
 &lt;ol&gt;
 &lt;li&gt;开启Rewrite支持.htaccess&lt;/li&gt;
 &lt;li&gt;自定义工程路径&lt;/li&gt;
 &lt;li&gt;自定义本地域名访问&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;WAMP安装
-&lt;a href=&#34;http://www.wampserver.com/en/#download-wrapper&#34;&gt;http://www.wampserver.com/en/#download-wrapper&lt;/a&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#编辑wamp/bin/apache/Apache2.x.x/conf/httpd.conf
-#开启rewrite，支持.htaccess
-#LoadModule rewrite_module modules/mod_rewrite.so去掉注释
-LoadModule rewrite_module modules/mod_rewrite.so
-
-#开启httpd-vhosts，自定义域名和工程路径
-#Include conf/extra/httpd-vhosts.conf去掉注释
-Include conf/extra/httpd-vhosts.conf
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;自定义本地域名和工程路径&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#编辑wamp/bin/apache/Apache2.x.x/conf/extra/httpd-vhosts.conf
-#自定义工程路径
-#d:projectpath工程路径
-#mylocalhost.com自定义域名
-#注意AllowOverride 是All，与wamp主界面不同
-#可以定义其他端口
-&amp;lt;VirtualHost *:80&amp;gt;  
-  DocumentRoot d:projectpath 
-  ServerName myhost.com 
-  &amp;lt;Directory &amp;quot;d:projectpath&amp;quot;&amp;gt; 
-      Options Indexes FollowSymLinks 
-      AllowOverride All 
-      Order allow,deny 
-      Allow from all 
-  &amp;lt;/Directory&amp;gt; 
-&amp;lt;/VirtualHost&amp;gt;
-
-#添加wamp主界面，假设wamp安装在D盘
-&amp;lt;VirtualHost *:80&amp;gt;  
-  DocumentRoot d:wamp/www 
-  ServerName wamp.com 
-  &amp;lt;Directory &amp;quot;d:wamp/www&amp;quot;&amp;gt; 
-      Options Indexes FollowSymLinks 
-      AllowOverride None 
-      Order allow,deny 
-      Allow from all 
-  &amp;lt;/Directory&amp;gt; 
-&amp;lt;/VirtualHost&amp;gt;
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;去掉URL中的index.php&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#.htaccess
-&amp;lt;IfModule mod_rewrite.c&amp;gt;
-RewriteEngine on
-RewriteCond %{SCRIPT_FILENAME} !-f
-RewriteCond %{SCRIPT_FILENAME} !-d
-RewriteRule ^(.*)$ index.php/$1 [QAS,PT,L]
-&amp;lt;/IfModule&amp;gt;
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code&gt;#修改系统hosts
-127.0.0.1 	myhost.com
-127.0.0.1 	wamp.com
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;重启Apache&lt;/p&gt;
-
-&lt;p&gt;查看成果吧&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;myhost.com
-wamp.com
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
+&lt;/ol&gt;</description>
     </item>
     
   </channel>

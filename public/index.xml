@@ -51,8 +51,6 @@
 
 &lt;p&gt;研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。&lt;/p&gt;
 
-&lt;p&gt;&lt;/p&gt;
-
 &lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
 
 &lt;p&gt;结合&lt;a href=&#34;https://github.com/hb-go/micro-mesh&#34;&gt;micro-mesh&lt;/a&gt;的实践场景，需要在&lt;code&gt;ingressgateway&lt;/code&gt;与&lt;code&gt;API service&lt;/code&gt;间加入认证&amp;amp;鉴权(JWT&amp;amp;RBAC)，自然考虑Istio提供的&lt;a href=&#34;https://istio.io/zh/docs/concepts/security/&#34;&gt;安全&lt;/a&gt;方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:&lt;/p&gt;
@@ -179,25 +177,30 @@ make mixc
 
 &lt;p&gt;在&lt;code&gt;$GOPATH/out/darwin_amd64/release/&lt;/code&gt;生成&lt;code&gt;mixs&lt;/code&gt;、&lt;code&gt;mixc&lt;/code&gt;&lt;/p&gt;
 
-&lt;h3 id=&#34;4-构建auth-adapter项目-optional&#34;&gt;4.构建Auth adapter项目(optional)&lt;/h3&gt;
+&lt;h3 id=&#34;4-构建auth-adapter项目&#34;&gt;4.构建Auth adapter项目&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# copy auth adapter example
 cp {micro-mesh path}/examples/adapter/auth mixer/adapter/auth
 
 cd mixer/adapter/auth
+&lt;/code&gt;&lt;/pre&gt;
 
-# 可以删除`config`目录除`config.proto`外的其他文件，看执行go generate后的结果
-go generate ./...
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Optional&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;可以删除&lt;code&gt;config&lt;/code&gt;目录除&lt;code&gt;config.proto&lt;/code&gt;外的其他文件，看执行go generate后的结果&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;go generate ./...
 go build ./...
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;code&gt;go generate&lt;/code&gt;根据&lt;code&gt;config/config.proto&lt;/code&gt;以及&lt;code&gt;auth.go&lt;/code&gt;的注释自动生成&lt;code&gt;config&lt;/code&gt;目录下的其他文件:&lt;/p&gt;
 
 &lt;ul&gt;
+&lt;li&gt;adapter.auth.config.pb.html&lt;/li&gt;
+&lt;li&gt;auth-adapter.yaml&lt;/li&gt;
 &lt;li&gt;config.pb.go&lt;/li&gt;
 &lt;li&gt;config.proto_descriptor&lt;/li&gt;
-&lt;li&gt;auth-adapter.yaml&lt;/li&gt;
-&lt;li&gt;adapter.auth.config.pb.html&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;根据&lt;code&gt;auth.go&lt;/code&gt;的以下注释，&lt;code&gt;mixer_codegen.sh&lt;/code&gt;使用&lt;code&gt;authorization&lt;/code&gt;模板生成&lt;code&gt;name&lt;/code&gt;为&lt;code&gt;auth-adapter&lt;/code&gt;的适配器&lt;/p&gt;
@@ -207,6 +210,7 @@ go build ./...
 // names (metric in this case), and whether it is session or no-session based.
 //go:generate $GOPATH/src/istio.io/istio/bin/mixer_codegen.sh -a mixer/adapter/auth/config/config.proto -x &amp;quot;-s=false -n auth-adapter -t authorization&amp;quot;
 &lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
 
 &lt;h3 id=&#34;5-本地测试&#34;&gt;5.本地测试&lt;/h3&gt;
 
@@ -304,8 +308,6 @@ curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-t
       <guid>http://hbchen.com/post/2019-01-08-go-micro%E5%8A%A0%E5%85%A5istio%E6%9C%8D%E5%8A%A1%E7%BD%91%E6%A0%BC/</guid>
       
         <description>&lt;p&gt;将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp;amp; client插件，去掉在istio中不需要的组件依赖。&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro-istio.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
 
@@ -453,8 +455,6 @@ spec:
 &lt;li&gt;Spark &lt;code&gt;2.3.2&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;Elasticsearch &lt;code&gt;6.3.2&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
-
-&lt;p&gt;&lt;/p&gt;
 
 &lt;h4 id=&#34;1-环境准备&#34;&gt;1.环境准备&lt;/h4&gt;
 
@@ -613,8 +613,6 @@ artifact /{elasticsearch-hadoop-path}/elasticsearch-hadoop-6.3.2/dist/elasticsea
 
 &lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;/p&gt;
-
 &lt;p&gt;主要有以下组件构成:&lt;/p&gt;
 
 &lt;ul&gt;
@@ -715,8 +713,6 @@ artifact /{elasticsearch-hadoop-path}/elasticsearch-hadoop-6.3.2/dist/elasticsea
 &lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;yum install vsftp
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;&lt;/p&gt;
-
 &lt;p&gt;配置&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#/etc/vsftpd/vsftpd.conf
@@ -759,8 +755,6 @@ $ echo Hobo &amp;gt;&amp;gt; /etc/vsftpd/user_list
 
 &lt;p&gt;Gist
 &lt;a href=&#34;https://gist.github.com/Hobo86/effd4b45b50f576bf4d1&#34;&gt;https://gist.github.com/Hobo86/effd4b45b50f576bf4d1&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;#脚本属性设为可执行
 $ chmod +x mysql_backup.sh
@@ -882,8 +876,6 @@ echo &amp;quot;-------------------------------------------&amp;quot;&amp;gt;&amp
 &lt;p&gt;Gist
 &lt;/br&gt;&lt;a href=&#34;https://gist.github.com/icyleaf/566767&#34;&gt;https://gist.github.com/icyleaf/566767&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;/p&gt;
-
 &lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ vi post-receive
 
 #!/bin/sh
@@ -972,8 +964,6 @@ vi /usr/local/etc/mongod.conf
 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;&lt;/p&gt;
-
 &lt;p&gt;启动配置&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;#为了方便使用配置.bash_profile
@@ -1039,8 +1029,6 @@ extension=&amp;quot;/usr/local/Cellar/php54-mongo/1.4.5/mongo.so&amp;quot;
 &#39;BAE_REDIS_DBNAME&#39; =&amp;gt;	&#39;XXX&#39;,
 
 &lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;可以选择将Redis是否设为默认缓存，如果不是，使用时注意切换&lt;/p&gt;
 
@@ -1388,8 +1376,6 @@ class CacheBae extends Cache {
 &lt;li&gt;自定义本地域名访问&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;p&gt;&lt;/p&gt;
-
 &lt;p&gt;WAMP安装
 &lt;a href=&#34;http://www.wampserver.com/en/#download-wrapper&#34;&gt;http://www.wampserver.com/en/#download-wrapper&lt;/a&gt;&lt;/p&gt;
 
@@ -1480,8 +1466,6 @@ wamp.com
 #./tuning-primer.sh
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;&lt;/p&gt;
-
 &lt;p&gt;优化工具Mysqltuner&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;安装：
@@ -1509,8 +1493,6 @@ wamp.com
 #cat access.log |grep &amp;quot;200&amp;quot; | awk &#39;{print $7}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
 #vi stat.log
 &lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;指定String统计&lt;/p&gt;
 
@@ -1547,8 +1529,6 @@ wamp.com
 
 &lt;pre&gt;&lt;code&gt;#yum install subversion
 &lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;/p&gt;
 
 &lt;h4 id=&#34;3-建立版本库&#34;&gt;3.建立版本库&lt;/h4&gt;
 
@@ -1636,8 +1616,6 @@ svn add libMobClickLibrary.a
 
 &lt;pre&gt;&lt;code&gt;quit/exit
 &lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;/p&gt;
 
 &lt;h4 id=&#34;查看数据库&#34;&gt;查看数据库&lt;/h4&gt;
 
@@ -1752,8 +1730,6 @@ go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;配置conf/app.conf&lt;/p&gt;
 
@@ -1927,8 +1903,6 @@ func (c App) Index() revel.Result {
 
 &lt;p&gt;Revel&lt;br&gt;
 &lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;Revel配置过程中GOPATH和Revel command的配置可以直接编辑.bash_profile，个人感觉这样更简单直接&lt;/p&gt;
 

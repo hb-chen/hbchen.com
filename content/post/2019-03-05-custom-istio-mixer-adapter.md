@@ -14,7 +14,7 @@ tags: [
 
 > 快速开始:[micro-mesh/examples/adapter/auth](https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth)源码传送门
 
-研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。
+研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。
 
 <!--more-->
 
@@ -118,24 +118,30 @@ make mixc
 ```
 在`$GOPATH/out/darwin_amd64/release/`生成`mixs`、`mixc`
 
-### 4.构建Auth adapter项目(optional)
+### 4.构建Auth adapter项目
 ```bash
 # copy auth adapter example
 cp {micro-mesh path}/examples/adapter/auth mixer/adapter/auth
 
 cd mixer/adapter/auth
+```
 
-# 可以删除`config`目录除`config.proto`外的其他文件，看执行go generate后的结果
+>
+**Optional**
+
+> 可以删除`config`目录除`config.proto`外的其他文件，看执行go generate后的结果
+```bash
 go generate ./...
 go build ./...
 ```
 `go generate`根据`config/config.proto`以及`auth.go`的注释自动生成`config`目录下的其他文件:
-
+> 
+- adapter.auth.config.pb.html
+- auth-adapter.yaml
 - config.pb.go
 - config.proto_descriptor
-- auth-adapter.yaml
-- adapter.auth.config.pb.html
 
+>
 根据`auth.go`的以下注释，`mixer_codegen.sh`使用`authorization`模板生成`name`为`auth-adapter`的适配器
 ```go
 // nolint:lll

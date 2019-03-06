@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Tue, 15 Apr 2014 12:09:00 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/tags/gitolite/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/tags/gitolite/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,12 +18,7 @@
       <pubDate>Tue, 15 Apr 2014 12:09:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2014-04-15-redmine-plugins/</guid>
-      
-        <description>&lt;p&gt;Git版本库工具-&lt;a href=&#34;https://github.com/CtrlC-Root/redmine-gitolite/&#34;&gt;Gitolite&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;知识积累工具-&lt;a href=&#34;https://github.com/alexbevi/redmine_knowledgebase/&#34;&gt;Knowledgebase&lt;/a&gt;&lt;/p&gt;
-</description>
-      
+      <description>Git版本库工具-Gitolite 知识积累工具-Knowledgebase</description>
     </item>
     
   </channel>

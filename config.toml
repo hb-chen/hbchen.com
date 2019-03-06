@@ -8,7 +8,7 @@ theme = "jane"
 #    archives = "/:year/:month/:day/:filename/"
 
 # language support # en / zh-cn / other...
-defaultContentLanguage = "zh-cn"
+defaultContentLanguage = "en"
 [Languages.en]
   languageCode = "en"
 

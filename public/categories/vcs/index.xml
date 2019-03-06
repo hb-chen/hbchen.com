@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Fri, 17 Oct 2014 13:29:00 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/categories/vcs/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/categories/vcs/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,67 +18,10 @@
       <pubDate>Fri, 17 Oct 2014 13:29:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</guid>
-      
-        <description>&lt;p&gt;Git push后自动更新项目部署，&amp;rdquo;[deploy]&amp;ldquo;部署的分支为master。&lt;/p&gt;
+      <description>&lt;p&gt;Git push后自动更新项目部署，&amp;rdquo;[deploy]&amp;ldquo;部署的分支为master。&lt;/p&gt;
 
 &lt;p&gt;Gist
-&lt;/br&gt;&lt;a href=&#34;https://gist.github.com/icyleaf/566767&#34;&gt;https://gist.github.com/icyleaf/566767&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ vi post-receive
-
-#!/bin/sh
-#
-# git autodeploy script when it matches the string &amp;quot;[deploy]&amp;quot;
-#
-# @author    icyleaf &amp;lt;icyleaf.cn@gmail.com&amp;gt;
-# @link      http://icyleaf.com
-# @version   0.1
-#
-# Usage:
-#       1. put this into the post-receive hook file itself below
-#       2. `chmod +x post-recive` 
-#       3. Done!
- 
-# Check the remote git repository whether it is bare
-IS_BARE=$(git rev-parse --is-bare-repository)
-if [ -z &amp;quot;$IS_BARE&amp;quot; ]; then
-	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: IS_NOT_BARE&amp;quot;
-	exit 1
-fi
- 
-# Get the latest commit subject
-SUBJECT=$(git log -1 --pretty=format:&amp;quot;%s&amp;quot;)
- 
-# Deploy the HEAD sources to publish
-IS_PULL=$(echo &amp;quot;$SUBJECT&amp;quot; | grep &amp;quot;\[deploy\]&amp;quot;)
-if [ -z &amp;quot;$IS_PULL&amp;quot; ]; then
-	echo &amp;gt;&amp;amp;2 &amp;quot;tips: post-receive: IS_NOT_PULL&amp;quot;
-	exit 1
-fi
- 
-# Check the deploy dir whether it exists
-DEPLOY_DIR=/home/icyleaf/php/icyleaf/
-if [ ! -d $DEPLOY_DIR ] ; then
-	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: DEPLOY_DIR_NOT_EXIST: \&amp;quot;$DEPLOY_DIR\&amp;quot;&amp;quot;
-	exit 1
-fi
- 
-# Check the deploy dir whether it is git repository
-#
-#IS_GIT=$(git rev-parse --git-dir 2&amp;gt;/dev/null)
-#if [ -z &amp;quot;$IS_GIT&amp;quot; ]; then
-#	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: IS_NOT_GIT&amp;quot;
-#	exit 1
-#fi
- 
-# Goto the deploy dir and pull the latest sources
-cd $DEPLOY_DIR
-env -i git reset --hard
-env -i git pull
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
+&lt;/br&gt;&lt;a href=&#34;https://gist.github.com/icyleaf/566767&#34;&gt;https://gist.github.com/icyleaf/566767&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -87,86 +30,14 @@ env -i git pull
       <pubDate>Thu, 07 Nov 2013 18:15:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2013-11-07-svnshi-yong/</guid>
-      
-        <description>&lt;h4 id=&#34;1-系统&#34;&gt;1.系统&lt;/h4&gt;
+      <description>&lt;h4 id=&#34;1-系统&#34;&gt;1.系统&lt;/h4&gt;
 
 &lt;p&gt;Centos 6.4&lt;/p&gt;
 
 &lt;h4 id=&#34;2-安装svn&#34;&gt;2.安装svn&lt;/h4&gt;
 
 &lt;pre&gt;&lt;code&gt;#yum install subversion
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;h4 id=&#34;3-建立版本库&#34;&gt;3.建立版本库&lt;/h4&gt;
-
-&lt;pre&gt;&lt;code&gt;#mkdir /mnt/svndata
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;启动服务&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#svnserve -d -r /mnt/svndata
-#svnadmin create /mnt/svndata/svn
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;4-修改配置&#34;&gt;4.修改配置&lt;/h4&gt;
-
-&lt;pre&gt;&lt;code&gt;#cd /mnt/svndata/svn/conf
-#vi svnserve.conf
-anon-access=none
-auth-access=write
-password-db=passwd
-
-#vi passwd
-[users]
-hobo=123456
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;5-实现svn与web同步&#34;&gt;5.实现SVN与WEB同步&lt;/h4&gt;
-
-&lt;p&gt;1)checkout一个test项目&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#svn co svn://localhost/svn /mnt/www/webroot/test
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;2)修改权限为WEB用户&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#chown -R apache:apache /mnt/www/webroot/test
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;3)建立同步脚本&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#cd /mnt/svndata/svn/hooks/
-#cp post-commit.tmpl post-commit
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;4)编辑post-commit，添加同步脚本&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#vi post-commit
-export LANG=en_US.UTF-8
-SVN=/usr/bin/svn
-WEB_TEST=/mnt/www/webroot/test
-$SVN update $WEB_TEST –username hobo –password 123456
-chown -R apache:apache $WEB
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;5)增加脚本执行权限&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#chmod +x post-commit
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Mac下Versions中.a包无法上传问题&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;cd filepath
-svn add libMobClickLibrary.a 
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;删除版本控制 / 删除多级.svn文件&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#find . -type d -name &amp;quot;.svn&amp;quot;|xargs rm -rf;
 &lt;/code&gt;&lt;/pre&gt;</description>
-      
     </item>
     
   </channel>

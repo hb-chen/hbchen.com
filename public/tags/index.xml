@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Thu, 06 Mar 2014 19:00:00 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/tags/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/tags/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,9 +18,7 @@
       <pubDate>Thu, 06 Mar 2014 19:00:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/bae/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -29,9 +27,7 @@
       <pubDate>Thu, 06 Mar 2014 19:00:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/cache/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -40,9 +36,7 @@
       <pubDate>Wed, 24 Oct 2018 16:23:46 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/elasticsearch/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -51,9 +45,7 @@
       <pubDate>Fri, 17 Oct 2014 13:29:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/git/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -62,9 +54,7 @@
       <pubDate>Tue, 15 Apr 2014 12:09:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/gitolite/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -73,9 +63,7 @@
       <pubDate>Tue, 27 Mar 2018 19:09:32 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/go/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -84,9 +72,7 @@
       <pubDate>Thu, 21 Feb 2019 16:59:37 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/go-micro/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -95,9 +81,7 @@
       <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/goaccess/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -106,9 +90,7 @@
       <pubDate>Tue, 05 Mar 2019 20:44:07 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/istio/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -117,9 +99,7 @@
       <pubDate>Tue, 11 Mar 2014 18:00:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/mongodb/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -128,9 +108,7 @@
       <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/mysql/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -139,9 +117,7 @@
       <pubDate>Thu, 06 Mar 2014 19:00:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/redis/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -150,9 +126,7 @@
       <pubDate>Tue, 15 Apr 2014 12:09:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/redmine/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -161,9 +135,7 @@
       <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/revel/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -172,9 +144,7 @@
       <pubDate>Tue, 11 Mar 2014 18:00:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/rockmongo/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -183,9 +153,7 @@
       <pubDate>Tue, 05 Mar 2019 20:44:07 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/service-mesh/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -194,9 +162,7 @@
       <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/shell/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -205,9 +171,7 @@
       <pubDate>Wed, 24 Oct 2018 16:23:46 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/spark/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -216,9 +180,7 @@
       <pubDate>Thu, 07 Nov 2013 18:15:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/svn/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
     <item>
@@ -227,9 +189,7 @@
       <pubDate>Thu, 06 Mar 2014 19:00:00 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/thinkphp/</guid>
-      
-        <description></description>
-      
+      <description></description>
     </item>
     
   </channel>

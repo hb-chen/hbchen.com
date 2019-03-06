@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Thu, 07 Nov 2013 18:36:00 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/tags/shell/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/tags/shell/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,8 +18,7 @@
       <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</guid>
-      
-        <description>&lt;p&gt;对Nginx或其他日志进行简单的统计分析&lt;/p&gt;
+      <description>&lt;p&gt;对Nginx或其他日志进行简单的统计分析&lt;/p&gt;
 
 &lt;p&gt;Shell
 对某一列进行统计，可以分析Status Code,URL等&lt;/p&gt;
@@ -28,28 +27,7 @@
 或
 #cat access.log |grep &amp;quot;200&amp;quot; | awk &#39;{print $7}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
 #vi stat.log
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;指定String统计&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#cat access.log|grep &amp;quot;200&amp;quot;|wc -l 
-#cat access.log|grep &amp;quot;www.localhost.com&amp;quot;|wc -l
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Goaccess工具
-&lt;a href=&#34;http://goaccess.io/&#34;&gt;http://goaccess.io/&lt;/a&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#goaccess -f access.log
-#goaccess -f access.log -a -s -b
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Goaccess分析压缩日志&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#zcat access.log-20130123.gz | goaccess
 &lt;/code&gt;&lt;/pre&gt;</description>
-      
     </item>
     
   </channel>

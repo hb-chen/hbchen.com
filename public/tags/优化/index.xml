@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Thu, 07 Nov 2013 18:36:00 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/tags/%E4%BC%98%E5%8C%96/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/tags/%E4%BC%98%E5%8C%96/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,25 +18,13 @@
       <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2013-11-07-mysql-you-hua-gong-ju/</guid>
-      
-        <description>&lt;p&gt;脚本优化tuning-primer.sh&lt;/p&gt;
+      <description>&lt;p&gt;脚本优化tuning-primer.sh&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;#cd /etc/   (my.conf所在目录)
 #wget http://www.day32.com/MySQL/tuning-primer.sh
 #chmod +x tuning-primer.sh
 #./tuning-primer.sh
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;优化工具Mysqltuner&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;安装：
-#yum install -y mysqltuner
-运行：
-#mysqltuner
 &lt;/code&gt;&lt;/pre&gt;</description>
-      
     </item>
     
   </channel>

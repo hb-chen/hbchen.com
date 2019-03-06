@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Wed, 24 Oct 2018 16:23:46 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/tags/spark/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/tags/spark/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,159 +18,13 @@
       <pubDate>Wed, 24 Oct 2018 16:23:46 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2018-10-24-spark-elasticsearch-recommender/</guid>
-      
-        <description>&lt;p&gt;Github &lt;a href=&#34;https://github.com/hb-chen/spark-elasticsearch-recommender&#34;&gt;hb-chen/spark-elasticsearch-recommender&lt;/a&gt;&lt;/p&gt;
+      <description>&lt;p&gt;Github &lt;a href=&#34;https://github.com/hb-chen/spark-elasticsearch-recommender&#34;&gt;hb-chen/spark-elasticsearch-recommender&lt;/a&gt;&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt;Zeppelin &lt;code&gt;0.8.0&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;Spark &lt;code&gt;2.3.2&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;Elasticsearch &lt;code&gt;6.3.2&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;h4 id=&#34;1-环境准备&#34;&gt;1.环境准备&lt;/h4&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Mac OSX&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h5 id=&#34;zeppeline&#34;&gt;Zeppeline&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# http://www.apache.org/dyn/closer.cgi/zeppelin/zeppelin-0.8.0/zeppelin-0.8.0-bin-netinst.tgz
-$ wget http://mirrors.shu.edu.cn/apache/zeppelin/zeppelin-0.8.0/zeppelin-0.8.0-bin-netinst.tgz
-$ tar -zxf zeppelin-0.8.0-bin-netinst.tgz
-$ cd zeppelin-0.8.0-bin-netinst
-
-# 安装必要interpreter
-$ ./bin/install-interpreter.sh --name md,elasticsearch
-$ ./bin/zeppelin-daemon.sh start
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;spark&#34;&gt;Spark&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# http://spark.apache.org/downloads.html
-$ wget https://www.apache.org/dyn/closer.lua/spark/spark-2.3.2/spark-2.3.2-bin-hadoop2.7.tgz
-$ tar -zxf spark-2.3.2-bin-hadoop2.7.tgz
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;elasticsearch&#34;&gt;Elasticsearch&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# https://www.elastic.co/downloads/past-releases
-# Elasticsearch + 6.3.2
-$ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.3.2.zip
-$ unzip elasticsearch-6.3.2.zip
-
-# ES-Hadoop + 6.3.2
-$ wget https://artifacts.elastic.co/downloads/elasticsearch-hadoop/elasticsearch-hadoop-6.3.2.zip
-$ unzip elasticsearch-hadoop-6.3.2.zip
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h6 id=&#34;elasticsearch-矢量评分插件&#34;&gt;Elasticsearch 矢量评分插件&lt;/h6&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/muhleder/elasticsearch-vector-scoring&#34;&gt;muhleder/elasticsearch-vector-scoring&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 修改build.gradle，这样不必Checkout Elasticsearch 
-# https://github.com/muhleder/elasticsearch-vector-scoring/issues/1#issuecomment-415267767
-buildscript {
-  repositories {
-    jcenter()
-    mavenLocal()
-  }
-  dependencies {
-    classpath &amp;quot;org.elasticsearch.gradle:build-tools:6.3.2&amp;quot;
-  }
-}
-
-apply plugin: &#39;idea&#39;
-apply plugin: &#39;java&#39;
-apply plugin: &#39;elasticsearch.esplugin&#39;
-
-licenseFile = rootProject.file(&#39;LICENSE&#39;)
-noticeFile = rootProject.file(&#39;NOTICE&#39;)
-
-esplugin {
-  name &#39;elasticsearch-vector-scoring&#39;
-  description &#39;Provides a fast vector multiplication script.&#39;
-  classname &#39;com.gosololaw.elasticsearch.VectorScoringPlugin&#39;
-}
-
-dependencies {
-  compile &amp;quot;org.elasticsearch:elasticsearch:6.3.2&amp;quot;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 插件安装
-$ ./bin/elasticsearch-plugin install {file:///path/to/plugin.zip}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;python依赖库&#34;&gt;Python依赖库&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ pip install elasticsearch
-$ pip install numpy
-$ pip install tmdbsimple # 忽略，暂时未使用
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;movielens数据集-https-grouplens-org-datasets-movielens-下载&#34;&gt;&lt;a href=&#34;https://grouplens.org/datasets/movielens/&#34;&gt;Movielens数据集&lt;/a&gt;下载&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ cd data # 与zeppelin-0.8.0-bin-netinst同Path，note中配置PATH_TO_DATA = &amp;quot;../data/ml-latest-small&amp;quot;
-$ wget http://files.grouplens.org/datasets/movielens/ml-latest-small.zip
-$ unzip ml-latest-small.zip
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;2-启动服务&#34;&gt;2.启动服务&lt;/h4&gt;
-
-&lt;h5 id=&#34;elasticsearch启动&#34;&gt;Elasticsearch启动&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ ./bin/elasticsearch
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;zeppelin配置及启动&#34;&gt;Zeppelin配置及启动&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ cp conf/shiro.ini.template conf/shiro.ini
-$ vim conf/shiro.ini
-# 管理员账户密码
-[users]
-admin = 123456, admin
-
-$ cp conf/zeppelin-env.sh.template conf/zeppelin-env.sh
-$ vim conf/zeppelin-env.sh
-# Spark配置
-export SPARK_HOME=/{apache-spark-path}/spark-2.3.2-bin-hadoop2.7
-export SPARK_SUBMIT_OPTIONS=&amp;quot;--driver-memory 2G&amp;quot;
-
-$ cp conf/zeppelin-site.xml.template conf/zeppelin-site.xml
-$ vim conf/zeppelin-site.xml
-# 根据需要可以修改zeppelin.server.port等配置
-
-# 启动
-$ ./bin/zeppelin-daemon.sh start
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;3-notebook&#34;&gt;3.Notebook&lt;/h4&gt;
-
-&lt;p&gt;&lt;a href=&#34;http://localhost:8080&#34;&gt;http://localhost:8080&lt;/a&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# Create new interpreter
-# md
-
-# elasticsearch
-elasticsearch.client.type http
-elasticsearch.port	9200
-
-# spark
-# 添加Dependencies
-artifact /{elasticsearch-hadoop-path}/elasticsearch-hadoop-6.3.2/dist/elasticsearch-spark-20_2.11-6.3.2.jar
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;参考&#34;&gt;参考&lt;/h4&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/IBM/elasticsearch-spark-recommender&#34;&gt;使用 Apache Spark 和 Elasticsearch 构建一个推荐系统&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;</description>
-      
     </item>
     
   </channel>

@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Thu, 21 Feb 2019 16:59:37 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,141 +18,7 @@
       <pubDate>Thu, 21 Feb 2019 16:59:37 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2019-01-08-go-micro%E5%8A%A0%E5%85%A5istio%E6%9C%8D%E5%8A%A1%E7%BD%91%E6%A0%BC/</guid>
-      
-        <description>&lt;p&gt;将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp;amp; client插件，去掉在istio中不需要的组件依赖。&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro-istio.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&#34;https://github.com/hb-go/micro-plugins&#34;&gt;hb-go/micro-plugins&lt;/a&gt;实现了gRPC、http的Istio版本Plugin，下面介绍如何使用。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;完整示例参考&lt;a href=&#34;https://github.com/hb-go/micro/tree/master/istio&#34;&gt;hb-go/micro/istio&lt;/a&gt;，示例包括http、gRPC&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h5 id=&#34;命令行参数&#34;&gt;命令行参数&lt;/h5&gt;
-
-&lt;p&gt;方便服务运行时指定端口，在命令行获取服务server、client端口配置，参数根据具体情况自行设计&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;在服务网格中我倾向统一上下游服务端口，避免不必要的配置以及因此引发的冲突问题&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Client端服务地址&lt;code&gt;CallOptions.Address&lt;/code&gt;解析规则：
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;:&lt;/code&gt;开头，将&lt;code&gt;service.Name&lt;/code&gt;中&lt;code&gt;.&lt;/code&gt;替换为&lt;code&gt;-&lt;/code&gt;，加&lt;code&gt;CallOptions.Address&lt;/code&gt;，如&lt;code&gt;go.micro.api.sample&lt;/code&gt; &lt;code&gt;:9080&lt;/code&gt; =&amp;gt; &lt;code&gt;go-micro-api-sample:9080&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;非&lt;code&gt;:&lt;/code&gt;开头，固定地址&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var (
-	serverAddr string
-	callAddr   string
-	cmdHelp    bool
-)
-
-func init() {
-	flag.StringVar(&amp;amp;serverAddr, &amp;quot;server_address&amp;quot;, &amp;quot;0.0.0.0:9080&amp;quot;, &amp;quot;server address.&amp;quot;)
-	flag.StringVar(&amp;amp;callAddr, &amp;quot;client_call_address&amp;quot;, &amp;quot;:9080&amp;quot;, &amp;quot;client call options address.&amp;quot;)
-	flag.Parse()
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;自定义server-client插件-创建服务&#34;&gt;自定义server、client插件，创建服务&lt;/h5&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;由于micro框架对命令行的解析问题，创建服务时需要增加&lt;code&gt;micro.Flags(...)&lt;/code&gt;，兼容自定义参数，如:&lt;code&gt;client_call_address&lt;/code&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;import (
-	httpClient &amp;quot;github.com/hb-go/micro-plugins/client/istio_http&amp;quot;
-	httpServer &amp;quot;github.com/hb-go/micro-plugins/server/istio_http&amp;quot;
-)
-
-func main() {
-	c := httpClient.NewClient(
-		client.ContentType(&amp;quot;application/json&amp;quot;),
-		func(o *client.Options) {
-			o.CallOptions.Address = callAddr
-		},
-	)
-	s := httpServer.NewApiServer(
-		server.Address(serverAddr),
-	)
-
-	// New Service
-	service := micro.NewService(
-		micro.Name(&amp;quot;go.micro.api.sample&amp;quot;),
-		micro.Version(&amp;quot;latest&amp;quot;),
-		micro.Registry(noop.NewRegistry()),
-		micro.Client(c),
-		micro.Server(s),
-
-		// 兼容micro cmd parse
-		micro.Flags(cli.StringFlag{
-			Name:   &amp;quot;client_call_address&amp;quot;,
-			EnvVar: &amp;quot;MICRO_CLIENT_CALL_ADDRESS&amp;quot;,
-			Usage:  &amp;quot; Invalid!!!&amp;quot;,
-		}),
-	)
-
-	service.Options().Cmd.Init()
-	
-	// ……
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;服务部署-yaml&#34;&gt;服务部署.yaml&lt;/h5&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;其它Istio相关.yaml参考完整示例&lt;a href=&#34;https://github.com/hb-go/micro/tree/master/istio/k8s&#34;&gt;hb-go/micro/istio/k8s&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;######################################################################################
-# API service
-######################################################################################
-apiVersion: v1
-kind: Service
-metadata:
-  name: go-micro-api-sample
-  labels:
-    app: go-micro-api-sample
-spec:
-  ports:
-  - port: 9080
-    name: http
-  selector:
-    app: go-micro-api-sample
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: go-micro-api-sample-v1
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: go-micro-api-sample
-        version: v1
-    spec:
-      containers:
-      - name: go-micro-api-sample
-        command: [
-          &amp;quot;/sample&amp;quot;,
-          &amp;quot;-server_address=0.0.0.0:9080&amp;quot;,
-          &amp;quot;-client_call_address=:9080&amp;quot;,
-        ]
-        image: hbchen/go-micro-istio-api-sample:v0.0.5
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 9080
----
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
+      <description>&lt;p&gt;将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp;amp; client插件，去掉在istio中不需要的组件依赖。&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -161,101 +27,11 @@ spec:
       <pubDate>Tue, 27 Mar 2018 19:09:32 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/</guid>
-      
-        <description>&lt;h2 id=&#34;go-micro-https-github-com-micro-go-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-micro&#34;&gt;go-micro&lt;/a&gt;&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;go-micro-https-github-com-micro-go-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-micro&#34;&gt;go-micro&lt;/a&gt;&lt;/h2&gt;
 
 &lt;p&gt;go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;主要有以下组件构成:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;Registry&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;提供一套服务注册、发现、注销、监测机制，服务注册中心支持consul、etcd2/3、zookeeper、gossip、k8s、eureka等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Selector&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;选择器提供了负载均衡，可以通过过滤方法对微服务进行过滤，并通过不同路由算法选择微服务，以及缓存等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Transport&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;微服务间同步请求/响应通信方式，相对Go标准net包做了更高的抽象，支持更多的传输方式，如http、grpc、tcp、udp、Rabbitmq等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Broker&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;微服务间异步发布/订阅通信方式，更好的处理分布式系统解耦问题，默认使用http方式，生产环境通常会使用消息中间件，如Kafka、RabbitMQ、NSQ等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Codec&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;服务间消息的编解码，支持json、protobuf、bson、msgpack等，与普通编码格式不同都是支持RPC格式&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Server&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;用于启动服务，为服务命名、注册Handler、添加中间件等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Client&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;提供微服务客户端，通过Registry、Selector、Transport、Broker实现以服务名来查找服务、负载均衡、同步通信、异步消息等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&#34;micro-https-github-com-micro-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/micro&#34;&gt;micro&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;Micro的工具包，主要由以下部分构成:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;API&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;API网关提供HTTP服务，并将请求路由到指定的微服务，是Micro的统一入口，可以用作反向代理，或者将HTTP请求转到RPC&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Web&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;为Micro提供一套仪表盘，并可作为Web应用的反向代理，有别于普通API将Web应用作为了Micro的一等公民，其实和API差不多，但同时提供了对socket的支持&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Sidecar&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;通过HTTP的方式实现go-micro全部功能的RPC代理，通过Sidecar可以方便的将其他语言集成到Micro框架中，方便解决解决应用的异构框架问题&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;CLI&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;提供一套命令行工具，可以方便的与Micro服务进行交互，并且可以通过Sidecar代理CLI命令&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Bot&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;通过Bot可以在Micro环境中方便的与Slack、HipChat、XMPP等进行集成，通过消息的方式模仿CLI功能&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&#34;go-plugins-https-github-com-micro-go-plugins&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-plugins&#34;&gt;go-plugins&lt;/a&gt;&lt;/h3&gt;
-
-&lt;p&gt;go-plugins是Micro的插件库，除go-micro相应组件的扩展外，还有其他如Trace、KV存储、监控等&lt;/p&gt;</description>
-      
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;</description>
     </item>
     
   </channel>

@@ -9,7 +9,7 @@
     <copyright>HB Studio</copyright>
     <lastBuildDate>Tue, 27 Mar 2018 19:09:32 +0800</lastBuildDate>
     
-        <atom:link href="http://hbchen.com/categories/go/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/categories/go/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,101 +18,11 @@
       <pubDate>Tue, 27 Mar 2018 19:09:32 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/</guid>
-      
-        <description>&lt;h2 id=&#34;go-micro-https-github-com-micro-go-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-micro&#34;&gt;go-micro&lt;/a&gt;&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;go-micro-https-github-com-micro-go-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-micro&#34;&gt;go-micro&lt;/a&gt;&lt;/h2&gt;
 
 &lt;p&gt;go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;主要有以下组件构成:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;Registry&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;提供一套服务注册、发现、注销、监测机制，服务注册中心支持consul、etcd2/3、zookeeper、gossip、k8s、eureka等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Selector&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;选择器提供了负载均衡，可以通过过滤方法对微服务进行过滤，并通过不同路由算法选择微服务，以及缓存等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Transport&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;微服务间同步请求/响应通信方式，相对Go标准net包做了更高的抽象，支持更多的传输方式，如http、grpc、tcp、udp、Rabbitmq等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Broker&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;微服务间异步发布/订阅通信方式，更好的处理分布式系统解耦问题，默认使用http方式，生产环境通常会使用消息中间件，如Kafka、RabbitMQ、NSQ等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Codec&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;服务间消息的编解码，支持json、protobuf、bson、msgpack等，与普通编码格式不同都是支持RPC格式&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Server&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;用于启动服务，为服务命名、注册Handler、添加中间件等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Client&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;提供微服务客户端，通过Registry、Selector、Transport、Broker实现以服务名来查找服务、负载均衡、同步通信、异步消息等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&#34;micro-https-github-com-micro-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/micro&#34;&gt;micro&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;Micro的工具包，主要由以下部分构成:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;API&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;API网关提供HTTP服务，并将请求路由到指定的微服务，是Micro的统一入口，可以用作反向代理，或者将HTTP请求转到RPC&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Web&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;为Micro提供一套仪表盘，并可作为Web应用的反向代理，有别于普通API将Web应用作为了Micro的一等公民，其实和API差不多，但同时提供了对socket的支持&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Sidecar&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;通过HTTP的方式实现go-micro全部功能的RPC代理，通过Sidecar可以方便的将其他语言集成到Micro框架中，方便解决解决应用的异构框架问题&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;CLI&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;提供一套命令行工具，可以方便的与Micro服务进行交互，并且可以通过Sidecar代理CLI命令&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Bot&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;通过Bot可以在Micro环境中方便的与Slack、HipChat、XMPP等进行集成，通过消息的方式模仿CLI功能&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&#34;go-plugins-https-github-com-micro-go-plugins&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-plugins&#34;&gt;go-plugins&lt;/a&gt;&lt;/h3&gt;
-
-&lt;p&gt;go-plugins是Micro的插件库，除go-micro相应组件的扩展外，还有其他如Trace、KV存储、监控等&lt;/p&gt;</description>
-      
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -121,8 +31,7 @@
       <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/</guid>
-      
-        <description>&lt;p&gt;Revel连接数据库可以参考官方的Booking示例&lt;/p&gt;
+      <description>&lt;p&gt;Revel连接数据库可以参考官方的Booking示例&lt;/p&gt;
 
 &lt;p&gt;除了Revel需要Gorp和MySQL驱动两个库&lt;/p&gt;
 
@@ -133,165 +42,7 @@ go get github.com/coopernurse/gorp
 go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;配置conf/app.conf&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;# DB username:@tcp(yourhost:port)/dbname
-db.import = github.com/Go-SQL-Driver/mysql
-db.driver = mysql
-db.spec   = root:@tcp(localhost:3306)/db_name
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建models/user.go，先只定义几个测试字段&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package models
-
-type User struct {
-	UserId							int
-	Name               	string
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建controllers/init.go&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package controllers
-
-import &amp;quot;github.com/robfig/revel&amp;quot;
-
-func init() {
-	revel.OnAppStart(Init)
-	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
-	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
-	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建controllers/gorp.go&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package controllers
-
-import (
-	&amp;quot;database/sql&amp;quot;
-	&amp;quot;github.com/coopernurse/gorp&amp;quot;
-	_ &amp;quot;github.com/Go-SQL-Driver/mysql&amp;quot;
-	r &amp;quot;github.com/robfig/revel&amp;quot;
-	&amp;quot;github.com/robfig/revel/modules/db/app&amp;quot;
-	&amp;quot;app_name/app/models&amp;quot;
-)
-
-var (
-	Dbm *gorp.DbMap
-)
-
-func Init() {
-	db.Init()
-	//MySQL InnoDB UTF8
-	Dbm = &amp;amp;gorp.DbMap{Db: db.Db, Dialect: gorp.MySQLDialect{&amp;quot;InnoDB&amp;quot;, &amp;quot;UTF8&amp;quot;}}
-
-	setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
-		for col, size := range colSizes {
-			t.ColMap(col).MaxSize = size
-		}
-	}
-
-	//创建一个User测试表
-	t := Dbm.AddTable(models.User{}).SetKeys(true, &amp;quot;UserId&amp;quot;)
-	setColumnSizes(t, map[string]int{
-		&amp;quot;Name&amp;quot;: 20,
-	})
-
-	Dbm.TraceOn(&amp;quot;[gorp]&amp;quot;, r.INFO)
-	Dbm.CreateTables()
-
-	//插入一组测试数据
-	demoUser := &amp;amp;models.User{0, &amp;quot;Hobo&amp;quot;}
-	if err := Dbm.Insert(demoUser); err != nil {
-		panic(err)
-	}
-
-}
-
-type GorpController struct {
-	*r.Controller
-	Txn *gorp.Transaction
-}
-
-func (c *GorpController) Begin() r.Result {
-	txn, err := Dbm.Begin()
-	if err != nil {
-		panic(err)
-	}
-	c.Txn = txn
-	return nil
-}
-
-func (c *GorpController) Commit() r.Result {
-	if c.Txn == nil {
-		return nil
-	}
-	if err := c.Txn.Commit(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
-		panic(err)
-	}
-	c.Txn = nil
-	return nil
-}
-
-func (c *GorpController) Rollback() r.Result {
-	if c.Txn == nil {
-		return nil
-	}
-	if err := c.Txn.Rollback(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
-		panic(err)
-	}
-	c.Txn = nil
-	return nil
-}
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;修改controllers/app.go&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;#import添加
-&amp;quot;app_name/app/models&amp;quot;
-
-#包含GorpController
-type App struct {
-	GorpController
-}
-
-#测试查询
-func (c App) Index() revel.Result {
-	greeting := &amp;quot;It works!&amp;quot;
-
-	users, err := c.Txn.Select(models.User{}, `select * from user where Name=&amp;quot;Hobo&amp;quot;`)
-	if len(users) == 0 {
-		greeting = &amp;quot;Null&amp;quot;
-	} else {
-		user := users[0].(*models.User)
-		greeting = user.Name
-	}
-	if err != nil {
-		panic(err)
-	}
-	return c.Render(greeting)
-}
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;修改views/App/Index.html&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#&amp;lt;h1&amp;gt;It works&amp;lt;/h1&amp;gt;
-&amp;lt;h1&amp;gt;/{/{.greeting/}/}&amp;lt;/h1&amp;gt;		#去掉反斜杠
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;运行测试下&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;go run app_name
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
+&lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -300,37 +51,14 @@ func (c App) Index() revel.Result {
       <pubDate>Tue, 20 Aug 2013 16:38:00 +0800</pubDate>
       
       <guid>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</guid>
-      
-        <description>&lt;p&gt;环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享&lt;/p&gt;
+      <description>&lt;p&gt;环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享&lt;/p&gt;
 
 &lt;p&gt;Go&lt;br&gt;
 英文&lt;a href=&#34;http://golang.org/doc/install#osx&#34;&gt;http://golang.org/doc/install#osx&lt;/a&gt; （墙）&lt;br&gt;
 中文&lt;a href=&#34;http://zh.golanger.com/doc/install#osx&#34;&gt;http://zh.golanger.com/doc/install#osx&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;Revel&lt;br&gt;
-&lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;/p&gt;
-
-&lt;p&gt;Revel配置过程中GOPATH和Revel command的配置可以直接编辑.bash_profile，个人感觉这样更简单直接&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#编辑.bash_profile
-$ vi ~/.bash_profile
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#添加两行
-export GOPATH=gocode_path 			#gocode_path自己的工作目录
-export PATH=$PATH:$GOPATH/bin		#PATH可能原来也有其他的配置，继续追加就行，&amp;quot;:&amp;quot;分割
-
-#编辑完成，重启终端
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;开发工具我还是喜欢Sublime Text 2，LiteIDE也试过，感觉一般&lt;br&gt;
-&lt;a href=&#34;http://www.sublimetext.com/&#34;&gt;http://www.sublimetext.com/&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;再推荐个Mac小工具Go2Shell，安装后添加到Finder的工具栏上，直接在当前目录下启动终端，没用过的同学可以装下，很方便&lt;br&gt;
-&lt;a href=&#34;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&#34;&gt;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&lt;/a&gt;&lt;/p&gt;</description>
-      
+&lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     
   </channel>
