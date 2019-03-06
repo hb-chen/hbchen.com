@@ -20,7 +20,7 @@
 
 <meta name="author" content="Hobo Chen" />
   <meta name="description" content=" 快速开始:micro-mesh/examples/adapter/auth源码传送门
- 研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。
+ 研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。
 " />
 
   <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
@@ -56,7 +56,7 @@
 快速开始:micro-mesh/examples/adapter/auth源码传送门
 
 
-研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。" />
+研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/" /><meta property="article:published_time" content="2019-03-05T20:44:07&#43;08:00"/>
 <meta property="article:modified_time" content="2019-03-05T20:44:07&#43;08:00"/>
@@ -66,12 +66,12 @@
 快速开始:micro-mesh/examples/adapter/auth源码传送门
 
 
-研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。">
+研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。">
 
 
 <meta itemprop="datePublished" content="2019-03-05T20:44:07&#43;08:00" />
 <meta itemprop="dateModified" content="2019-03-05T20:44:07&#43;08:00" />
-<meta itemprop="wordCount" content="2348">
+<meta itemprop="wordCount" content="2352">
 
 
 
@@ -82,7 +82,7 @@
 快速开始:micro-mesh/examples/adapter/auth源码传送门
 
 
-研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。"/>
+研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -162,7 +162,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 2348 words </span>
+        <span class="more-meta"> 2352 words </span>
         <span class="more-meta"> 5 min read </span>
       </div>
     </header>
@@ -176,7 +176,7 @@
 <p>快速开始:<a href="https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth">micro-mesh/examples/adapter/auth</a>源码传送门</p>
 </blockquote>
 
-<p>研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。</p>
+<p>研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。</p>
 
 <h2 id="背景">背景</h2>
 
@@ -270,7 +270,7 @@ Dockerfile                  Docker镜像
 
 <h2 id="步骤">步骤</h2>
 
-<p>开发环境</p>
+<p><strong>开发环境</strong></p>
 
 <blockquote>
 <p>OSX</p>
@@ -376,6 +376,14 @@ docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
 </code></pre>
 
 <h3 id="7-istio环境部署">7.Istio环境部署</h3>
+
+<p><strong>部署环境</strong></p>
+
+<blockquote>
+<p>GKE <strong>1.11.7-gke.4</strong></p>
+
+<p>Istio <strong>1.0.0</strong></p>
+</blockquote>
 
 <pre><code class="language-bash"># 属性、模板
 # attributes.yaml -&gt; istio/mixer/testdata/config/attributes.yaml 
@@ -483,7 +491,7 @@ curl -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;x-custom-token: abc&qu
     id: '2019-03-05 20:44:07 \x2b0800 CST',
     title: '如何自定义Istio Mixer Adapter',
     link: decodeURI(location.href),
-    desc: '\x3cblockquote\x3e\n\x3cp\x3e快速开始:\x3ca href=\x22https:\/\/github.com\/hb-go\/micro-mesh\/tree\/master\/examples\/adapter\/auth\x22\x3emicro-mesh\/examples\/adapter\/auth\x3c\/a\x3e源码传送门\x3c\/p\x3e\n\x3c\/blockquote\x3e\n\n\x3cp\x3e研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。\x3c\/p\x3e',
+    desc: '\x3cblockquote\x3e\n\x3cp\x3e快速开始:\x3ca href=\x22https:\/\/github.com\/hb-go\/micro-mesh\/tree\/master\/examples\/adapter\/auth\x22\x3emicro-mesh\/examples\/adapter\/auth\x3c\/a\x3e源码传送门\x3c\/p\x3e\n\x3c\/blockquote\x3e\n\n\x3cp\x3e研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。\x3c\/p\x3e',
     owner: 'hb-chen',
     repo: 'hbchen.com',
     oauth: {

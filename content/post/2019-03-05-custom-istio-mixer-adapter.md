@@ -87,7 +87,7 @@ Dockerfile                  Docker镜像
 
 步骤
 ---
-开发环境
+**开发环境**
 
 > OSX
 
@@ -185,6 +185,12 @@ docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
 ```
 
 ### 7.Istio环境部署
+**部署环境**
+
+> GKE **1.11.7-gke.4**
+
+> Istio **1.0.0**
+
 ```bash
 # 属性、模板
 # attributes.yaml -> istio/mixer/testdata/config/attributes.yaml 

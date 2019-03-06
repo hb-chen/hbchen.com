@@ -22,7 +22,7 @@
 &lt;p&gt;快速开始:&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth&#34;&gt;micro-mesh/examples/adapter/auth&lt;/a&gt;源码传送门&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。&lt;/p&gt;</description>
+&lt;p&gt;研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。&lt;/p&gt;</description>
     </item>
     
     <item>

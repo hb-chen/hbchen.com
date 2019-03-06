@@ -49,7 +49,7 @@
 &lt;p&gt;快速开始:&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth&#34;&gt;micro-mesh/examples/adapter/auth&lt;/a&gt;源码传送门&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义Adapter的实践分享。&lt;/p&gt;
+&lt;p&gt;研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。&lt;/p&gt;
 
 &lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
 
@@ -143,7 +143,7 @@ Dockerfile                  Docker镜像
 
 &lt;h2 id=&#34;步骤&#34;&gt;步骤&lt;/h2&gt;
 
-&lt;p&gt;开发环境&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;开发环境&lt;/strong&gt;&lt;/p&gt;
 
 &lt;blockquote&gt;
 &lt;p&gt;OSX&lt;/p&gt;
@@ -249,6 +249,14 @@ docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;h3 id=&#34;7-istio环境部署&#34;&gt;7.Istio环境部署&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;部署环境&lt;/strong&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;GKE &lt;strong&gt;1.11.7-gke.4&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Istio &lt;strong&gt;1.0.0&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 属性、模板
 # attributes.yaml -&amp;gt; istio/mixer/testdata/config/attributes.yaml 
