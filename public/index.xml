@@ -237,6 +237,10 @@ $GOPATH/out/darwin_amd64/release/mixc check -s request.host=&amp;quot;localhost&
 # Check RPC completed successfully. Check status was OK
 &lt;/code&gt;&lt;/pre&gt;
 
+&lt;blockquote&gt;
+&lt;p&gt;NOTE:出现预期结果不一致可能是由于mixer cache导致&lt;code&gt;Valid use count: 10000, valid duration: 9.726875254s&lt;/code&gt;，请参考&lt;a href=&#34;http://www.servicemesher.com/categories/istio-mixer-cache&#34;&gt;Istio Mixer Cache&lt;/a&gt;系列文章了解&lt;/p&gt;
+&lt;/blockquote&gt;
+
 &lt;h3 id=&#34;6-打包镜像&#34;&gt;6.打包镜像&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# build执行文件

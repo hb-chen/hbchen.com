@@ -71,7 +71,7 @@
 
 <meta itemprop="datePublished" content="2019-03-05T20:44:07&#43;08:00" />
 <meta itemprop="dateModified" content="2019-03-05T20:44:07&#43;08:00" />
-<meta itemprop="wordCount" content="2352">
+<meta itemprop="wordCount" content="2426">
 
 
 
@@ -162,7 +162,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 2352 words </span>
+        <span class="more-meta"> 2426 words </span>
         <span class="more-meta"> 5 min read </span>
       </div>
     </header>
@@ -363,6 +363,10 @@ $GOPATH/out/darwin_amd64/release/mixc check -s request.host=&quot;localhost&quot
 $GOPATH/out/darwin_amd64/release/mixc check -s request.host=&quot;localhost&quot; --stringmap_attributes &quot;request.headers=x-custom-token:abc&quot;
 # Check RPC completed successfully. Check status was OK
 </code></pre>
+
+<blockquote>
+<p>NOTE:出现预期结果不一致可能是由于mixer cache导致<code>Valid use count: 10000, valid duration: 9.726875254s</code>，请参考<a href="http://www.servicemesher.com/categories/istio-mixer-cache">Istio Mixer Cache</a>系列文章了解</p>
+</blockquote>
 
 <h3 id="6-打包镜像">6.打包镜像</h3>
 
