@@ -20,6 +20,7 @@ tags: [
 
 背景
 ---
+![auth-adapter](https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/micro-mesh.jpg)
 结合[micro-mesh](https://github.com/hb-go/micro-mesh#micro-mesh)的实践场景，需要在`ingressgateway`与`API service`间加入认证&鉴权(JWT&RBAC)，自然考虑Istio提供的[安全](https://istio.io/zh/docs/concepts/security/)方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:
 
 - 密码修改、终端连接限制等场景下无法踢除
@@ -41,7 +42,7 @@ tags: [
 自定义Adapter介绍
 ---
 配置关系及执行流程如图：
-![auth-adapter](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/auth-adapter.jpg)
+![auth-adapter](https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/auth-adapter.jpg)
 
 - 属性：使用`istio`的`attributes`，`istio/mixer/testdata/config/attributes.yaml`
 - 属性与适配器输入映射模板：使用`istio`的`authorization`模板，`istio/mixer/template/authorization/template.yaml`，通过`template.proto`查看协议内容
@@ -83,7 +84,7 @@ Dockerfile                  Docker镜像
 
 ---
 
-> 接下来使用[micro-mesh/examples/adapter/auth](https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth)源码按步骤操作，实现本地及`K8S`环境的测试部署
+> 接下来使用[micro-mesh/examples/adapter/auth](https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth)源码按步骤操作，实现本地及`GKE`环境的测试部署
 
 步骤
 ---
@@ -163,7 +164,7 @@ go run cmd/main.go 44225
 # 使用testdata下配置启动mixer server
 $GOPATH/out/darwin_amd64/release/mixs server \
 --configStoreURL=fs://$GOPATH/src/istio.io/istio/mixer/adapter/auth/testdata \
---log_output_level=attributes:debug
+--log_output_level=default:debug,attributes:debug
 
 # 测试Adapter是否生效
 $GOPATH/out/darwin_amd64/release/mixc check -s request.host="localhost" --stringmap_attributes "request.headers=x-custom-token:efg"

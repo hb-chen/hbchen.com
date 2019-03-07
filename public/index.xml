@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+    <title>Hobo&#39;s Blog - 技术实践</title>
     <link>http://hbchen.com/</link>
-    <description>Recent content on Hobo&#39;s Blog - 在路上~永不停止的脚步</description>
+    <description>Recent content on Hobo&#39;s Blog - 技术实践</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>HB Studio</copyright>
@@ -53,7 +53,8 @@
 
 &lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
 
-&lt;p&gt;结合&lt;a href=&#34;https://github.com/hb-go/micro-mesh#micro-mesh&#34;&gt;micro-mesh&lt;/a&gt;的实践场景，需要在&lt;code&gt;ingressgateway&lt;/code&gt;与&lt;code&gt;API service&lt;/code&gt;间加入认证&amp;amp;鉴权(JWT&amp;amp;RBAC)，自然考虑Istio提供的&lt;a href=&#34;https://istio.io/zh/docs/concepts/security/&#34;&gt;安全&lt;/a&gt;方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/micro-mesh.jpg&#34; alt=&#34;auth-adapter&#34; /&gt;
+结合&lt;a href=&#34;https://github.com/hb-go/micro-mesh#micro-mesh&#34;&gt;micro-mesh&lt;/a&gt;的实践场景，需要在&lt;code&gt;ingressgateway&lt;/code&gt;与&lt;code&gt;API service&lt;/code&gt;间加入认证&amp;amp;鉴权(JWT&amp;amp;RBAC)，自然考虑Istio提供的&lt;a href=&#34;https://istio.io/zh/docs/concepts/security/&#34;&gt;安全&lt;/a&gt;方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt;密码修改、终端连接限制等场景下无法踢除&lt;/li&gt;
@@ -87,7 +88,7 @@
 &lt;h2 id=&#34;自定义adapter介绍&#34;&gt;自定义Adapter介绍&lt;/h2&gt;
 
 &lt;p&gt;配置关系及执行流程如图：
-&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/auth-adapter.jpg&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
+&lt;img src=&#34;https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/auth-adapter.jpg&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt;属性：使用&lt;code&gt;istio&lt;/code&gt;的&lt;code&gt;attributes&lt;/code&gt;，&lt;code&gt;istio/mixer/testdata/config/attributes.yaml&lt;/code&gt;&lt;/li&gt;
@@ -138,7 +139,7 @@ Dockerfile                  Docker镜像
 &lt;hr /&gt;
 
 &lt;blockquote&gt;
-&lt;p&gt;接下来使用&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth&#34;&gt;micro-mesh/examples/adapter/auth&lt;/a&gt;源码按步骤操作，实现本地及&lt;code&gt;K8S&lt;/code&gt;环境的测试部署&lt;/p&gt;
+&lt;p&gt;接下来使用&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth&#34;&gt;micro-mesh/examples/adapter/auth&lt;/a&gt;源码按步骤操作，实现本地及&lt;code&gt;GKE&lt;/code&gt;环境的测试部署&lt;/p&gt;
 &lt;/blockquote&gt;
 
 &lt;h2 id=&#34;步骤&#34;&gt;步骤&lt;/h2&gt;
@@ -227,7 +228,7 @@ go run cmd/main.go 44225
 # 使用testdata下配置启动mixer server
 $GOPATH/out/darwin_amd64/release/mixs server \
 --configStoreURL=fs://$GOPATH/src/istio.io/istio/mixer/adapter/auth/testdata \
---log_output_level=attributes:debug
+--log_output_level=default:debug,attributes:debug
 
 # 测试Adapter是否生效
 $GOPATH/out/darwin_amd64/release/mixc check -s request.host=&amp;quot;localhost&amp;quot; --stringmap_attributes &amp;quot;request.headers=x-custom-token:efg&amp;quot;

@@ -1,5 +1,5 @@
 baseURL = "http://hbchen.com"
-title = "Hobo's Blog - 在路上~永不停止的脚步"
+title = "Hobo's Blog - 技术实践"
 enableRobotsTXT = true
 enableEmoji = true
 theme = "jane"

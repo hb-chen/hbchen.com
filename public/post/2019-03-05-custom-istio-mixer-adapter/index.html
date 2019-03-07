@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>自定义Istio Mixer Adapter示例教程(附源码) - Hobo&#39;s Blog - 在路上~永不停止的脚步</title>
+  <title>自定义Istio Mixer Adapter示例教程(附源码) - Hobo&#39;s Blog - 技术实践</title>
   <link rel="alternate" hreflang="en" href="http://hbchen.com" />
 
 <meta name="renderer" content="webkit" />
@@ -180,7 +180,8 @@
 
 <h2 id="背景">背景</h2>
 
-<p>结合<a href="https://github.com/hb-go/micro-mesh#micro-mesh">micro-mesh</a>的实践场景，需要在<code>ingressgateway</code>与<code>API service</code>间加入认证&amp;鉴权(JWT&amp;RBAC)，自然考虑Istio提供的<a href="https://istio.io/zh/docs/concepts/security/">安全</a>方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:</p>
+<p><img src="https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/micro-mesh.jpg" alt="auth-adapter" />
+结合<a href="https://github.com/hb-go/micro-mesh#micro-mesh">micro-mesh</a>的实践场景，需要在<code>ingressgateway</code>与<code>API service</code>间加入认证&amp;鉴权(JWT&amp;RBAC)，自然考虑Istio提供的<a href="https://istio.io/zh/docs/concepts/security/">安全</a>方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:</p>
 
 <ul>
 <li>密码修改、终端连接限制等场景下无法踢除</li>
@@ -214,7 +215,7 @@
 <h2 id="自定义adapter介绍">自定义Adapter介绍</h2>
 
 <p>配置关系及执行流程如图：
-<img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/auth-adapter.jpg" alt="auth-adapter" /></p>
+<img src="https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/auth-adapter.jpg" alt="auth-adapter" /></p>
 
 <ul>
 <li>属性：使用<code>istio</code>的<code>attributes</code>，<code>istio/mixer/testdata/config/attributes.yaml</code></li>
@@ -265,7 +266,7 @@ Dockerfile                  Docker镜像
 <hr />
 
 <blockquote>
-<p>接下来使用<a href="https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth">micro-mesh/examples/adapter/auth</a>源码按步骤操作，实现本地及<code>K8S</code>环境的测试部署</p>
+<p>接下来使用<a href="https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth">micro-mesh/examples/adapter/auth</a>源码按步骤操作，实现本地及<code>GKE</code>环境的测试部署</p>
 </blockquote>
 
 <h2 id="步骤">步骤</h2>
@@ -354,7 +355,7 @@ go run cmd/main.go 44225
 # 使用testdata下配置启动mixer server
 $GOPATH/out/darwin_amd64/release/mixs server \
 --configStoreURL=fs://$GOPATH/src/istio.io/istio/mixer/adapter/auth/testdata \
---log_output_level=attributes:debug
+--log_output_level=default:debug,attributes:debug
 
 # 测试Adapter是否生效
 $GOPATH/out/darwin_amd64/release/mixc check -s request.host=&quot;localhost&quot; --stringmap_attributes &quot;request.headers=x-custom-token:efg&quot;
