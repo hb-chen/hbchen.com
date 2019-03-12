@@ -71,7 +71,7 @@
 
 <meta itemprop="datePublished" content="2019-03-05T20:44:07&#43;08:00" />
 <meta itemprop="dateModified" content="2019-03-05T20:44:07&#43;08:00" />
-<meta itemprop="wordCount" content="2426">
+<meta itemprop="wordCount" content="2489">
 
 
 
@@ -162,7 +162,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 2426 words </span>
+        <span class="more-meta"> 2489 words </span>
         <span class="more-meta"> 5 min read </span>
       </div>
     </header>
@@ -273,15 +273,12 @@ Dockerfile                  Docker镜像
 
 <p><strong>开发环境</strong></p>
 
-<blockquote>
-<p>OSX</p>
-
-<p>Go <strong>1.11.1</strong></p>
-
-<p>protoc <strong>libprotoc 3.6.1</strong></p>
-
-<p>Istio <strong>1.0.6</strong></p>
-</blockquote>
+<ul>
+<li>OSX</li>
+<li>Go <strong>1.11.1</strong></li>
+<li>protoc <strong>libprotoc 3.6.1</strong></li>
+<li>Istio <strong>1.1.0-rc.3</strong></li>
+</ul>
 
 <h3 id="1-istio源码">1.Istio源码</h3>
 
@@ -384,11 +381,10 @@ docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
 
 <p><strong>部署环境</strong></p>
 
-<blockquote>
-<p>GKE <strong>1.11.7-gke.4</strong></p>
-
-<p>Istio <strong>1.0.0</strong></p>
-</blockquote>
+<ul>
+<li>GKE <strong>1.12.5-gke.10</strong></li>
+<li>Istio <strong>1.1.0-rc.3</strong></li>
+</ul>
 
 <pre><code class="language-bash"># 属性、模板
 # attributes.yaml -&gt; istio/mixer/testdata/config/attributes.yaml 
@@ -408,11 +404,11 @@ kubectl apply -f examples/adapter/auth/config/auth-adapter.yaml
 <ul>
 <li><code>handler</code>的<code>address</code>使用集群服务<code>&quot;mm-example-auth-adapter-service:44225&quot;</code></li>
 <li><code>instance</code>的<code>params</code>根据<code>authorization</code>模板及<code>auth-adapter</code>服务的需求配置</li>
-<li><code>rule</code>的<code>match</code>条件使用<code>destination.service == &quot;mm-example-api.default.svc.cluster.local&quot;</code>，仅对<code>mm-example-api</code>服务生效</li>
+<li><code>rule</code>的<code>match</code>条件使用<code>destination.service.name == &quot;mm-example-api&quot;</code>或<code>destination.service.host == &quot;mm-example-api.default.svc.cluster.local&quot;</code>，仅对<code>mm-example-api</code>服务生效</li>
 </ul>
 
 <pre><code class="language-bash"># 适配器服务实例部署
-kubectl apply -f examples/adapter/auth/operatorconfig/cluser-service.yaml
+kubectl apply -f examples/adapter/auth/operatorconfig/cluster-service.yaml
 
 # 适配器配置
 kubectl apply -f examples/adapter/auth/operatorconfig/operator-cfg.yaml
@@ -426,8 +422,8 @@ kubectl apply -f examples/adapter/auth/operatorconfig/operator-cfg.yaml
 
 <pre><code class="language-bash">TOKEN=$(curl https://raw.githubusercontent.com/istio/istio/release-1.1/security/tools/jwt/samples/demo.jwt -s)
 
-curl -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;x-custom-token: efg&quot; -X GET http://35.193.180.18/v1/example/call/Hobo
-curl -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;x-custom-token: abc&quot; -X GET http://35.193.180.18/v1/example/call/Hobo
+curl -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;x-custom-token: efg&quot; -H &quot;Grpc-Metadata-x-tier: 2&quot; -X GET http://35.192.111.18/v1/example/call/Hobo
+curl -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;x-custom-token: abc&quot; -H &quot;Grpc-Metadata-x-tier: 2&quot; -X GET http://35.192.111.18/v1/example/call/Hobo
 
 </code></pre>
 

@@ -146,15 +146,12 @@ Dockerfile                  Docker镜像
 
 &lt;p&gt;&lt;strong&gt;开发环境&lt;/strong&gt;&lt;/p&gt;
 
-&lt;blockquote&gt;
-&lt;p&gt;OSX&lt;/p&gt;
-
-&lt;p&gt;Go &lt;strong&gt;1.11.1&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;protoc &lt;strong&gt;libprotoc 3.6.1&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Istio &lt;strong&gt;1.0.6&lt;/strong&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;OSX&lt;/li&gt;
+&lt;li&gt;Go &lt;strong&gt;1.11.1&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;protoc &lt;strong&gt;libprotoc 3.6.1&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Istio &lt;strong&gt;1.1.0-rc.3&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
 
 &lt;h3 id=&#34;1-istio源码&#34;&gt;1.Istio源码&lt;/h3&gt;
 
@@ -257,11 +254,10 @@ docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
 
 &lt;p&gt;&lt;strong&gt;部署环境&lt;/strong&gt;&lt;/p&gt;
 
-&lt;blockquote&gt;
-&lt;p&gt;GKE &lt;strong&gt;1.11.7-gke.4&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Istio &lt;strong&gt;1.0.0&lt;/strong&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;GKE &lt;strong&gt;1.12.5-gke.10&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Istio &lt;strong&gt;1.1.0-rc.3&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 属性、模板
 # attributes.yaml -&amp;gt; istio/mixer/testdata/config/attributes.yaml 
@@ -281,11 +277,11 @@ kubectl apply -f examples/adapter/auth/config/auth-adapter.yaml
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;handler&lt;/code&gt;的&lt;code&gt;address&lt;/code&gt;使用集群服务&lt;code&gt;&amp;quot;mm-example-auth-adapter-service:44225&amp;quot;&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;instance&lt;/code&gt;的&lt;code&gt;params&lt;/code&gt;根据&lt;code&gt;authorization&lt;/code&gt;模板及&lt;code&gt;auth-adapter&lt;/code&gt;服务的需求配置&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;rule&lt;/code&gt;的&lt;code&gt;match&lt;/code&gt;条件使用&lt;code&gt;destination.service == &amp;quot;mm-example-api.default.svc.cluster.local&amp;quot;&lt;/code&gt;，仅对&lt;code&gt;mm-example-api&lt;/code&gt;服务生效&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;rule&lt;/code&gt;的&lt;code&gt;match&lt;/code&gt;条件使用&lt;code&gt;destination.service.name == &amp;quot;mm-example-api&amp;quot;&lt;/code&gt;或&lt;code&gt;destination.service.host == &amp;quot;mm-example-api.default.svc.cluster.local&amp;quot;&lt;/code&gt;，仅对&lt;code&gt;mm-example-api&lt;/code&gt;服务生效&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 适配器服务实例部署
-kubectl apply -f examples/adapter/auth/operatorconfig/cluser-service.yaml
+kubectl apply -f examples/adapter/auth/operatorconfig/cluster-service.yaml
 
 # 适配器配置
 kubectl apply -f examples/adapter/auth/operatorconfig/operator-cfg.yaml
@@ -299,8 +295,8 @@ kubectl apply -f examples/adapter/auth/operatorconfig/operator-cfg.yaml
 
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;TOKEN=$(curl https://raw.githubusercontent.com/istio/istio/release-1.1/security/tools/jwt/samples/demo.jwt -s)
 
-curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-token: efg&amp;quot; -X GET http://35.193.180.18/v1/example/call/Hobo
-curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-token: abc&amp;quot; -X GET http://35.193.180.18/v1/example/call/Hobo
+curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-token: efg&amp;quot; -H &amp;quot;Grpc-Metadata-x-tier: 2&amp;quot; -X GET http://35.192.111.18/v1/example/call/Hobo
+curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-token: abc&amp;quot; -H &amp;quot;Grpc-Metadata-x-tier: 2&amp;quot; -X GET http://35.192.111.18/v1/example/call/Hobo
 
 &lt;/code&gt;&lt;/pre&gt;
 
