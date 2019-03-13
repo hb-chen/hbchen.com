@@ -78,7 +78,7 @@
 &lt;/ul&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/istio-tls-rbac.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
 
 &lt;h2 id=&#34;双向tls&#34;&gt;双向TLS&lt;/h2&gt;
 
