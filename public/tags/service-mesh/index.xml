@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Tue, 05 Mar 2019 20:44:07 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 09 Mar 2019 09:21:22 +0800</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/service-mesh/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Istio服务间访问控制-RBAC</title>
+      <link>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</link>
+      <pubDate>Sat, 09 Mar 2019 09:21:22 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</guid>
+      <description>&lt;p&gt;Istio提供了非常易用的安全解决方案，包括服务间身份验证&lt;code&gt;mTLS&lt;/code&gt;，服务间访问控制&lt;code&gt;RBAC&lt;/code&gt;，以及终端用户身份验证&lt;code&gt;JWT&lt;/code&gt;等，接下来将介绍如何使用服务间访问控制，同时涉及&lt;code&gt;双向TLS&lt;/code&gt;。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>自定义Istio Mixer Adapter示例教程(附源码)</title>
