@@ -33,7 +33,7 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
 - [Optional](#Optional)
     - `ServiceAccount`，`RoleBinding``subjects`的`user`条件
     
-![auth-adapter](https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/istio-tls-rbac.png)
+![auth-adapter](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png)
     
 ## 双向TLS
 
