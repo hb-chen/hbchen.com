@@ -45,7 +45,7 @@
       
       <guid>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</guid>
       
-        <description>&lt;p&gt;Istio提供了非常易用的安全解决方案，包括服务间身份验证&lt;code&gt;mTLS&lt;/code&gt;，服务间访问控制&lt;code&gt;RBAC&lt;/code&gt;，以及终端用户身份验证&lt;code&gt;JWT&lt;/code&gt;等，接下来将介绍如何使用服务间访问控制，同时涉及&lt;code&gt;双向TLS&lt;/code&gt;。&lt;/p&gt;
+        <description>&lt;p&gt;Istio提供了非常易用的安全解决方案，包括服务间身份验证&lt;code&gt;mTLS&lt;/code&gt;，服务间访问控制&lt;code&gt;RBAC&lt;/code&gt;，以及终端用户身份验证&lt;code&gt;JWT&lt;/code&gt;等，本文主要介绍如何使用服务间访问控制，同时涉及&lt;code&gt;双向TLS&lt;/code&gt;。&lt;/p&gt;
 
 &lt;blockquote&gt;
 &lt;ul&gt;
@@ -76,6 +76,13 @@
 &lt;li&gt;&lt;code&gt;ServiceAccount&lt;/code&gt;，&lt;code&gt;RoleBinding&lt;/code&gt;&lt;code&gt;subjects&lt;/code&gt;的&lt;code&gt;user&lt;/code&gt;条件
 &lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;假设场景&#34;&gt;假设场景&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;网格内&lt;code&gt;service-1&lt;/code&gt;、&lt;code&gt;service-2&lt;/code&gt;开启RBAC访问控制&lt;/li&gt;
+&lt;li&gt;仅&lt;code&gt;service-1&lt;/code&gt;授权给&lt;code&gt;ingressgateay&lt;/code&gt;访问，&lt;code&gt;service-2&lt;/code&gt;则不能访问&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
@@ -175,7 +182,7 @@ metadata:
   name: service-name-1
 spec:
   host: service-host-1
-  # 开启TLS
+  # NOTE: 开启TLS
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL
@@ -257,7 +264,7 @@ spec:
   inclusion:
     namespaces: [&amp;quot;namespace-1&amp;quot;]
     services: [&amp;quot;service-name-1.namespace-1.svc.cluster.local&amp;quot;, &amp;quot;service-name-2.namespace-1.svc.cluster.local&amp;quot;]
-  # ENFORCED/PERMISSIVE，严格或宽容模式
+  # NOTE: ENFORCED/PERMISSIVE，严格或宽容模式
   enforcement_mode: ENFORCED
 ---
 &lt;/code&gt;&lt;/pre&gt;
@@ -318,7 +325,7 @@ spec:
 
 &lt;h3 id=&#34;3-角色绑定规则-servicerolebinding&#34;&gt;3.角色绑定规则&lt;code&gt;ServiceRoleBinding&lt;/code&gt;&lt;/h3&gt;
 
-&lt;p&gt;&lt;code&gt;user&lt;/code&gt; + &lt;code&gt;properties&lt;/code&gt; 一起定义授权给谁，支持的属性参考&lt;a href=&#34;https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F&#34;&gt;Istio参考配置-授权-约束和属性#支持的属性&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;user&lt;/code&gt; + &lt;code&gt;properties&lt;/code&gt; 一起定义授权给谁，支持的属性参考&lt;a href=&#34;https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E5%B1%9E%E6%80%A7&#34;&gt;Istio参考配置-授权-约束和属性#支持的属性&lt;/a&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: &amp;quot;rbac.istio.io/v1alpha1&amp;quot;
 kind: ServiceRoleBinding
@@ -327,12 +334,12 @@ metadata:
   namespace: default
 spec:
   subjects:
-  # NOTE:需要添加 ServiceAccount
+  # NOTE: 需要添加 ServiceAccount
   - user: &amp;quot;cluster.local/ns/namespace-1/sa/service-account-2&amp;quot;
-  # ingressgateway
-  - user: &amp;quot;cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account&amp;quot;
     properties:
-      source.namespace: &amp;quot;abc&amp;quot;
+      source.namespace: &amp;quot;default&amp;quot;
+  # NOTE: ingressgateway授权
+  - user: &amp;quot;cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account&amp;quot;
   roleRef:
     kind: ServiceRole
     name: &amp;quot;service-role-1&amp;quot;
@@ -345,7 +352,7 @@ spec:
 
 &lt;p&gt;对于需要要在&lt;code&gt;ServiceRoleBinding&lt;/code&gt;的&lt;code&gt;subjects&lt;/code&gt;条件中授权的&lt;code&gt;user&lt;/code&gt;，需要在部署实例时指定&lt;code&gt;serviceAccountName&lt;/code&gt;&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;# 创建ServiceAccount
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;# NOTE: 创建ServiceAccount
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -363,7 +370,7 @@ spec:
         app: service-name-2
         version: v1
     spec:
-      # 为部署实例指定serviceAccountName
+      # NOTE: 为部署实例指定serviceAccountName
       serviceAccountName: service-account-2
       containers:
       - name: service-name-2-v1

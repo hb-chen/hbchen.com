@@ -13,7 +13,7 @@ tags: [
 ]
 ---
 
-Istio提供了非常易用的安全解决方案，包括服务间身份验证`mTLS`，服务间访问控制`RBAC`，以及终端用户身份验证`JWT`等，接下来将介绍如何使用服务间访问控制，同时涉及`双向TLS`。
+Istio提供了非常易用的安全解决方案，包括服务间身份验证`mTLS`，服务间访问控制`RBAC`，以及终端用户身份验证`JWT`等，本文主要介绍如何使用服务间访问控制，同时涉及`双向TLS`。
 <!--more-->
 
 > 
@@ -33,6 +33,11 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
 - [Optional](#Optional)
     - `ServiceAccount`，`RoleBinding``subjects`的`user`条件
     
+假设场景
+---
+- 网格内`service-1`、`service-2`开启RBAC访问控制
+- 仅`service-1`授权给`ingressgateay`访问，`service-2`则不能访问
+
 ![auth-adapter](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png)
     
 ## 双向TLS
@@ -115,7 +120,7 @@ metadata:
   name: service-name-1
 spec:
   host: service-host-1
-  # 开启TLS
+  # NOTE: 开启TLS
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL
@@ -163,7 +168,7 @@ spec:
   inclusion:
     namespaces: ["namespace-1"]
     services: ["service-name-1.namespace-1.svc.cluster.local", "service-name-2.namespace-1.svc.cluster.local"]
-  # ENFORCED/PERMISSIVE，严格或宽容模式
+  # NOTE: ENFORCED/PERMISSIVE，严格或宽容模式
   enforcement_mode: ENFORCED
 ---
 ```
@@ -196,7 +201,7 @@ spec:
 ---
 ```
 ### 3.角色绑定规则`ServiceRoleBinding`
-`user` + `properties` 一起定义授权给谁，支持的属性参考[Istio参考配置-授权-约束和属性#支持的属性](https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F)
+`user` + `properties` 一起定义授权给谁，支持的属性参考[Istio参考配置-授权-约束和属性#支持的属性](https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E5%B1%9E%E6%80%A7)
 ```yaml
 apiVersion: "rbac.istio.io/v1alpha1"
 kind: ServiceRoleBinding
@@ -205,12 +210,12 @@ metadata:
   namespace: default
 spec:
   subjects:
-  # NOTE:需要添加 ServiceAccount
+  # NOTE: 需要添加 ServiceAccount
   - user: "cluster.local/ns/namespace-1/sa/service-account-2"
-  # ingressgateway
-  - user: "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"
     properties:
-      source.namespace: "abc"
+      source.namespace: "default"
+  # NOTE: ingressgateway授权
+  - user: "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"
   roleRef:
     kind: ServiceRole
     name: "service-role-1"
@@ -223,7 +228,7 @@ spec:
 对于需要要在`ServiceRoleBinding`的`subjects`条件中授权的`user`，需要在部署实例时指定`serviceAccountName`
 
 ```yaml
-# 创建ServiceAccount
+# NOTE: 创建ServiceAccount
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -241,7 +246,7 @@ spec:
         app: service-name-2
         version: v1
     spec:
-      # 为部署实例指定serviceAccountName
+      # NOTE: 为部署实例指定serviceAccountName
       serviceAccountName: service-account-2
       containers:
       - name: service-name-2-v1

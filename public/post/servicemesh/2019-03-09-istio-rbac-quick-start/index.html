@@ -19,7 +19,7 @@
 
 
 <meta name="author" content="Hobo Chen" />
-  <meta name="description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，接下来将介绍如何使用服务间访问控制，同时涉及双向TLS。
+  <meta name="description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，本文主要介绍如何使用服务间访问控制，同时涉及双向TLS。
 " />
 
   <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
@@ -51,25 +51,25 @@
 
 
 <meta property="og:title" content="【Istio安全】服务间访问控制-RBAC" />
-<meta property="og:description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，接下来将介绍如何使用服务间访问控制，同时涉及双向TLS。" />
+<meta property="og:description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，本文主要介绍如何使用服务间访问控制，同时涉及双向TLS。" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/" /><meta property="article:published_time" content="2019-03-09T09:21:22&#43;08:00"/>
 <meta property="article:modified_time" content="2019-03-09T09:21:22&#43;08:00"/>
 
 <meta itemprop="name" content="【Istio安全】服务间访问控制-RBAC">
-<meta itemprop="description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，接下来将介绍如何使用服务间访问控制，同时涉及双向TLS。">
+<meta itemprop="description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，本文主要介绍如何使用服务间访问控制，同时涉及双向TLS。">
 
 
 <meta itemprop="datePublished" content="2019-03-09T09:21:22&#43;08:00" />
 <meta itemprop="dateModified" content="2019-03-09T09:21:22&#43;08:00" />
-<meta itemprop="wordCount" content="2168">
+<meta itemprop="wordCount" content="2263">
 
 
 
 <meta itemprop="keywords" content="Service Mesh,Istio,安全,RBAC," />
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="【Istio安全】服务间访问控制-RBAC"/>
-<meta name="twitter:description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，接下来将介绍如何使用服务间访问控制，同时涉及双向TLS。"/>
+<meta name="twitter:description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，本文主要介绍如何使用服务间访问控制，同时涉及双向TLS。"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -149,7 +149,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 2168 words </span>
+        <span class="more-meta"> 2263 words </span>
         <span class="more-meta"> 5 min read </span>
       </div>
     </header>
@@ -159,7 +159,7 @@
 
     
     <div class="post-content">
-      <p>Istio提供了非常易用的安全解决方案，包括服务间身份验证<code>mTLS</code>，服务间访问控制<code>RBAC</code>，以及终端用户身份验证<code>JWT</code>等，接下来将介绍如何使用服务间访问控制，同时涉及<code>双向TLS</code>。</p>
+      <p>Istio提供了非常易用的安全解决方案，包括服务间身份验证<code>mTLS</code>，服务间访问控制<code>RBAC</code>，以及终端用户身份验证<code>JWT</code>等，本文主要介绍如何使用服务间访问控制，同时涉及<code>双向TLS</code>。</p>
 
 <blockquote>
 <ul>
@@ -190,6 +190,13 @@
 <li><code>ServiceAccount</code>，<code>RoleBinding</code><code>subjects</code>的<code>user</code>条件
 <br /></li>
 </ul></li>
+</ul>
+
+<h2 id="假设场景">假设场景</h2>
+
+<ul>
+<li>网格内<code>service-1</code>、<code>service-2</code>开启RBAC访问控制</li>
+<li>仅<code>service-1</code>授权给<code>ingressgateay</code>访问，<code>service-2</code>则不能访问</li>
 </ul>
 
 <p><img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png" alt="auth-adapter" /></p>
@@ -289,7 +296,7 @@ metadata:
   name: service-name-1
 spec:
   host: service-host-1
-  # 开启TLS
+  # NOTE: 开启TLS
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL
@@ -371,7 +378,7 @@ spec:
   inclusion:
     namespaces: [&quot;namespace-1&quot;]
     services: [&quot;service-name-1.namespace-1.svc.cluster.local&quot;, &quot;service-name-2.namespace-1.svc.cluster.local&quot;]
-  # ENFORCED/PERMISSIVE，严格或宽容模式
+  # NOTE: ENFORCED/PERMISSIVE，严格或宽容模式
   enforcement_mode: ENFORCED
 ---
 </code></pre>
@@ -432,7 +439,7 @@ spec:
 
 <h3 id="3-角色绑定规则-servicerolebinding">3.角色绑定规则<code>ServiceRoleBinding</code></h3>
 
-<p><code>user</code> + <code>properties</code> 一起定义授权给谁，支持的属性参考<a href="https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F">Istio参考配置-授权-约束和属性#支持的属性</a></p>
+<p><code>user</code> + <code>properties</code> 一起定义授权给谁，支持的属性参考<a href="https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E5%B1%9E%E6%80%A7">Istio参考配置-授权-约束和属性#支持的属性</a></p>
 
 <pre><code class="language-yaml">apiVersion: &quot;rbac.istio.io/v1alpha1&quot;
 kind: ServiceRoleBinding
@@ -441,12 +448,12 @@ metadata:
   namespace: default
 spec:
   subjects:
-  # NOTE:需要添加 ServiceAccount
+  # NOTE: 需要添加 ServiceAccount
   - user: &quot;cluster.local/ns/namespace-1/sa/service-account-2&quot;
-  # ingressgateway
-  - user: &quot;cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account&quot;
     properties:
-      source.namespace: &quot;abc&quot;
+      source.namespace: &quot;default&quot;
+  # NOTE: ingressgateway授权
+  - user: &quot;cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account&quot;
   roleRef:
     kind: ServiceRole
     name: &quot;service-role-1&quot;
@@ -459,7 +466,7 @@ spec:
 
 <p>对于需要要在<code>ServiceRoleBinding</code>的<code>subjects</code>条件中授权的<code>user</code>，需要在部署实例时指定<code>serviceAccountName</code></p>
 
-<pre><code class="language-yaml"># 创建ServiceAccount
+<pre><code class="language-yaml"># NOTE: 创建ServiceAccount
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -477,7 +484,7 @@ spec:
         app: service-name-2
         version: v1
     spec:
-      # 为部署实例指定serviceAccountName
+      # NOTE: 为部署实例指定serviceAccountName
       serviceAccountName: service-account-2
       containers:
       - name: service-name-2-v1
@@ -551,7 +558,7 @@ spec:
     id: '2019-03-09 09:21:22 \x2b0800 CST',
     title: '【Istio安全】服务间访问控制-RBAC',
     link: decodeURI(location.href),
-    desc: '\x3cp\x3eIstio提供了非常易用的安全解决方案，包括服务间身份验证\x3ccode\x3emTLS\x3c\/code\x3e，服务间访问控制\x3ccode\x3eRBAC\x3c\/code\x3e，以及终端用户身份验证\x3ccode\x3eJWT\x3c\/code\x3e等，接下来将介绍如何使用服务间访问控制，同时涉及\x3ccode\x3e双向TLS\x3c\/code\x3e。\x3c\/p\x3e',
+    desc: '\x3cp\x3eIstio提供了非常易用的安全解决方案，包括服务间身份验证\x3ccode\x3emTLS\x3c\/code\x3e，服务间访问控制\x3ccode\x3eRBAC\x3c\/code\x3e，以及终端用户身份验证\x3ccode\x3eJWT\x3c\/code\x3e等，本文主要介绍如何使用服务间访问控制，同时涉及\x3ccode\x3e双向TLS\x3c\/code\x3e。\x3c\/p\x3e',
     owner: 'hb-chen',
     repo: 'hbchen.com',
     oauth: {
