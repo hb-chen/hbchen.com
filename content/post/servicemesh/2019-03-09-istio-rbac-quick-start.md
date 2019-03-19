@@ -262,6 +262,6 @@ spec:
 ---
 ```
 
----
-Istio服务网格可以很方便的实现服**务间访问控制**，通过服务级的授权开关，以及`ServiceRole`、`ServiceRoleBinding`的约束和属性条件，可以实现细粒度的访问控制。
+## 总结
+Istio服务网格可以很方便的实现**服务间访问控制**，通过服务级的授权开关，以及`ServiceRole`、`ServiceRoleBinding`的约束和属性条件，可以实现细粒度的访问控制。
 
