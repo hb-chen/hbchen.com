@@ -82,7 +82,7 @@
 
 &lt;ul&gt;
 &lt;li&gt;网格内&lt;code&gt;service-1&lt;/code&gt;、&lt;code&gt;service-2&lt;/code&gt;开启RBAC访问控制&lt;/li&gt;
-&lt;li&gt;仅&lt;code&gt;service-1&lt;/code&gt;授权给&lt;code&gt;ingressgateay&lt;/code&gt;访问，&lt;code&gt;service-2&lt;/code&gt;则不能访问&lt;/li&gt;
+&lt;li&gt;仅&lt;code&gt;service-1&lt;/code&gt;授权给&lt;code&gt;ingressgateway&lt;/code&gt;访问，&lt;code&gt;service-2&lt;/code&gt;则不能被&lt;code&gt;ingressgateway&lt;/code&gt;访问&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
@@ -317,6 +317,7 @@ spec:
   rules:
   - services: [&amp;quot;service-name-1.namespace-1.svc.cluster.local&amp;quot;]
     methods: [&amp;quot;*&amp;quot;]
+    # NOTE: 根据约束需要修改
     constraints:
     - key: request.headers[version]
       values: [&amp;quot;v1&amp;quot;, &amp;quot;v2&amp;quot;]
@@ -336,6 +337,7 @@ spec:
   subjects:
   # NOTE: 需要添加 ServiceAccount
   - user: &amp;quot;cluster.local/ns/namespace-1/sa/service-account-2&amp;quot;
+    # NOTE: 根据属性需要修改
     properties:
       source.namespace: &amp;quot;default&amp;quot;
   # NOTE: ingressgateway授权
@@ -350,7 +352,7 @@ spec:
 
 &lt;h3 id=&#34;部署实例添加-serviceaccount&#34;&gt;部署实例添加&lt;code&gt;ServiceAccount&lt;/code&gt;&lt;/h3&gt;
 
-&lt;p&gt;对于需要要在&lt;code&gt;ServiceRoleBinding&lt;/code&gt;的&lt;code&gt;subjects&lt;/code&gt;条件中授权的&lt;code&gt;user&lt;/code&gt;，需要在部署实例时指定&lt;code&gt;serviceAccountName&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;对于需要要在&lt;code&gt;ServiceRoleBinding&lt;/code&gt;的&lt;code&gt;subjects&lt;/code&gt;条件中授权的&lt;code&gt;user&lt;/code&gt;，需要在部署实例时指定&lt;code&gt;serviceAccountName&lt;/code&gt;，如前面&lt;code&gt;ServiceRoleBinding&lt;/code&gt;配置要允许&lt;code&gt;service-2&lt;/code&gt;访问&lt;code&gt;service-1&lt;/code&gt;，则部署&lt;code&gt;service-2&lt;/code&gt;时需要配置&lt;code&gt;serviceAccountName: service-account-2&lt;/code&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;# NOTE: 创建ServiceAccount
 apiVersion: v1

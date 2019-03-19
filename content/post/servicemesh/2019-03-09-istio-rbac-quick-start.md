@@ -36,7 +36,7 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
 假设场景
 ---
 - 网格内`service-1`、`service-2`开启RBAC访问控制
-- 仅`service-1`授权给`ingressgateay`访问，`service-2`则不能访问
+- 仅`service-1`授权给`ingressgateway`访问，`service-2`则不能被`ingressgateway`访问
 
 ![auth-adapter](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png)
     
@@ -195,6 +195,7 @@ spec:
   rules:
   - services: ["service-name-1.namespace-1.svc.cluster.local"]
     methods: ["*"]
+    # NOTE: 根据约束需要修改
     constraints:
     - key: request.headers[version]
       values: ["v1", "v2"]
@@ -212,6 +213,7 @@ spec:
   subjects:
   # NOTE: 需要添加 ServiceAccount
   - user: "cluster.local/ns/namespace-1/sa/service-account-2"
+    # NOTE: 根据属性需要修改
     properties:
       source.namespace: "default"
   # NOTE: ingressgateway授权
@@ -225,7 +227,7 @@ spec:
 ## Optional
 
 ### 部署实例添加`ServiceAccount`
-对于需要要在`ServiceRoleBinding`的`subjects`条件中授权的`user`，需要在部署实例时指定`serviceAccountName`
+对于需要要在`ServiceRoleBinding`的`subjects`条件中授权的`user`，需要在部署实例时指定`serviceAccountName`，如前面`ServiceRoleBinding`配置要允许`service-2`访问`service-1`，则部署`service-2`时需要配置`serviceAccountName: service-account-2`
 
 ```yaml
 # NOTE: 创建ServiceAccount

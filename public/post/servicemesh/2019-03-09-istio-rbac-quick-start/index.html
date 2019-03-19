@@ -62,7 +62,7 @@
 
 <meta itemprop="datePublished" content="2019-03-09T09:21:22&#43;08:00" />
 <meta itemprop="dateModified" content="2019-03-09T09:21:22&#43;08:00" />
-<meta itemprop="wordCount" content="2263">
+<meta itemprop="wordCount" content="2384">
 
 
 
@@ -149,7 +149,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 2263 words </span>
+        <span class="more-meta"> 2384 words </span>
         <span class="more-meta"> 5 min read </span>
       </div>
     </header>
@@ -196,7 +196,7 @@
 
 <ul>
 <li>网格内<code>service-1</code>、<code>service-2</code>开启RBAC访问控制</li>
-<li>仅<code>service-1</code>授权给<code>ingressgateay</code>访问，<code>service-2</code>则不能访问</li>
+<li>仅<code>service-1</code>授权给<code>ingressgateway</code>访问，<code>service-2</code>则不能被<code>ingressgateway</code>访问</li>
 </ul>
 
 <p><img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png" alt="auth-adapter" /></p>
@@ -431,6 +431,7 @@ spec:
   rules:
   - services: [&quot;service-name-1.namespace-1.svc.cluster.local&quot;]
     methods: [&quot;*&quot;]
+    # NOTE: 根据约束需要修改
     constraints:
     - key: request.headers[version]
       values: [&quot;v1&quot;, &quot;v2&quot;]
@@ -450,6 +451,7 @@ spec:
   subjects:
   # NOTE: 需要添加 ServiceAccount
   - user: &quot;cluster.local/ns/namespace-1/sa/service-account-2&quot;
+    # NOTE: 根据属性需要修改
     properties:
       source.namespace: &quot;default&quot;
   # NOTE: ingressgateway授权
@@ -464,7 +466,7 @@ spec:
 
 <h3 id="部署实例添加-serviceaccount">部署实例添加<code>ServiceAccount</code></h3>
 
-<p>对于需要要在<code>ServiceRoleBinding</code>的<code>subjects</code>条件中授权的<code>user</code>，需要在部署实例时指定<code>serviceAccountName</code></p>
+<p>对于需要要在<code>ServiceRoleBinding</code>的<code>subjects</code>条件中授权的<code>user</code>，需要在部署实例时指定<code>serviceAccountName</code>，如前面<code>ServiceRoleBinding</code>配置要允许<code>service-2</code>访问<code>service-1</code>，则部署<code>service-2</code>时需要配置<code>serviceAccountName: service-account-2</code></p>
 
 <pre><code class="language-yaml"># NOTE: 创建ServiceAccount
 apiVersion: v1
