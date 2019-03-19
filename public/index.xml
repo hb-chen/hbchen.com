@@ -384,7 +384,11 @@ spec:
         ports:
         - containerPort: 9080
 ---
-&lt;/code&gt;&lt;/pre&gt;</description>
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Istio服务网格可以很方便的实现服&lt;strong&gt;务间访问控制&lt;/strong&gt;，通过服务级的授权开关，以及&lt;code&gt;ServiceRole&lt;/code&gt;、&lt;code&gt;ServiceRoleBinding&lt;/code&gt;的约束和属性条件，可以实现细粒度的访问控制。&lt;/p&gt;</description>
       
     </item>
     
