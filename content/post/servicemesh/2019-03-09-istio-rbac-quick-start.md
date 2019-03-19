@@ -1,5 +1,5 @@
 ---
-title: "Istio服务间访问控制-RBAC"
+title: "【Istio安全】服务间访问控制-RBAC"
 date: 2019-03-09T09:21:22+08:00
 comments: true
 categories: [
@@ -27,7 +27,7 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
     - `Policy`或`MeshPolicy`，上游`server`开启TLS
     - `DestinationRule`，下游`client`开启TLS
 - [RBAC](#RBAC)
-    - `ClusterRbacConfig`，启用授权及范围
+    - `ClusterRbacConfig`/`RbacConfig`，启用授权及范围
     - `ServiceRole`，角色权限规则
     - `ServiceRoleBinding`，角色绑定规则
 - [Optional](#Optional)
@@ -48,9 +48,12 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
 ***[策略范围说明](##)***
 
 > 
-- **网格范围策略**：在网格范围存储中定义的策略，没有目标选择器部分。网格中最多只能有一个网格范围的策略。
-- **命名空间范围的策略**：在命名空间范围存储中定义的策略，名称为 default 且没有目标选择器部分。每个命名空间最多只能有一个命名空间范围的策略。
-- **特定于服务的策略**：在命名空间范围存储中定义的策略，具有非空目标选择器部分。命名空间可以具有零个，一个或多个特定于服务的策略。
+- **网格范围策略**：在网格范围存储中定义的策略，没有目标选择器部分。网格中最多只能有**一个网格范围**的策略。
+- **命名空间范围的策略**：在命名空间范围存储中定义的策略，名称为 default 且没有目标选择器部分。每个命名空间最多只能有**一个命名空间范围**的策略。
+- **特定于服务的策略**：在命名空间范围存储中定义的策略，具有非空目标选择器部分。命名空间可以具有**零个，一个或多个特定于服务**的策略。
+
+策略范围可以分别由`Policy`、`MeshPolicy`设置，`Policy`可以选择对**命名空间**所有服务生效，也可以指定`targets`对**特定服务**生效，`MeshPolicy`则是整个网格内生效，对于**命名空间范围**和**网格范围**名称都只能为`default`。</br>
+同时配置多个策略时使用最窄匹配策略，**特定服务>命名空间范围>网格范围**，如果多个**特定于服务的策略**与服务匹配，则随机选择一个。下面是不同策略范围的具体配置参考：
 
 **`Policy`特定于服务的策略**
 
@@ -98,6 +101,13 @@ spec:
 ```
 
 ### 2.下游`client`开启TLS
+
+`client`端TLS由目标规则`DestinationRule`配置，在流量策略`trafficPolicy`中开启`tls`
+
+>
+- [Istio参考配置-通信路由#DestinationRule](https://preliminary.istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#destinationrule)
+- [Istio参考配置-通信路由#TrafficPolicy](https://preliminary.istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#trafficpolicy)
+
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
@@ -116,6 +126,16 @@ spec:
 ---
 ```
 
+**TLS`mode`说明**
+
+| mode值 | 描述 |
+|:---:|:---|
+|DISABLE | 不要为上游端点使用 TLS。
+|SIMPLE	| 向上游端点发起 TLS 连接。
+|MUTUAL	| 发送客户端证书进行验证，用双向 TLS 连接上游端点。
+|ISTIO_MUTUAL | 发送客户端证书进行验证，用双向 TLS 连接上游端点。和 MUTUAL 相比，这种方式使用的双向 TLS 证书系统是由 Istio 生成的。如果使用这种模式，TLSSettings 中的其他字段应该留空。
+
+
 ## RBAC
 
 >
@@ -126,8 +146,9 @@ spec:
     - [服务级的访问控制](https://preliminary.istio.io/zh/docs/tasks/security/role-based-access-control/#%E6%9C%8D%E5%8A%A1%E7%BA%A7%E7%9A%84%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6)
 - [Istio文档-迁移 RbacConfig 到 ClusterRbacConfig](https://preliminary.istio.io/zh/docs/setup/kubernetes/upgrade/#%E8%BF%81%E7%A7%BB-rbacconfig-%E5%88%B0-clusterrbacconfig)
     - *这里使用的`ClusterRbacConfig`*
+- [Istio参考配置-授权](https://preliminary.istio.io/zh/docs/reference/config/authorization/)
     
-有关`RbacConfig`、`ServiceRole`、`ServiceRoleBinding`的属性结构Istio文档有详细的配置可以参考[RBAC](https://preliminary.istio.io/zh/docs/reference/config/authorization/istio.rbac.v1alpha1/)
+有关`RbacConfig`、`ServiceRole`、`ServiceRoleBinding`的属性结构Istio文档有详细的配置可以参考:[Istio参考配置-授权-RBAC](https://preliminary.istio.io/zh/docs/reference/config/authorization/istio.rbac.v1alpha1/)
 
 ### 1.开启授权`ClusterRbacConfig`
 
@@ -146,8 +167,19 @@ spec:
   enforcement_mode: ENFORCED
 ---
 ```
+`enforcement_mode`可以选择`ENFORCED`严格模式，或`PERMISSIVE`宽容模式，宽容模式便于授权策略需要**变更时进行验证测试**，[Istio任务-授权许可模式](https://preliminary.istio.io/zh/docs/tasks/security/role-based-access-control/#%E6%8E%88%E6%9D%83%E8%AE%B8%E5%8F%AF%E6%A8%A1%E5%BC%8F)任务中有更具体的场景介绍。
+
+**模式`mode`说明**
+
+| mode值 | 描述 |
+| :---: |:---|
+| OFF | 关闭 Istio RBAC，RbacConfig 的所有配置将会失效，且 Istio RBAC Policies 不会执行。
+| ON | 为所有 services 和 namespaces 启用 Istio RBAC。
+| ON_WITH_INCLUSION | 仅针对 inclusion 字段中指定的 services 和 namespaces 启用 Istio RBAC。其它不在 inclusion 字段中的 services 和 namespaces 将不会被 Istio RBAC Policies 强制执行。
+| ON_WITH_EXCLUSION	| 针对除了 exclusion 字段中指定的 services 和 namespaces，启用 Istio RBAC。其它不在 exclusion 字段中的 services 和 namespaces 将按照 Istio RBAC Policies 执行。
+
 ### 2.角色权限规则`ServiceRole`
-`namespace` + `services` + `paths` + `methods` 一起定义了如何访问服务，其中`services`必选，另外有`constraints`可以指定其它约束
+`namespace` + `services` + `paths` + `methods` 一起定义了如何访问服务，其中`services`必选，另外有`constraints`可以指定其它约束，支持的约束参考[Istio参考配置-授权-约束和属性#支持的约束](https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F)
 ```yaml
 apiVersion: "rbac.istio.io/v1alpha1"
 kind: ServiceRole
@@ -164,7 +196,7 @@ spec:
 ---
 ```
 ### 3.角色绑定规则`ServiceRoleBinding`
-`user` + `properties` 一起定义授权给谁
+`user` + `properties` 一起定义授权给谁，支持的属性参考[Istio参考配置-授权-约束和属性#支持的属性](https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F)
 ```yaml
 apiVersion: "rbac.istio.io/v1alpha1"
 kind: ServiceRoleBinding

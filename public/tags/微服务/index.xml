@@ -7,23 +7,10 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Tue, 05 Mar 2019 20:44:07 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 21 Feb 2019 16:59:37 +0800</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/index.xml" rel="self" type="application/rss+xml" />
     
-    
-    <item>
-      <title>自定义Istio Mixer Adapter示例教程(附源码)</title>
-      <link>http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/</link>
-      <pubDate>Tue, 05 Mar 2019 20:44:07 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/</guid>
-      <description>&lt;blockquote&gt;
-&lt;p&gt;快速开始:&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth&#34;&gt;micro-mesh/examples/adapter/auth&lt;/a&gt;源码传送门&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。&lt;/p&gt;</description>
-    </item>
     
     <item>
       <title>go-micro加入Istio服务网格</title>

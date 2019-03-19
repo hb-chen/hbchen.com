@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Istio服务间访问控制-RBAC - Hobo&#39;s Blog - 技术实践</title>
+  <title>【Istio安全】服务间访问控制-RBAC - Hobo&#39;s Blog - 技术实践</title>
   <link rel="alternate" hreflang="en" href="http://hbchen.com" />
 
 <meta name="renderer" content="webkit" />
@@ -50,25 +50,25 @@
 
 
 
-<meta property="og:title" content="Istio服务间访问控制-RBAC" />
+<meta property="og:title" content="【Istio安全】服务间访问控制-RBAC" />
 <meta property="og:description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，接下来将介绍如何使用服务间访问控制，同时涉及双向TLS。" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/" /><meta property="article:published_time" content="2019-03-09T09:21:22&#43;08:00"/>
 <meta property="article:modified_time" content="2019-03-09T09:21:22&#43;08:00"/>
 
-<meta itemprop="name" content="Istio服务间访问控制-RBAC">
+<meta itemprop="name" content="【Istio安全】服务间访问控制-RBAC">
 <meta itemprop="description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，接下来将介绍如何使用服务间访问控制，同时涉及双向TLS。">
 
 
 <meta itemprop="datePublished" content="2019-03-09T09:21:22&#43;08:00" />
 <meta itemprop="dateModified" content="2019-03-09T09:21:22&#43;08:00" />
-<meta itemprop="wordCount" content="1337">
+<meta itemprop="wordCount" content="2168">
 
 
 
 <meta itemprop="keywords" content="Service Mesh,Istio,安全,RBAC," />
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Istio服务间访问控制-RBAC"/>
+<meta name="twitter:title" content="【Istio安全】服务间访问控制-RBAC"/>
 <meta name="twitter:description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，接下来将介绍如何使用服务间访问控制，同时涉及双向TLS。"/>
 
 <!--[if lte IE 9]>
@@ -140,7 +140,7 @@
           <article class="post bg-white">
     
     <header class="post-header">
-      <h1 class="post-title">Istio服务间访问控制-RBAC</h1>
+      <h1 class="post-title">【Istio安全】服务间访问控制-RBAC</h1>
 
       <div class="post-meta">
         <span class="post-time"> 2019-03-09 </span>
@@ -149,8 +149,8 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 1337 words </span>
-        <span class="more-meta"> 3 min read </span>
+        <span class="more-meta"> 2168 words </span>
+        <span class="more-meta"> 5 min read </span>
       </div>
     </header>
 
@@ -180,7 +180,7 @@
 <li><a href="#RBAC">RBAC</a>
 
 <ul>
-<li><code>ClusterRbacConfig</code>，启用授权及范围</li>
+<li><code>ClusterRbacConfig</code>/<code>RbacConfig</code>，启用授权及范围</li>
 <li><code>ServiceRole</code>，角色权限规则</li>
 <li><code>ServiceRoleBinding</code>，角色绑定规则</li>
 </ul></li>
@@ -217,11 +217,14 @@
 
 <blockquote>
 <ul>
-<li><strong>网格范围策略</strong>：在网格范围存储中定义的策略，没有目标选择器部分。网格中最多只能有一个网格范围的策略。</li>
-<li><strong>命名空间范围的策略</strong>：在命名空间范围存储中定义的策略，名称为 default 且没有目标选择器部分。每个命名空间最多只能有一个命名空间范围的策略。</li>
-<li><strong>特定于服务的策略</strong>：在命名空间范围存储中定义的策略，具有非空目标选择器部分。命名空间可以具有零个，一个或多个特定于服务的策略。</li>
+<li><strong>网格范围策略</strong>：在网格范围存储中定义的策略，没有目标选择器部分。网格中最多只能有<strong>一个网格范围</strong>的策略。</li>
+<li><strong>命名空间范围的策略</strong>：在命名空间范围存储中定义的策略，名称为 default 且没有目标选择器部分。每个命名空间最多只能有<strong>一个命名空间范围</strong>的策略。</li>
+<li><strong>特定于服务的策略</strong>：在命名空间范围存储中定义的策略，具有非空目标选择器部分。命名空间可以具有<strong>零个，一个或多个特定于服务</strong>的策略。</li>
 </ul>
 </blockquote>
+
+<p>策略范围可以分别由<code>Policy</code>、<code>MeshPolicy</code>设置，<code>Policy</code>可以选择对<strong>命名空间</strong>所有服务生效，也可以指定<code>targets</code>对<strong>特定服务</strong>生效，<code>MeshPolicy</code>则是整个网格内生效，对于<strong>命名空间范围</strong>和<strong>网格范围</strong>名称都只能为<code>default</code>。</br>
+同时配置多个策略时使用最窄匹配策略，<strong>特定服务&gt;命名空间范围&gt;网格范围</strong>，如果多个<strong>特定于服务的策略</strong>与服务匹配，则随机选择一个。下面是不同策略范围的具体配置参考：</p>
 
 <p><strong><code>Policy</code>特定于服务的策略</strong></p>
 
@@ -271,6 +274,15 @@ spec:
 
 <h3 id="2-下游-client-开启tls">2.下游<code>client</code>开启TLS</h3>
 
+<p><code>client</code>端TLS由目标规则<code>DestinationRule</code>配置，在流量策略<code>trafficPolicy</code>中开启<code>tls</code></p>
+
+<blockquote>
+<ul>
+<li><a href="https://preliminary.istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#destinationrule">Istio参考配置-通信路由#DestinationRule</a></li>
+<li><a href="https://preliminary.istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#trafficpolicy">Istio参考配置-通信路由#TrafficPolicy</a></li>
+</ul>
+</blockquote>
+
 <pre><code class="language-yaml">apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
@@ -287,6 +299,39 @@ spec:
       version: v1
 ---
 </code></pre>
+
+<p><strong>TLS<code>mode</code>说明</strong></p>
+
+<table>
+<thead>
+<tr>
+<th align="center">mode值</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center">DISABLE</td>
+<td align="left">不要为上游端点使用 TLS。</td>
+</tr>
+
+<tr>
+<td align="center">SIMPLE</td>
+<td align="left">向上游端点发起 TLS 连接。</td>
+</tr>
+
+<tr>
+<td align="center">MUTUAL</td>
+<td align="left">发送客户端证书进行验证，用双向 TLS 连接上游端点。</td>
+</tr>
+
+<tr>
+<td align="center">ISTIO_MUTUAL</td>
+<td align="left">发送客户端证书进行验证，用双向 TLS 连接上游端点。和 MUTUAL 相比，这种方式使用的双向 TLS 证书系统是由 Istio 生成的。如果使用这种模式，TLSSettings 中的其他字段应该留空。</td>
+</tr>
+</tbody>
+</table>
 
 <h2 id="rbac">RBAC</h2>
 
@@ -308,10 +353,11 @@ spec:
 <ul>
 <li><em>这里使用的<code>ClusterRbacConfig</code></em></li>
 </ul></li>
+<li><a href="https://preliminary.istio.io/zh/docs/reference/config/authorization/">Istio参考配置-授权</a></li>
 </ul>
 </blockquote>
 
-<p>有关<code>RbacConfig</code>、<code>ServiceRole</code>、<code>ServiceRoleBinding</code>的属性结构Istio文档有详细的配置可以参考<a href="https://preliminary.istio.io/zh/docs/reference/config/authorization/istio.rbac.v1alpha1/">RBAC</a></p>
+<p>有关<code>RbacConfig</code>、<code>ServiceRole</code>、<code>ServiceRoleBinding</code>的属性结构Istio文档有详细的配置可以参考:<a href="https://preliminary.istio.io/zh/docs/reference/config/authorization/istio.rbac.v1alpha1/">Istio参考配置-授权-RBAC</a></p>
 
 <h3 id="1-开启授权-clusterrbacconfig">1.开启授权<code>ClusterRbacConfig</code></h3>
 
@@ -330,9 +376,44 @@ spec:
 ---
 </code></pre>
 
+<p><code>enforcement_mode</code>可以选择<code>ENFORCED</code>严格模式，或<code>PERMISSIVE</code>宽容模式，宽容模式便于授权策略需要<strong>变更时进行验证测试</strong>，<a href="https://preliminary.istio.io/zh/docs/tasks/security/role-based-access-control/#%E6%8E%88%E6%9D%83%E8%AE%B8%E5%8F%AF%E6%A8%A1%E5%BC%8F">Istio任务-授权许可模式</a>任务中有更具体的场景介绍。</p>
+
+<p><strong>模式<code>mode</code>说明</strong></p>
+
+<table>
+<thead>
+<tr>
+<th align="center">mode值</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="center">OFF</td>
+<td align="left">关闭 Istio RBAC，RbacConfig 的所有配置将会失效，且 Istio RBAC Policies 不会执行。</td>
+</tr>
+
+<tr>
+<td align="center">ON</td>
+<td align="left">为所有 services 和 namespaces 启用 Istio RBAC。</td>
+</tr>
+
+<tr>
+<td align="center">ON_WITH_INCLUSION</td>
+<td align="left">仅针对 inclusion 字段中指定的 services 和 namespaces 启用 Istio RBAC。其它不在 inclusion 字段中的 services 和 namespaces 将不会被 Istio RBAC Policies 强制执行。</td>
+</tr>
+
+<tr>
+<td align="center">ON_WITH_EXCLUSION</td>
+<td align="left">针对除了 exclusion 字段中指定的 services 和 namespaces，启用 Istio RBAC。其它不在 exclusion 字段中的 services 和 namespaces 将按照 Istio RBAC Policies 执行。</td>
+</tr>
+</tbody>
+</table>
+
 <h3 id="2-角色权限规则-servicerole">2.角色权限规则<code>ServiceRole</code></h3>
 
-<p><code>namespace</code> + <code>services</code> + <code>paths</code> + <code>methods</code> 一起定义了如何访问服务，其中<code>services</code>必选，另外有<code>constraints</code>可以指定其它约束</p>
+<p><code>namespace</code> + <code>services</code> + <code>paths</code> + <code>methods</code> 一起定义了如何访问服务，其中<code>services</code>必选，另外有<code>constraints</code>可以指定其它约束，支持的约束参考<a href="https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F">Istio参考配置-授权-约束和属性#支持的约束</a></p>
 
 <pre><code class="language-yaml">apiVersion: &quot;rbac.istio.io/v1alpha1&quot;
 kind: ServiceRole
@@ -351,7 +432,7 @@ spec:
 
 <h3 id="3-角色绑定规则-servicerolebinding">3.角色绑定规则<code>ServiceRoleBinding</code></h3>
 
-<p><code>user</code> + <code>properties</code> 一起定义授权给谁</p>
+<p><code>user</code> + <code>properties</code> 一起定义授权给谁，支持的属性参考<a href="https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F">Istio参考配置-授权-约束和属性#支持的属性</a></p>
 
 <pre><code class="language-yaml">apiVersion: &quot;rbac.istio.io/v1alpha1&quot;
 kind: ServiceRoleBinding
@@ -450,7 +531,7 @@ spec:
         
         
           <a class="next" href="/post/2019-03-05-custom-istio-mixer-adapter/">
-            <span class="next-text nav-default">自定义Istio Mixer Adapter示例教程(附源码)</span>
+            <span class="next-text nav-default">【Istio】自定义 Mixer Adapter示例教程(附源码)</span>
             <span class="prev-text nav-mobile">Next</span>
             <i class="iconfont icon-right"></i>
           </a>
@@ -468,7 +549,7 @@ spec:
   <script type="text/javascript">
   const gitment = new Gitment({
     id: '2019-03-09 09:21:22 \x2b0800 CST',
-    title: 'Istio服务间访问控制-RBAC',
+    title: '【Istio安全】服务间访问控制-RBAC',
     link: decodeURI(location.href),
     desc: '\x3cp\x3eIstio提供了非常易用的安全解决方案，包括服务间身份验证\x3ccode\x3emTLS\x3c\/code\x3e，服务间访问控制\x3ccode\x3eRBAC\x3c\/code\x3e，以及终端用户身份验证\x3ccode\x3eJWT\x3c\/code\x3e等，接下来将介绍如何使用服务间访问控制，同时涉及\x3ccode\x3e双向TLS\x3c\/code\x3e。\x3c\/p\x3e',
     owner: 'hb-chen',

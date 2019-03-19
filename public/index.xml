@@ -39,7 +39,7 @@
     </item>
     
     <item>
-      <title>Istio服务间访问控制-RBAC</title>
+      <title>【Istio安全】服务间访问控制-RBAC</title>
       <link>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</link>
       <pubDate>Sat, 09 Mar 2019 09:21:22 +0800</pubDate>
       
@@ -66,7 +66,7 @@
 &lt;li&gt;&lt;a href=&#34;#RBAC&#34;&gt;RBAC&lt;/a&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;code&gt;ClusterRbacConfig&lt;/code&gt;，启用授权及范围&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ClusterRbacConfig&lt;/code&gt;/&lt;code&gt;RbacConfig&lt;/code&gt;，启用授权及范围&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;ServiceRole&lt;/code&gt;，角色权限规则&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;ServiceRoleBinding&lt;/code&gt;，角色绑定规则&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
@@ -103,11 +103,14 @@
 
 &lt;blockquote&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;网格范围策略&lt;/strong&gt;：在网格范围存储中定义的策略，没有目标选择器部分。网格中最多只能有一个网格范围的策略。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;命名空间范围的策略&lt;/strong&gt;：在命名空间范围存储中定义的策略，名称为 default 且没有目标选择器部分。每个命名空间最多只能有一个命名空间范围的策略。&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;特定于服务的策略&lt;/strong&gt;：在命名空间范围存储中定义的策略，具有非空目标选择器部分。命名空间可以具有零个，一个或多个特定于服务的策略。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;网格范围策略&lt;/strong&gt;：在网格范围存储中定义的策略，没有目标选择器部分。网格中最多只能有&lt;strong&gt;一个网格范围&lt;/strong&gt;的策略。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;命名空间范围的策略&lt;/strong&gt;：在命名空间范围存储中定义的策略，名称为 default 且没有目标选择器部分。每个命名空间最多只能有&lt;strong&gt;一个命名空间范围&lt;/strong&gt;的策略。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;特定于服务的策略&lt;/strong&gt;：在命名空间范围存储中定义的策略，具有非空目标选择器部分。命名空间可以具有&lt;strong&gt;零个，一个或多个特定于服务&lt;/strong&gt;的策略。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/blockquote&gt;
+
+&lt;p&gt;策略范围可以分别由&lt;code&gt;Policy&lt;/code&gt;、&lt;code&gt;MeshPolicy&lt;/code&gt;设置，&lt;code&gt;Policy&lt;/code&gt;可以选择对&lt;strong&gt;命名空间&lt;/strong&gt;所有服务生效，也可以指定&lt;code&gt;targets&lt;/code&gt;对&lt;strong&gt;特定服务&lt;/strong&gt;生效，&lt;code&gt;MeshPolicy&lt;/code&gt;则是整个网格内生效，对于&lt;strong&gt;命名空间范围&lt;/strong&gt;和&lt;strong&gt;网格范围&lt;/strong&gt;名称都只能为&lt;code&gt;default&lt;/code&gt;。&lt;/br&gt;
+同时配置多个策略时使用最窄匹配策略，&lt;strong&gt;特定服务&amp;gt;命名空间范围&amp;gt;网格范围&lt;/strong&gt;，如果多个&lt;strong&gt;特定于服务的策略&lt;/strong&gt;与服务匹配，则随机选择一个。下面是不同策略范围的具体配置参考：&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;&lt;code&gt;Policy&lt;/code&gt;特定于服务的策略&lt;/strong&gt;&lt;/p&gt;
 
@@ -157,6 +160,15 @@ spec:
 
 &lt;h3 id=&#34;2-下游-client-开启tls&#34;&gt;2.下游&lt;code&gt;client&lt;/code&gt;开启TLS&lt;/h3&gt;
 
+&lt;p&gt;&lt;code&gt;client&lt;/code&gt;端TLS由目标规则&lt;code&gt;DestinationRule&lt;/code&gt;配置，在流量策略&lt;code&gt;trafficPolicy&lt;/code&gt;中开启&lt;code&gt;tls&lt;/code&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://preliminary.istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#destinationrule&#34;&gt;Istio参考配置-通信路由#DestinationRule&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://preliminary.istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#trafficpolicy&#34;&gt;Istio参考配置-通信路由#TrafficPolicy&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
@@ -173,6 +185,39 @@ spec:
       version: v1
 ---
 &lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;TLS&lt;code&gt;mode&lt;/code&gt;说明&lt;/strong&gt;&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;center&#34;&gt;mode值&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;描述&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align=&#34;center&#34;&gt;DISABLE&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;不要为上游端点使用 TLS。&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;center&#34;&gt;SIMPLE&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;向上游端点发起 TLS 连接。&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;center&#34;&gt;MUTUAL&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;发送客户端证书进行验证，用双向 TLS 连接上游端点。&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;center&#34;&gt;ISTIO_MUTUAL&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;发送客户端证书进行验证，用双向 TLS 连接上游端点。和 MUTUAL 相比，这种方式使用的双向 TLS 证书系统是由 Istio 生成的。如果使用这种模式，TLSSettings 中的其他字段应该留空。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
 
 &lt;h2 id=&#34;rbac&#34;&gt;RBAC&lt;/h2&gt;
 
@@ -194,10 +239,11 @@ spec:
 &lt;ul&gt;
 &lt;li&gt;&lt;em&gt;这里使用的&lt;code&gt;ClusterRbacConfig&lt;/code&gt;&lt;/em&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://preliminary.istio.io/zh/docs/reference/config/authorization/&#34;&gt;Istio参考配置-授权&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/blockquote&gt;
 
-&lt;p&gt;有关&lt;code&gt;RbacConfig&lt;/code&gt;、&lt;code&gt;ServiceRole&lt;/code&gt;、&lt;code&gt;ServiceRoleBinding&lt;/code&gt;的属性结构Istio文档有详细的配置可以参考&lt;a href=&#34;https://preliminary.istio.io/zh/docs/reference/config/authorization/istio.rbac.v1alpha1/&#34;&gt;RBAC&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;有关&lt;code&gt;RbacConfig&lt;/code&gt;、&lt;code&gt;ServiceRole&lt;/code&gt;、&lt;code&gt;ServiceRoleBinding&lt;/code&gt;的属性结构Istio文档有详细的配置可以参考:&lt;a href=&#34;https://preliminary.istio.io/zh/docs/reference/config/authorization/istio.rbac.v1alpha1/&#34;&gt;Istio参考配置-授权-RBAC&lt;/a&gt;&lt;/p&gt;
 
 &lt;h3 id=&#34;1-开启授权-clusterrbacconfig&#34;&gt;1.开启授权&lt;code&gt;ClusterRbacConfig&lt;/code&gt;&lt;/h3&gt;
 
@@ -216,9 +262,44 @@ spec:
 ---
 &lt;/code&gt;&lt;/pre&gt;
 
+&lt;p&gt;&lt;code&gt;enforcement_mode&lt;/code&gt;可以选择&lt;code&gt;ENFORCED&lt;/code&gt;严格模式，或&lt;code&gt;PERMISSIVE&lt;/code&gt;宽容模式，宽容模式便于授权策略需要&lt;strong&gt;变更时进行验证测试&lt;/strong&gt;，&lt;a href=&#34;https://preliminary.istio.io/zh/docs/tasks/security/role-based-access-control/#%E6%8E%88%E6%9D%83%E8%AE%B8%E5%8F%AF%E6%A8%A1%E5%BC%8F&#34;&gt;Istio任务-授权许可模式&lt;/a&gt;任务中有更具体的场景介绍。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;模式&lt;code&gt;mode&lt;/code&gt;说明&lt;/strong&gt;&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;center&#34;&gt;mode值&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;描述&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align=&#34;center&#34;&gt;OFF&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;关闭 Istio RBAC，RbacConfig 的所有配置将会失效，且 Istio RBAC Policies 不会执行。&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;center&#34;&gt;ON&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;为所有 services 和 namespaces 启用 Istio RBAC。&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;center&#34;&gt;ON_WITH_INCLUSION&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;仅针对 inclusion 字段中指定的 services 和 namespaces 启用 Istio RBAC。其它不在 inclusion 字段中的 services 和 namespaces 将不会被 Istio RBAC Policies 强制执行。&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;center&#34;&gt;ON_WITH_EXCLUSION&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;针对除了 exclusion 字段中指定的 services 和 namespaces，启用 Istio RBAC。其它不在 exclusion 字段中的 services 和 namespaces 将按照 Istio RBAC Policies 执行。&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
 &lt;h3 id=&#34;2-角色权限规则-servicerole&#34;&gt;2.角色权限规则&lt;code&gt;ServiceRole&lt;/code&gt;&lt;/h3&gt;
 
-&lt;p&gt;&lt;code&gt;namespace&lt;/code&gt; + &lt;code&gt;services&lt;/code&gt; + &lt;code&gt;paths&lt;/code&gt; + &lt;code&gt;methods&lt;/code&gt; 一起定义了如何访问服务，其中&lt;code&gt;services&lt;/code&gt;必选，另外有&lt;code&gt;constraints&lt;/code&gt;可以指定其它约束&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;namespace&lt;/code&gt; + &lt;code&gt;services&lt;/code&gt; + &lt;code&gt;paths&lt;/code&gt; + &lt;code&gt;methods&lt;/code&gt; 一起定义了如何访问服务，其中&lt;code&gt;services&lt;/code&gt;必选，另外有&lt;code&gt;constraints&lt;/code&gt;可以指定其它约束，支持的约束参考&lt;a href=&#34;https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F&#34;&gt;Istio参考配置-授权-约束和属性#支持的约束&lt;/a&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: &amp;quot;rbac.istio.io/v1alpha1&amp;quot;
 kind: ServiceRole
@@ -237,7 +318,7 @@ spec:
 
 &lt;h3 id=&#34;3-角色绑定规则-servicerolebinding&#34;&gt;3.角色绑定规则&lt;code&gt;ServiceRoleBinding&lt;/code&gt;&lt;/h3&gt;
 
-&lt;p&gt;&lt;code&gt;user&lt;/code&gt; + &lt;code&gt;properties&lt;/code&gt; 一起定义授权给谁&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;user&lt;/code&gt; + &lt;code&gt;properties&lt;/code&gt; 一起定义授权给谁，支持的属性参考&lt;a href=&#34;https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F&#34;&gt;Istio参考配置-授权-约束和属性#支持的属性&lt;/a&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: &amp;quot;rbac.istio.io/v1alpha1&amp;quot;
 kind: ServiceRoleBinding
@@ -299,7 +380,7 @@ spec:
     </item>
     
     <item>
-      <title>自定义Istio Mixer Adapter示例教程(附源码)</title>
+      <title>【Istio】自定义 Mixer Adapter示例教程(附源码)</title>
       <link>http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/</link>
       <pubDate>Tue, 05 Mar 2019 20:44:07 +0800</pubDate>
       

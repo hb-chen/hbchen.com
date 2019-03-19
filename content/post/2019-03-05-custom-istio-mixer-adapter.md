@@ -1,5 +1,5 @@
 ---
-title: "自定义Istio Mixer Adapter示例教程(附源码)"
+title: "【Istio】自定义 Mixer Adapter示例教程(附源码)"
 date: 2019-03-05T20:44:07+08:00
 comments: true
 categories: [
@@ -8,7 +8,6 @@ categories: [
 tags: [
 	"Service Mesh",
     "Istio",
-    "微服务"
 ]
 ---
 
