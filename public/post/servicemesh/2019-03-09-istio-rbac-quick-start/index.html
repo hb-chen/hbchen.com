@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-cn">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>【Istio安全】服务间访问控制-RBAC - Hobo&#39;s Blog - 技术实践</title>
-  <link rel="alternate" hreflang="en" href="http://hbchen.com" />
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
 
 <meta name="renderer" content="webkit" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
@@ -53,16 +53,16 @@
 <meta property="og:title" content="【Istio安全】服务间访问控制-RBAC" />
 <meta property="og:description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，本文主要介绍如何使用服务间访问控制，同时涉及双向TLS。" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/" /><meta property="article:published_time" content="2019-03-09T09:21:22&#43;08:00"/>
-<meta property="article:modified_time" content="2019-03-09T09:21:22&#43;08:00"/>
+<meta property="og:url" content="http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/" /><meta property="article:published_time" content="2019-03-09T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-03-20T00:00:00&#43;00:00"/>
 
 <meta itemprop="name" content="【Istio安全】服务间访问控制-RBAC">
 <meta itemprop="description" content="Istio提供了非常易用的安全解决方案，包括服务间身份验证mTLS，服务间访问控制RBAC，以及终端用户身份验证JWT等，本文主要介绍如何使用服务间访问控制，同时涉及双向TLS。">
 
 
-<meta itemprop="datePublished" content="2019-03-09T09:21:22&#43;08:00" />
-<meta itemprop="dateModified" content="2019-03-09T09:21:22&#43;08:00" />
-<meta itemprop="wordCount" content="2540">
+<meta itemprop="datePublished" content="2019-03-09T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-03-20T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="2547">
 
 
 
@@ -149,13 +149,43 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 2540 words </span>
-        <span class="more-meta"> 6 min read </span>
+        <span class="more-meta"> 约 2547 字 </span>
+        <span class="more-meta"> 预计阅读 6 分钟 </span>
       </div>
     </header>
 
     
     
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#假设场景">假设场景</a></li>
+<li><a href="#双向tls">双向TLS</a>
+<ul>
+<li><a href="#1-上游-server-开启tls">1.上游<code>server</code>开启TLS</a></li>
+<li><a href="#2-下游-client-开启tls">2.下游<code>client</code>开启TLS</a></li>
+</ul></li>
+<li><a href="#rbac">RBAC</a>
+<ul>
+<li><a href="#1-开启授权-clusterrbacconfig">1.开启授权<code>ClusterRbacConfig</code></a></li>
+<li><a href="#2-角色权限规则-servicerole">2.角色权限规则<code>ServiceRole</code></a></li>
+<li><a href="#3-角色绑定规则-servicerolebinding">3.角色绑定规则<code>ServiceRoleBinding</code></a></li>
+</ul></li>
+<li><a href="#optional">Optional</a>
+<ul>
+<li><a href="#部署实例添加-serviceaccount">部署实例添加<code>ServiceAccount</code></a></li>
+</ul></li>
+<li><a href="#总结">总结</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
 
     
     <div class="post-content">
@@ -171,23 +201,23 @@
 <p><strong>要实现<code>RBAC</code>主要理解以下几个类型的<code>yaml</code>配置，以及之间的关系：</strong></p>
 
 <ul>
-<li><a href="#双向TLS">双向TLS</a>
+<li><a href="#双向tls">双向TLS</a>
 
 <ul>
 <li><code>Policy</code>或<code>MeshPolicy</code>，上游<code>server</code>开启TLS</li>
 <li><code>DestinationRule</code>，下游<code>client</code>开启TLS</li>
 </ul></li>
-<li><a href="#RBAC">RBAC</a>
+<li><a href="#rbac">RBAC</a>
 
 <ul>
 <li><code>ClusterRbacConfig</code>/<code>RbacConfig</code>，启用授权及范围</li>
 <li><code>ServiceRole</code>，角色权限规则</li>
 <li><code>ServiceRoleBinding</code>，角色绑定规则</li>
 </ul></li>
-<li><a href="#Optional">Optional</a>
+<li><a href="#optional">Optional</a>
 
 <ul>
-<li><code>ServiceAccount</code>，<code>RoleBinding</code><code>subjects</code>的<code>user</code>条件
+<li><code>ServiceAccount</code>，<code>ServiceRoleBinding</code><code>subjects</code>的<code>user</code>条件
 <br /></li>
 </ul></li>
 </ul>
@@ -509,16 +539,16 @@ spec:
     
 <div class="post-copyright">
   <p class="copyright-item">
-    <span class="item-title">Author</span>
+    <span class="item-title">文章作者</span>
     <span class="item-content">Hobo Chen</span>
   </p>
   <p class="copyright-item">
-    <span class="item-title">LastMod</span>
-    <span class="item-content">2019-03-09</span>
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-03-20</span>
   </p>
   
   <p class="copyright-item">
-    <span class="item-title">License</span>
+    <span class="item-title">许可协议</span>
     <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
   </p>
 </div>
@@ -545,7 +575,7 @@ spec:
         
           <a class="next" href="/post/2019-03-05-custom-istio-mixer-adapter/">
             <span class="next-text nav-default">【Istio】自定义 Mixer Adapter示例教程(附源码)</span>
-            <span class="prev-text nav-mobile">Next</span>
+            <span class="prev-text nav-mobile">下一篇</span>
             <i class="iconfont icon-right"></i>
           </a>
       </nav>
@@ -561,7 +591,7 @@ spec:
     <script src="/lib/gitment/gitment-0.0.3.min.js"></script>
   <script type="text/javascript">
   const gitment = new Gitment({
-    id: '2019-03-09 09:21:22 \x2b0800 CST',
+    id: '2019-03-09 00:00:00 \x2b0000 UTC',
     title: '【Istio安全】服务间访问控制-RBAC',
     link: decodeURI(location.href),
     desc: '\x3cp\x3eIstio提供了非常易用的安全解决方案，包括服务间身份验证\x3ccode\x3emTLS\x3c\/code\x3e，服务间访问控制\x3ccode\x3eRBAC\x3c\/code\x3e，以及终端用户身份验证\x3ccode\x3eJWT\x3c\/code\x3e等，本文主要介绍如何使用服务间访问控制，同时涉及\x3ccode\x3e双向TLS\x3c\/code\x3e。\x3c\/p\x3e',

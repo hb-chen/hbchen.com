@@ -38,8 +38,8 @@ tags: [
     
 以下示例对token验证、访问控制不做具体设计，重点介绍如何自定义一个`auth-adapter`
 
-自定义Adapter介绍
----
+## 自定义Adapter介绍
+
 配置关系及执行流程如图：
 ![auth-adapter](https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/auth-adapter.jpg)
 
@@ -51,7 +51,7 @@ tags: [
 - 适配器服务实例，`micro-mesh/examples/adapter/auth/operatorconfig/cluster-service.yaml`
 - 适配器配置，`micro-mesh/examples/adapter/auth/operatorconfig/operator-cfg.yaml`
 
-##### 目录结构
+### 目录结构
 ```bash
 bin                         执行文件
 cmd                         

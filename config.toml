@@ -8,9 +8,9 @@ theme = "jane"
 #    archives = "/:year/:month/:day/:filename/"
 
 # language support # en / zh-cn / other...
-defaultContentLanguage = "en"
-[Languages.en]
-  languageCode = "en"
+defaultContentLanguage = "zh-cn"
+[Languages.zh-cn]
+  languageCode = "zh-cn"
 
 hasCJKLanguage = true     # has chinese/japanese/korean ? # 自动检测是否包含 中文\日文\韩文
 paginate = 7                                              # 首页每页显示的文章数
@@ -80,11 +80,13 @@ copyright = "HB Studio"            # default: author.name ↓        # 默认为
 
   # 一些全局开关，你也可以在每一篇内容的 front matter 中针对单篇内容关闭或开启某些功能，在 archetypes/default.md 查看更多信息。
   # Some global options, you can also close or open something in front matter for a single post, see more information from `archetypes/default.md`.
-  toc = false                                                                           # 是否开启目录
-  autoCollapseToc = false   # Auto expand and collapse toc                              # 目录自动展开/折叠
+  toc = true                                                                           # 是否开启目录
+  autoCollapseToc = true   # Auto expand and collapse toc                              # 目录自动展开/折叠
   fancybox = true           # see https://github.com/fancyapps/fancybox                 # 是否启用fancybox（图片可点击）
   bootcdn = false           # In china. @Deprecated: use [params.publicCDN]             # 是否使用bootcdn(@Deprecated: 请使用[params.publicCDN])
   mathjax = false           # see https://www.mathjax.org/                              # 是否使用mathjax（数学公式）
+  mermaid = false            # https://mermaidjs.github.io/  单个文章同时设定mermaid: true
+  mermaidTheme = "default"   # default dark forest
   contentCopyright = '<a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
 
   changyanAppid = ""        # Changyan app id             # 畅言

@@ -1,6 +1,7 @@
 ---
 title: "【Istio安全】服务间访问控制-RBAC"
-date: 2019-03-09T09:21:22+08:00
+date: 2019-03-09
+lastmod: 2019-03-20
 comments: true
 categories: [
 	"Service Mesh",
@@ -23,15 +24,15 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
 
 **要实现`RBAC`主要理解以下几个类型的`yaml`配置，以及之间的关系：**
 
-- [双向TLS](#双向TLS)
+- [双向TLS](#双向tls)
     - `Policy`或`MeshPolicy`，上游`server`开启TLS
     - `DestinationRule`，下游`client`开启TLS
-- [RBAC](#RBAC)
+- [RBAC](#rbac)
     - `ClusterRbacConfig`/`RbacConfig`，启用授权及范围
     - `ServiceRole`，角色权限规则
     - `ServiceRoleBinding`，角色绑定规则
-- [Optional](#Optional)
-    - `ServiceAccount`，`RoleBinding``subjects`的`user`条件
+- [Optional](#optional)
+    - `ServiceAccount`，`ServiceRoleBinding``subjects`的`user`条件
     
 假设场景
 ---
