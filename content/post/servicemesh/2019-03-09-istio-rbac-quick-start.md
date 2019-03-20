@@ -43,10 +43,10 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
 ## 双向TLS
 
 > 
-- [Istio文档-认证策略](https://preliminary.istio.io/zh/docs/concepts/security/#%E8%AE%A4%E8%AF%81)
-    - [认证策略](https://preliminary.istio.io/zh/docs/concepts/security/#%E8%AE%A4%E8%AF%81%E7%AD%96%E7%95%A5)
-- [Istio文档-基础认证策略](https://preliminary.istio.io/zh/docs/tasks/security/authn-policy/)
-    - [为网格中的所有服务启用双向 TLS 认证](https://preliminary.istio.io/zh/docs/tasks/security/authn-policy/#%E4%B8%BA%E7%BD%91%E6%A0%BC%E4%B8%AD%E7%9A%84%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1%E5%90%AF%E7%94%A8%E5%8F%8C%E5%90%91-tls-%E8%AE%A4%E8%AF%81)
+- [Istio文档-认证策略](https://istio.io/zh/docs/concepts/security/#%E8%AE%A4%E8%AF%81)
+    - [认证策略](https://istio.io/zh/docs/concepts/security/#%E8%AE%A4%E8%AF%81%E7%AD%96%E7%95%A5)
+- [Istio文档-基础认证策略](https://istio.io/zh/docs/tasks/security/authn-policy/)
+    - [为网格中的所有服务启用双向 TLS 认证](https://istio.io/zh/docs/tasks/security/authn-policy/#%E4%B8%BA%E7%BD%91%E6%A0%BC%E4%B8%AD%E7%9A%84%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1%E5%90%AF%E7%94%A8%E5%8F%8C%E5%90%91-tls-%E8%AE%A4%E8%AF%81)
 
 ### 1.上游`server`开启TLS
 
@@ -110,8 +110,8 @@ spec:
 `client`端TLS由目标规则`DestinationRule`配置，在流量策略`trafficPolicy`中开启`tls`
 
 >
-- [Istio参考配置-通信路由#DestinationRule](https://preliminary.istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#destinationrule)
-- [Istio参考配置-通信路由#TrafficPolicy](https://preliminary.istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#trafficpolicy)
+- [Istio参考配置-通信路由#DestinationRule](https://istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#destinationrule)
+- [Istio参考配置-通信路由#TrafficPolicy](https://istio.io/zh/docs/reference/config/istio.networking.v1alpha3/#trafficpolicy)
 
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
@@ -144,16 +144,16 @@ spec:
 ## RBAC
 
 >
-- [Istio文档-授权](https://preliminary.istio.io/zh/docs/concepts/security/#%E6%8E%88%E6%9D%83)
-    - [启用授权](https://preliminary.istio.io/zh/docs/concepts/security/#%E5%90%AF%E7%94%A8%E6%8E%88%E6%9D%83)
-    - [授权策略](https://preliminary.istio.io/zh/docs/concepts/security/#%E6%8E%88%E6%9D%83%E7%AD%96%E7%95%A5)
-- [Istio文档-基于角色的访问控制](https://preliminary.istio.io/zh/docs/tasks/security/role-based-access-control/)
-    - [服务级的访问控制](https://preliminary.istio.io/zh/docs/tasks/security/role-based-access-control/#%E6%9C%8D%E5%8A%A1%E7%BA%A7%E7%9A%84%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6)
-- [Istio文档-迁移 RbacConfig 到 ClusterRbacConfig](https://preliminary.istio.io/zh/docs/setup/kubernetes/upgrade/#%E8%BF%81%E7%A7%BB-rbacconfig-%E5%88%B0-clusterrbacconfig)
+- [Istio文档-授权](https://istio.io/zh/docs/concepts/security/#%E6%8E%88%E6%9D%83)
+    - [启用授权](https://istio.io/zh/docs/concepts/security/#%E5%90%AF%E7%94%A8%E6%8E%88%E6%9D%83)
+    - [授权策略](https://istio.io/zh/docs/concepts/security/#%E6%8E%88%E6%9D%83%E7%AD%96%E7%95%A5)
+- [Istio文档-基于角色的访问控制](https://istio.io/zh/docs/tasks/security/role-based-access-control/)
+    - [服务级的访问控制](https://istio.io/zh/docs/tasks/security/role-based-access-control/#%E6%9C%8D%E5%8A%A1%E7%BA%A7%E7%9A%84%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6)
+- [Istio文档-迁移 RbacConfig 到 ClusterRbacConfig](https://istio.io/zh/docs/setup/kubernetes/upgrade/#%E8%BF%81%E7%A7%BB-rbacconfig-%E5%88%B0-clusterrbacconfig)
     - *这里使用的`ClusterRbacConfig`*
-- [Istio参考配置-授权](https://preliminary.istio.io/zh/docs/reference/config/authorization/)
+- [Istio参考配置-授权](https://istio.io/zh/docs/reference/config/authorization/)
     
-有关`RbacConfig`、`ServiceRole`、`ServiceRoleBinding`的属性结构Istio文档有详细的配置可以参考:[Istio参考配置-授权-RBAC](https://preliminary.istio.io/zh/docs/reference/config/authorization/istio.rbac.v1alpha1/)
+有关`RbacConfig`、`ServiceRole`、`ServiceRoleBinding`的属性结构Istio文档有详细的配置可以参考:[Istio参考配置-授权-RBAC](https://istio.io/zh/docs/reference/config/authorization/istio.rbac.v1alpha1/)
 
 ### 1.开启授权`ClusterRbacConfig`
 
@@ -172,7 +172,7 @@ spec:
   enforcement_mode: ENFORCED
 ---
 ```
-`enforcement_mode`可以选择`ENFORCED`严格模式，或`PERMISSIVE`宽容模式，宽容模式便于授权策略需要**变更时进行验证测试**，[Istio任务-授权许可模式](https://preliminary.istio.io/zh/docs/tasks/security/role-based-access-control/#%E6%8E%88%E6%9D%83%E8%AE%B8%E5%8F%AF%E6%A8%A1%E5%BC%8F)任务中有更具体的场景介绍。
+`enforcement_mode`可以选择`ENFORCED`严格模式，或`PERMISSIVE`宽容模式，宽容模式便于授权策略需要**变更时进行验证测试**，[Istio任务-授权许可模式](https://istio.io/zh/docs/tasks/security/role-based-access-control/#%E6%8E%88%E6%9D%83%E8%AE%B8%E5%8F%AF%E6%A8%A1%E5%BC%8F)任务中有更具体的场景介绍。
 
 **模式`mode`说明**
 
@@ -184,7 +184,7 @@ spec:
 | ON_WITH_EXCLUSION	| 针对除了 exclusion 字段中指定的 services 和 namespaces，启用 Istio RBAC。其它不在 exclusion 字段中的 services 和 namespaces 将按照 Istio RBAC Policies 执行。
 
 ### 2.角色权限规则`ServiceRole`
-`namespace` + `services` + `paths` + `methods` 一起定义了如何访问服务，其中`services`必选，另外有`constraints`可以指定其它约束，支持的约束参考[Istio参考配置-授权-约束和属性#支持的约束](https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F)
+`namespace` + `services` + `paths` + `methods` 一起定义了如何访问服务，其中`services`必选，另外有`constraints`可以指定其它约束，支持的约束参考[Istio参考配置-授权-约束和属性#支持的约束](https://istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E7%BA%A6%E6%9D%9F)
 ```yaml
 apiVersion: "rbac.istio.io/v1alpha1"
 kind: ServiceRole
@@ -202,7 +202,7 @@ spec:
 ---
 ```
 ### 3.角色绑定规则`ServiceRoleBinding`
-`user` + `properties` 一起定义授权给谁，支持的属性参考[Istio参考配置-授权-约束和属性#支持的属性](https://preliminary.istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E5%B1%9E%E6%80%A7)
+`user` + `properties` 一起定义授权给谁，支持的属性参考[Istio参考配置-授权-约束和属性#支持的属性](https://istio.io/zh/docs/reference/config/authorization/constraints-and-properties/#%E6%94%AF%E6%8C%81%E7%9A%84%E5%B1%9E%E6%80%A7)
 ```yaml
 apiVersion: "rbac.istio.io/v1alpha1"
 kind: ServiceRoleBinding
