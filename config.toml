@@ -86,7 +86,7 @@ copyright = "HB Studio"            # default: author.name ↓        # 默认为
   bootcdn = false           # In china. @Deprecated: use [params.publicCDN]             # 是否使用bootcdn(@Deprecated: 请使用[params.publicCDN])
   mathjax = false           # see https://www.mathjax.org/                              # 是否使用mathjax（数学公式）
   mermaid = false            # https://mermaidjs.github.io/  单个文章同时设定mermaid: true
-  mermaidTheme = "default"   # default dark forest
+  mermaidTheme = "forest"   # default dark forest neutral
   contentCopyright = '<a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
 
   changyanAppid = ""        # Changyan app id             # 畅言

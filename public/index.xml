@@ -39,6 +39,170 @@
     </item>
     
     <item>
+      <title>【Istio源码】Mixer</title>
+      <link>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-mixer/</link>
+      <pubDate>Sun, 17 Mar 2019 17:23:52 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-mixer/</guid>
+      
+        <description>&lt;p&gt;Mixer模块为Istio提供了模块化可扩展的组件，将策略与遥测进行抽象，通过配置模型进行配置。在&lt;a href=&#34;http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/&#34;&gt;《【Istio】自定义 Mixer Adapter示例教程(附源码)》&lt;/a&gt;中介绍了如何自定义一个Adapter，本文通过&lt;code&gt;mxier&lt;/code&gt;的源码分析，进一步了解适配器如何工作。&lt;/p&gt;
+
+&lt;p&gt;Istio部署中有两个服务与&lt;code&gt;mixer&lt;/code&gt;有关:&lt;code&gt;istio-policy&lt;/code&gt;、&lt;code&gt;istio-telemetry&lt;/code&gt;，分别负责策略与遥测，运行的都是&lt;code&gt;mixs&lt;/code&gt;；另外&lt;code&gt;mixer&lt;/code&gt;的Client端在Sidecar&lt;code&gt;istio-proxy&lt;/code&gt;，竟像是&lt;code&gt;pilot-agent&lt;/code&gt;，镜像中的&lt;code&gt;Envoy&lt;/code&gt;是&lt;code&gt;istio/proxy&lt;/code&gt;通过&lt;code&gt;Envoy&lt;/code&gt;的&lt;code&gt;filter&lt;/code&gt;扩展了&lt;code&gt;mixerclient&lt;/code&gt;、&lt;code&gt;jwt_auth&lt;/code&gt;、&lt;code&gt;authn&lt;/code&gt;等功能。&lt;/p&gt;
+
+&lt;h2 id=&#34;mixer模块-mixs-server-执行序列&#34;&gt;Mixer模块&lt;code&gt;mixs server&lt;/code&gt;执行序列&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;sequenceDiagram
+    participant s as server
+    participant a as api
+    participant r as runtime
+    participant rd as runtine/dispatcher
+    participant rc as runtime/config
+    participant cs as config/store
+    
+    s -&amp;gt;&amp;gt; r: runtime.New()
+    r --&amp;gt;&amp;gt; s: rt *Runtime
+    s -&amp;gt;&amp;gt; r: p.runtimeListen(rt) —&amp;gt; rt.StartListening()
+    r -&amp;gt;&amp;gt; cs: store.StartWatch()
+    loop 配置监控 
+    cs -&amp;gt;&amp;gt; cs: go func() { watchChan&amp;lt;-Event }
+    end
+    cs --&amp;gt;&amp;gt; r: &amp;lt;-watchChan
+    
+    loop 配置更新
+    r -&amp;gt;&amp;gt; rc: go func() { WatchChanges(watchChan) }
+    alt &amp;lt;-watchChan
+    Note over rd,rc: &amp;lt;-watchChan Event先做堆积
+    cs -&amp;gt;&amp;gt; cs: append(events, event)
+    
+    else &amp;lt;-timeChan
+    Note over rd,rc: &amp;lt;-timeChan 计时器更新配置
+    cs -&amp;gt;&amp;gt; r: onConfigChange()
+    r -&amp;gt;&amp;gt; rc: ephemeral.ApplyEvent(events)
+    rc -&amp;gt;&amp;gt; rc: entries Lock()，更新entries
+    r -&amp;gt;&amp;gt; r: processNewConfig()
+    r -&amp;gt;&amp;gt; rc: ephemeral.BuildSnapshot()
+    Note right of rc: 创建配置快照&amp;lt;br/&amp;gt;entries RLock()&amp;lt;br/&amp;gt;......&amp;lt;br/&amp;gt;e.processRuleConfigs
+    rc -&amp;gt;&amp;gt; rc: processXXXConfigs()
+    rc --&amp;gt;&amp;gt; r: nweSnapshot *Snapshot
+    Note right of r: 获得newHandlers
+    r -&amp;gt;&amp;gt; r: handler.NewTable(nweSnapshot)
+    Note right of r: 获得newRoutes
+    r -&amp;gt;&amp;gt; r: routing.BuildTable(newHandlers, nweSnapshot)
+    Note right of r: 更新RoutingContext
+    r -&amp;gt;&amp;gt; rd: dispatcher.ChangeRoute(newRoutes)
+    
+    else &amp;lt;-stop
+    Note over rd,rc: &amp;lt;-stop 退出goroutine
+    cs --&amp;gt;&amp;gt; r: return
+    end
+    end
+    
+    r --&amp;gt;&amp;gt; s: nil or error
+    s -&amp;gt;&amp;gt; a: api.NewGRPCServer(s.dispatcher)
+    a --&amp;gt;&amp;gt; s: *MixerServer
+    s -&amp;gt;&amp;gt; s: grpcServer.Serve()
+    
+    loop MixerServer
+    activate a
+    s -&amp;gt;&amp;gt; a: MixerServer Request
+    Note right of a: Mixer服务逻辑
+    a -&amp;gt;&amp;gt; rd: Check、Quota等调度
+    activate rd
+    rd -&amp;gt;&amp;gt; rd: session.dispatch()
+    Note right of rd: 根据variety、ns筛选&amp;lt;br/&amp;gt;destinations
+    rd -&amp;gt;&amp;gt; rd: s.rc.Routes.GetDestinations()
+    Note right of rd: 等待Adapter调度完成
+    rd -&amp;gt;&amp;gt; rd: s.waitForDispatched()
+    rd --&amp;gt;&amp;gt; a: nil or error
+    a --&amp;gt;&amp;gt; s: MixerServer Response
+    deactivate rd
+    deactivate s
+    end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;通过序列分析对&lt;code&gt;mixs server&lt;/code&gt;有整体的了解，对&lt;code&gt;.yaml&lt;/code&gt;配置逻辑的理解在&lt;code&gt;runtime/config/ephemeral.go&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// BuildSnapshot builds a stable, fully-resolved snapshot view of the configuration.
+func (e *Ephemeral) BuildSnapshot() (*Snapshot, error) {
+	// ……
+	
+	// NOTE: e.entries中Kind为attributemanifest的属性，以及e.templates中Variety为TEMPLATE_VARIETY_ATTRIBUTE_GENERATOR生产的属性
+	attributes := e.processAttributeManifests(monitoringCtx)
+	
+	// NOTE: e.entries中Kind为handler，且在e.adapters中有定义的Resource
+	shandlers := e.processStaticAdapterHandlerConfigs(monitoringCtx)
+	
+	// NOTE: e.entries中Kind在e.templates中的Resource
+	af := ast.NewFinder(attributes)
+	instances := e.processInstanceConfigs(monitoringCtx, af, errs)
+    
+	// New dynamic configurations
+	dTemplates := e.processDynamicTemplateConfigs(monitoringCtx, errs)
+	dAdapters := e.processDynamicAdapterConfigs(monitoringCtx, dTemplates, errs)
+	dhandlers := e.processDynamicHandlerConfigs(monitoringCtx, dAdapters, errs)
+	dInstances := e.processDynamicInstanceConfigs(monitoringCtx, dTemplates, af, errs)
+    
+	// NOTE: 根据规则匹配默认及动态的handlers、instances配置
+	rules := e.processRuleConfigs(monitoringCtx, shandlers, instances, dhandlers, dInstances, af, errs)
+	// ……
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;istio-proxy中-mixerclient-执行流程&#34;&gt;istio/proxy中&lt;code&gt;mixerclient&lt;/code&gt;执行流程&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;src/envoy/BUILD
+
+&lt;ul&gt;
+&lt;li&gt;http/mixer:filter_lib&lt;/li&gt;
+&lt;li&gt;tcp/mixer:filter_lib&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;src/envoy/http、tcp/mixer/filter.cc
+
+&lt;ul&gt;
+&lt;li&gt;分别在&lt;code&gt;decodeHeaders()&lt;/code&gt;和&lt;code&gt;onData()&lt;/code&gt;做&lt;code&gt;Check()&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;src/istio/control/http、tcp/request_handler_impl.cc
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Check()&lt;/code&gt;先做属性注入&lt;/li&gt;
+&lt;li&gt;src/istio/control/client_context_base.cc，&lt;code&gt;SendCheck()&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;调用&lt;code&gt;mixerclient-&amp;gt;Check()&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;src/istio/mixerclient/client_impl.cc
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Check()&lt;/code&gt;先获取缓存&lt;code&gt;checkPolicyCache()&lt;/code&gt;，缓存没有命中则走&lt;code&gt;RemoteCheck()&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;RemoteCheck()&lt;/code&gt;成功后更新缓存&lt;code&gt;updatePolicyCache()&lt;/code&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;graph TB;
+  subgraph src/envoy
+  A[mixer:filter_lib]--&amp;gt;|&amp;quot;decodeHeaders()&amp;quot;|B(http/mixer/filter.cc)
+  A--&amp;gt;|&amp;quot;onData()&amp;quot;|C(tcp/mixer/filter.cc)
+  end
+  subgraph srv/istio/control
+  B--&amp;gt;|&amp;quot;Check(){属性注入}&amp;quot;|D(http/request_handler_impl.cc)
+  C--&amp;gt;|&amp;quot;Check(){属性注入}&amp;quot;|E(tcp/request_handler_impl.cc)
+  D--&amp;gt;|&amp;quot;SendCheck()&amp;quot;|F(client_context_base.cc)
+  E--&amp;gt;|&amp;quot;SendCheck()&amp;quot;|F
+  end
+  subgraph srv/istio/mixerclient
+  F--&amp;gt;|&amp;quot;Check()&amp;quot;|G(client_impl.cc)
+  G--&amp;gt;|&amp;quot;①checkPolicyCache()&amp;quot;|H(check_context.cc)
+  G--&amp;gt;|&amp;quot;②RemoteCheck()&amp;quot;|G
+  G--&amp;gt;|&amp;quot;③updatePolicyCache()&amp;quot;|H
+  end
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【Istio安全】服务间访问控制-RBAC</title>
       <link>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</link>
       <pubDate>Sat, 09 Mar 2019 00:00:00 +0000</pubDate>
