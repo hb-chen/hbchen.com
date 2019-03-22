@@ -2,7 +2,7 @@
 title: "【Knative】Quick Start"
 date: 2019-03-22T20:15:14+08:00
 lastmod: 2019-03-22
-draft: false
+draft: true
 comments: true
 categories: [
 	"Native",

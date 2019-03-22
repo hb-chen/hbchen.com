@@ -7,24 +7,18 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Fri, 22 Mar 2019 20:15:14 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 22 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>【Knative】Quick Start</title>
-      <link>http://hbchen.com/post/native/2019-03-22-knative-quick-start/</link>
-      <pubDate>Fri, 22 Mar 2019 20:15:14 +0800</pubDate>
+      <title>【Istio安全】服务间访问控制-RBAC</title>
+      <link>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</link>
+      <pubDate>Fri, 22 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://hbchen.com/post/native/2019-03-22-knative-quick-start/</guid>
-      <description>&lt;p&gt;Knative快速开始示例&lt;/p&gt;
-
-&lt;ul class=&#34;task-list&#34;&gt;
-&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; checked disabled class=&#34;task-list-item&#34;&gt; hello-world&lt;/label&gt;&lt;/li&gt;
-&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; checked disabled class=&#34;task-list-item&#34;&gt; autoscale-go&lt;/label&gt;&lt;/li&gt;
-&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; disabled class=&#34;task-list-item&#34;&gt; source-to-url-go&lt;/label&gt;&lt;/li&gt;
-&lt;/ul&gt;</description>
+      <guid>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</guid>
+      <description>&lt;p&gt;Istio提供了非常易用的安全解决方案，包括服务间身份验证&lt;code&gt;mTLS&lt;/code&gt;，服务间访问控制&lt;code&gt;RBAC&lt;/code&gt;，以及终端用户身份验证&lt;code&gt;JWT&lt;/code&gt;等，本文主要介绍如何使用服务间访问控制，同时涉及&lt;code&gt;双向TLS&lt;/code&gt;。&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -34,15 +28,6 @@
       
       <guid>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-mixer/</guid>
       <description>&lt;p&gt;Mixer模块为Istio提供了模块化可扩展的组件，将策略与遥测进行抽象，通过配置模型进行配置。在&lt;a href=&#34;http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/&#34;&gt;《【Istio】自定义 Mixer Adapter示例教程(附源码)》&lt;/a&gt;中介绍了如何自定义一个Adapter，本文通过&lt;code&gt;mxier&lt;/code&gt;的源码分析，进一步了解适配器如何工作。&lt;/p&gt;</description>
-    </item>
-    
-    <item>
-      <title>【Istio安全】服务间访问控制-RBAC</title>
-      <link>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</link>
-      <pubDate>Sat, 09 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</guid>
-      <description>&lt;p&gt;Istio提供了非常易用的安全解决方案，包括服务间身份验证&lt;code&gt;mTLS&lt;/code&gt;，服务间访问控制&lt;code&gt;RBAC&lt;/code&gt;，以及终端用户身份验证&lt;code&gt;JWT&lt;/code&gt;等，本文主要介绍如何使用服务间访问控制，同时涉及&lt;code&gt;双向TLS&lt;/code&gt;。&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -297,6 +282,15 @@ go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
 
 &lt;p&gt;Revel&lt;br&gt;
 &lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://hbchen.com/post/servicemesh/knative/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/knative/</guid>
+      <description>kubectl apply --filename https://github.com/knative/serving/releases/download/v0.4.0/serving.yaml \ --filename https://github.com/knative/serving/releases/download/v0.4.0/monitoring-metrics-prometheus.yaml \ --filename https://github.com/knative/build/releases/download/v0.4.0/build.yaml \ --filename https://raw.githubusercontent.com/knative/serving/v0.4.0/third_party/config/build/clusterrole.yaml  kubectl get pods --namespace knative-serving kubectl get pods --namespace knative-build kubectl get pods --namespace knative-monitoring kubectl get pods --namespace knative-eventing kubectl get pods --namespace knative-sources  root@iZt4n3cxtzylaam81i4vyaZ:~/go/src/github.com/knative# kubectl get pods --namespace knative-serving NAME READY STATUS RESTARTS AGE activator-56555cfd8f-gj9cq 2/2 Running 2 1m autoscaler-6d768b4f67-c5lld 2/2 Running 2 1m controller-6cf6f85976-4rpf2 1/1 Running 0 1m webhook-6f7dfd6946-7q87q 1/1 Running 0 1m root@iZt4n3cxtzylaam81i4vyaZ:~/go/src/github.</description>
     </item>
     
   </channel>

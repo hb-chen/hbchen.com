@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Sun, 17 Mar 2019 17:23:52 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 22 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/service-mesh/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio安全】服务间访问控制-RBAC</title>
+      <link>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</link>
+      <pubDate>Fri, 22 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</guid>
+      <description>&lt;p&gt;Istio提供了非常易用的安全解决方案，包括服务间身份验证&lt;code&gt;mTLS&lt;/code&gt;，服务间访问控制&lt;code&gt;RBAC&lt;/code&gt;，以及终端用户身份验证&lt;code&gt;JWT&lt;/code&gt;等，本文主要介绍如何使用服务间访问控制，同时涉及&lt;code&gt;双向TLS&lt;/code&gt;。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【Istio源码】Mixer</title>
@@ -19,15 +28,6 @@
       
       <guid>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-mixer/</guid>
       <description>&lt;p&gt;Mixer模块为Istio提供了模块化可扩展的组件，将策略与遥测进行抽象，通过配置模型进行配置。在&lt;a href=&#34;http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/&#34;&gt;《【Istio】自定义 Mixer Adapter示例教程(附源码)》&lt;/a&gt;中介绍了如何自定义一个Adapter，本文通过&lt;code&gt;mxier&lt;/code&gt;的源码分析，进一步了解适配器如何工作。&lt;/p&gt;</description>
-    </item>
-    
-    <item>
-      <title>【Istio安全】服务间访问控制-RBAC</title>
-      <link>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</link>
-      <pubDate>Sat, 09 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</guid>
-      <description>&lt;p&gt;Istio提供了非常易用的安全解决方案，包括服务间身份验证&lt;code&gt;mTLS&lt;/code&gt;，服务间访问控制&lt;code&gt;RBAC&lt;/code&gt;，以及终端用户身份验证&lt;code&gt;JWT&lt;/code&gt;等，本文主要介绍如何使用服务间访问控制，同时涉及&lt;code&gt;双向TLS&lt;/code&gt;。&lt;/p&gt;</description>
     </item>
     
     <item>
