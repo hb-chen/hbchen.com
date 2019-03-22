@@ -19,6 +19,9 @@ Mixer模块为Istio提供了模块化可扩展的组件，将策略与遥测进�
 
 Istio部署中有两个服务与`mixer`有关:`istio-policy`、`istio-telemetry`，分别负责策略与遥测，运行的都是`mixs`；另外`mixer`的Client端在Sidecar`istio-proxy`，竟像是`pilot-agent`，镜像中的`Envoy`是`istio/proxy`通过`Envoy`的`filter`扩展了`mixerclient`、`jwt_auth`、`authn`等功能。
 
+> 
+- github.com/istio/istio **release 1.1.0**
+- github.com/istio/proxy **release 1.1.0**
 
 ## Mixer模块`mixs server`执行序列
 

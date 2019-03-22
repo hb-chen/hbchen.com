@@ -1,6 +1,7 @@
 ---
 title: "【Istio】自定义 Mixer Adapter示例教程(附源码)"
 date: 2019-03-05T20:44:07+08:00
+lastmod: 2019-03-22
 comments: true
 categories: [
 	"Service Mesh",
@@ -92,7 +93,7 @@ Dockerfile                  Docker镜像
 - OSX
 - Go **1.11.1**
 - protoc **libprotoc 3.6.1**
-- Istio **1.1.0-rc.3**
+- Istio **1.1.0**
 
 ### 1.Istio源码
 ```bash
@@ -187,7 +188,7 @@ docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
 **部署环境**
 
 - GKE **1.12.5-gke.10**
-- Istio **1.1.0-rc.3**
+- Istio **1.1.0**
 
 ```bash
 # 属性、模板

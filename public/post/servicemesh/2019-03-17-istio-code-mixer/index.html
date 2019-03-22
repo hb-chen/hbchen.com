@@ -62,7 +62,7 @@
 
 <meta itemprop="datePublished" content="2019-03-17T17:23:52&#43;08:00" />
 <meta itemprop="dateModified" content="2019-03-21T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="1727">
+<meta itemprop="wordCount" content="1733">
 
 
 
@@ -149,7 +149,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 约 1727 字 </span>
+        <span class="more-meta"> 约 1733 字 </span>
         <span class="more-meta"> 预计阅读 4 分钟 </span>
       </div>
     </header>
@@ -177,6 +177,13 @@
       <p>Mixer模块为Istio提供了模块化可扩展的组件，将策略与遥测进行抽象，通过配置模型进行配置。在<a href="http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/">《【Istio】自定义 Mixer Adapter示例教程(附源码)》</a>中介绍了如何自定义一个Adapter，本文通过<code>mxier</code>的源码分析，进一步了解适配器如何工作。</p>
 
 <p>Istio部署中有两个服务与<code>mixer</code>有关:<code>istio-policy</code>、<code>istio-telemetry</code>，分别负责策略与遥测，运行的都是<code>mixs</code>；另外<code>mixer</code>的Client端在Sidecar<code>istio-proxy</code>，竟像是<code>pilot-agent</code>，镜像中的<code>Envoy</code>是<code>istio/proxy</code>通过<code>Envoy</code>的<code>filter</code>扩展了<code>mixerclient</code>、<code>jwt_auth</code>、<code>authn</code>等功能。</p>
+
+<blockquote>
+<ul>
+<li>github.com/istio/istio <strong>release 1.1.0</strong></li>
+<li>github.com/istio/proxy <strong>release 1.1.0</strong></li>
+</ul>
+</blockquote>
 
 <h2 id="mixer模块-mixs-server-执行序列">Mixer模块<code>mixs server</code>执行序列</h2>
 

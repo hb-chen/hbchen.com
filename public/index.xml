@@ -49,6 +49,13 @@
 
 &lt;p&gt;Istio部署中有两个服务与&lt;code&gt;mixer&lt;/code&gt;有关:&lt;code&gt;istio-policy&lt;/code&gt;、&lt;code&gt;istio-telemetry&lt;/code&gt;，分别负责策略与遥测，运行的都是&lt;code&gt;mixs&lt;/code&gt;；另外&lt;code&gt;mixer&lt;/code&gt;的Client端在Sidecar&lt;code&gt;istio-proxy&lt;/code&gt;，竟像是&lt;code&gt;pilot-agent&lt;/code&gt;，镜像中的&lt;code&gt;Envoy&lt;/code&gt;是&lt;code&gt;istio/proxy&lt;/code&gt;通过&lt;code&gt;Envoy&lt;/code&gt;的&lt;code&gt;filter&lt;/code&gt;扩展了&lt;code&gt;mixerclient&lt;/code&gt;、&lt;code&gt;jwt_auth&lt;/code&gt;、&lt;code&gt;authn&lt;/code&gt;等功能。&lt;/p&gt;
 
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;github.com/istio/istio &lt;strong&gt;release 1.1.0&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;github.com/istio/proxy &lt;strong&gt;release 1.1.0&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
 &lt;h2 id=&#34;mixer模块-mixs-server-执行序列&#34;&gt;Mixer模块&lt;code&gt;mixs server&lt;/code&gt;执行序列&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;sequenceDiagram
@@ -213,7 +220,7 @@ func (e *Ephemeral) BuildSnapshot() (*Snapshot, error) {
 
 &lt;blockquote&gt;
 &lt;ul&gt;
-&lt;li&gt;Istio版本 &lt;strong&gt;1.1.0-rc.3&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Istio版本 &lt;strong&gt;1.1.0&lt;/strong&gt;&lt;/li&gt;
 &lt;li&gt;在的&lt;a href=&#34;https://github.com/hb-go/micro-mesh&#34;&gt;github.com/hb-go/micro-mesh&lt;/a&gt;中有结合示例的&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/deploy/k8s/rbac&#34;&gt;RBAC配置实践&lt;/a&gt;可以参考&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/blockquote&gt;
@@ -668,7 +675,7 @@ Dockerfile                  Docker镜像
 &lt;li&gt;OSX&lt;/li&gt;
 &lt;li&gt;Go &lt;strong&gt;1.11.1&lt;/strong&gt;&lt;/li&gt;
 &lt;li&gt;protoc &lt;strong&gt;libprotoc 3.6.1&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;Istio &lt;strong&gt;1.1.0-rc.3&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Istio &lt;strong&gt;1.1.0&lt;/strong&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;h3 id=&#34;1-istio源码&#34;&gt;1.Istio源码&lt;/h3&gt;
@@ -774,7 +781,7 @@ docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
 
 &lt;ul&gt;
 &lt;li&gt;GKE &lt;strong&gt;1.12.5-gke.10&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;Istio &lt;strong&gt;1.1.0-rc.3&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Istio &lt;strong&gt;1.1.0&lt;/strong&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 属性、模板

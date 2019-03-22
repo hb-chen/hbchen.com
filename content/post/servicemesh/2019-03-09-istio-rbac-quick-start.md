@@ -1,7 +1,7 @@
 ---
 title: "【Istio安全】服务间访问控制-RBAC"
 date: 2019-03-09
-lastmod: 2019-03-20
+lastmod: 2019-03-22
 comments: true
 categories: [
 	"Service Mesh",
@@ -18,7 +18,7 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
 <!--more-->
 
 > 
-- Istio版本 **1.1.0-rc.3**
+- Istio版本 **1.1.0**
 - 在的[github.com/hb-go/micro-mesh](https://github.com/hb-go/micro-mesh)中有结合示例的[RBAC配置实践](https://github.com/hb-go/micro-mesh/tree/master/deploy/k8s/rbac)可以参考
 
 

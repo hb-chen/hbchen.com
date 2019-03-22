@@ -59,7 +59,7 @@
 研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/" /><meta property="article:published_time" content="2019-03-05T20:44:07&#43;08:00"/>
-<meta property="article:modified_time" content="2019-03-05T20:44:07&#43;08:00"/>
+<meta property="article:modified_time" content="2019-03-22T00:00:00&#43;00:00"/>
 
 <meta itemprop="name" content="【Istio】自定义 Mixer Adapter示例教程(附源码)">
 <meta itemprop="description" content="
@@ -70,7 +70,7 @@
 
 
 <meta itemprop="datePublished" content="2019-03-05T20:44:07&#43;08:00" />
-<meta itemprop="dateModified" content="2019-03-05T20:44:07&#43;08:00" />
+<meta itemprop="dateModified" content="2019-03-22T00:00:00&#43;00:00" />
 <meta itemprop="wordCount" content="2489">
 
 
@@ -307,7 +307,7 @@ Dockerfile                  Docker镜像
 <li>OSX</li>
 <li>Go <strong>1.11.1</strong></li>
 <li>protoc <strong>libprotoc 3.6.1</strong></li>
-<li>Istio <strong>1.1.0-rc.3</strong></li>
+<li>Istio <strong>1.1.0</strong></li>
 </ul>
 
 <h3 id="1-istio源码">1.Istio源码</h3>
@@ -413,7 +413,7 @@ docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
 
 <ul>
 <li>GKE <strong>1.12.5-gke.10</strong></li>
-<li>Istio <strong>1.1.0-rc.3</strong></li>
+<li>Istio <strong>1.1.0</strong></li>
 </ul>
 
 <pre><code class="language-bash"># 属性、模板
@@ -474,7 +474,7 @@ curl -H &quot;Authorization: Bearer $TOKEN&quot; -H &quot;x-custom-token: abc&qu
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2019-03-05</span>
+    <span class="item-content">2019-03-22</span>
   </p>
   
   <p class="copyright-item">
