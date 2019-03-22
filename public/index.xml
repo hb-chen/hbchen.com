@@ -743,7 +743,7 @@ metadata:
 spec:
   mode: &#39;ON_WITH_INCLUSION&#39;
   inclusion:
-    namespaces: [&amp;quot;namespace-1&amp;quot;]
+    #namespaces: [&amp;quot;namespace-1&amp;quot;]
     services: [&amp;quot;service-name-1.namespace-1.svc.cluster.local&amp;quot;, &amp;quot;service-name-2.namespace-1.svc.cluster.local&amp;quot;]
   # NOTE: ENFORCED/PERMISSIVE，严格或宽容模式
   enforcement_mode: ENFORCED
