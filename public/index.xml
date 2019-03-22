@@ -39,6 +39,316 @@
     </item>
     
     <item>
+      <title>【Knative】Quick Start</title>
+      <link>http://hbchen.com/post/native/2019-03-22-knative-quick-start/</link>
+      <pubDate>Fri, 22 Mar 2019 20:15:14 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/native/2019-03-22-knative-quick-start/</guid>
+      
+        <description>&lt;p&gt;Knative快速开始示例&lt;/p&gt;
+
+&lt;ul class=&#34;task-list&#34;&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; checked disabled class=&#34;task-list-item&#34;&gt; hello-world&lt;/label&gt;&lt;/li&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; checked disabled class=&#34;task-list-item&#34;&gt; autoscale-go&lt;/label&gt;&lt;/li&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; disabled class=&#34;task-list-item&#34;&gt; source-to-url-go&lt;/label&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;部署环境&lt;/strong&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;GKE &lt;strong&gt;1.12.5-gke.10&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Istio &lt;strong&gt;1.1.0&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;安装&#34;&gt;安装&lt;/h2&gt;
+
+&lt;p&gt;Knative的全量安装组件需要的资源太多，开始测试还是选择自定义安装比较好，结合目标示例选择了以下组件：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Serving Component:
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/knative/serving/releases/download/v0.4.0/serving.yaml&#34;&gt;https://github.com/knative/serving/releases/download/v0.4.0/serving.yaml&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/knative/serving/releases/download/v0.4.0/monitoring-metrics-prometheus.yaml&#34;&gt;https://github.com/knative/serving/releases/download/v0.4.0/monitoring-metrics-prometheus.yaml&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Build Component:
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/knative/build/releases/download/v0.4.0/build.yaml&#34;&gt;https://github.com/knative/build/releases/download/v0.4.0/build.yaml&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Cluster roles:
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://raw.githubusercontent.com/knative/serving/v0.4.0/third_party/config/build/clusterrole.yaml&#34;&gt;https://raw.githubusercontent.com/knative/serving/v0.4.0/third_party/config/build/clusterrole.yaml&lt;/a&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;left&#34;&gt;安装文件名&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;说明&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;依赖关系&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;serving.yaml&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Installs the Serving component.&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Cluster roles enabled, if interacting with Build&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;monitoring-metrics-prometheus.yaml&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Installs only Prometheus*&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Serving component&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;build.yaml&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Installs the Build component.&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Cluster roles enabled, if interacting with Serving&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;clusterrole.yaml&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Enables the Build and Serving components to interact.&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Serving component, Build component&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;strong&gt;Knative安装&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;kubectl apply --filename https://github.com/knative/serving/releases/download/v0.4.0/serving.yaml \
+--filename https://github.com/knative/serving/releases/download/v0.4.0/monitoring-metrics-prometheus.yaml \
+--filename https://github.com/knative/build/releases/download/v0.4.0/build.yaml \
+--filename https://raw.githubusercontent.com/knative/serving/v0.4.0/third_party/config/build/clusterrole.yaml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;安装情况&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;kubectl get pods --namespace knative-serving
+NAME                          READY     STATUS    RESTARTS   AGE
+activator-56555cfd8f-gj9cq    2/2       Running   2          1m
+autoscaler-6d768b4f67-c5lld   2/2       Running   2          1m
+controller-6cf6f85976-4rpf2   1/1       Running   0          1m
+webhook-6f7dfd6946-7q87q      1/1       Running   0          1m
+
+kubectl get pods --namespace knative-build
+NAME                                READY     STATUS    RESTARTS   AGE
+build-controller-755f6dd8b4-nbdr2   1/1       Running   0          32s
+build-webhook-588dcc4f7f-7pcgv      1/1       Running   0          32s
+
+kubectl get pods --namespace knative-monitoring
+NAME                                  READY     STATUS    RESTARTS   AGE
+grafana-7c5b4595b8-qc5fn              1/1       Running   0          1m
+kube-state-metrics-65648b6bf9-q9f5h   4/4       Running   0          1m
+node-exporter-7fhnm                   2/2       Running   0          1m
+node-exporter-9vn9t                   2/2       Running   0          1m
+node-exporter-sd8kt                   2/2       Running   0          1m
+node-exporter-vzrw4                   2/2       Running   0          1m
+prometheus-system-0                   1/1       Running   0          48s
+prometheus-system-1                   1/1       Running   0          48s
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;hello-world&#34;&gt;hello-world&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;service.yaml&lt;/code&gt;配置&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: helloworld-go
+  namespace: default
+spec:
+  runLatest:
+    configuration:
+      revisionTemplate:
+        spec:
+          container:
+            image: gcr.io/knative-samples/helloworld-go
+            env:
+            - name: TARGET
+              value: &amp;quot;Go Sample v1&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;部署&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;kubectl apply --filename service.yaml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;测试&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# ingressgateway ip
+kubectl get svc istio-ingressgateway --namespace istio-system
+NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                                                                                                                                      AGE
+istio-ingressgateway   LoadBalancer   10.39.249.196   35.192.111.18   80:31380/TCP,443:31390/TCP,31400:31400/TCP,15029:31828/TCP,15030:30781/TCP,15031:32757/TCP,15032:31758/TCP,15443:30565/TCP,15020:31820/TCP   4h
+
+# service domain
+kubectl get ksvc helloworld-go  --output=custom-columns=NAME:.metadata.name,DOMAIN:.status.domain
+NAME            DOMAIN
+helloworld-go   helloworld-go.default.example.com
+
+# 访问测试
+curl -H &amp;quot;Host: helloworld-go.default.example.com&amp;quot; http://35.192.111.18
+Hello Go Sample v1!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;autoscrole-go&#34;&gt;autoscrole-go&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;github.com/istio/docs/docs/serving/samples/autoscale-go/service.yaml&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: autoscale-go
+  namespace: default
+spec:
+  runLatest:
+    configuration:
+      revisionTemplate:
+        metadata:
+          annotations:
+            # Target 10 in-flight-requests per pod.
+            autoscaling.knative.dev/target: &amp;quot;10&amp;quot;
+        spec:
+          container:
+            image: gcr.io/knative-samples/autoscale-go:0.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;部署&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;kubectl apply -f https://raw.githubusercontent.com/knative/docs/master/docs/serving/samples/autoscale-go/service.yaml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;测试&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# service domain
+kubectl get ksvc autoscale-go  --output=custom-columns=NAME:.metadata.name,DOMAIN:.status.domain
+NAME           DOMAIN
+autoscale-go   autoscale-go.default.example.com
+
+# 访问测试
+curl -H &amp;quot;Host: autoscale-go.default.example.com&amp;quot; &amp;quot;http://35.192.111.18?sleep=100&amp;amp;prime=10000&amp;amp;bloat=5&amp;quot;
+Allocated 5 Mb of memory.
+The largest prime less than 10000 is 9973.
+Slept for 100.14 milliseconds.
+
+
+# hey压测
+hey -z 30s -c 50 \
+  -host &amp;quot;autoscale-go.default.example.com&amp;quot; \
+  &amp;quot;http://35.192.111.18?sleep=100&amp;amp;prime=10000&amp;amp;bloat=5&amp;quot;
+  
+# 或wrk压测
+wrk -t 4 -d 30s -c 50 -H &amp;quot;Host: autoscale-go.default.example.com&amp;quot; &amp;quot;http://35.192.111.18?sleep=100&amp;amp;prime=10000&amp;amp;bloat=5&amp;quot;
+
+# 可以多压几次或者时长、并发调大，看pods变化情况
+kubectl get pods
+NAME                                             READY     STATUS    RESTARTS   AGE
+autoscale-go-jpmvw-deployment-54f494dd86-4ft4m   0/3       Pending   0          22s
+autoscale-go-jpmvw-deployment-54f494dd86-j6x9j   3/3       Running   0          26s
+autoscale-go-jpmvw-deployment-54f494dd86-ljqd7   3/3       Running   0          28s
+autoscale-go-jpmvw-deployment-54f494dd86-s4xls   3/3       Running   0          28s
+autoscale-go-jpmvw-deployment-54f494dd86-s767s   0/3       Pending   0          24s
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align=&#34;left&#34;&gt;Key&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;Value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;autoscaling.knative.dev/class&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;kpa.autoscaling.knative.dev&lt;br/&gt;hpa.autoscaling.knative.dev&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;autoscaling.knative.dev/metric&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;concurrency&lt;br/&gt;cpu&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;autoscaling.knative.dev/target&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;并发数/CPU占比&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;autoscaling.knative.dev/minScale&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;最小缩容Pod数&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td align=&#34;left&#34;&gt;autoscaling.knative.dev/maxScale&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;最大扩容Pod数&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;code&gt;annotations&lt;/code&gt;定义&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;const (
+	InternalGroupName = &amp;quot;autoscaling.internal.knative.dev&amp;quot;
+
+	GroupName = &amp;quot;autoscaling.knative.dev&amp;quot;
+
+	// ClassAnnotationKey is the annotation for the explicit class of autoscaler
+	// that a particular resource has opted into. For example,
+	//   autoscaling.knative.dev/class: foo
+	// This uses a different domain because unlike the resource, it is user-facing.
+	ClassAnnotationKey = GroupName + &amp;quot;/class&amp;quot;
+	// KPA is Knative Horizontal Pod Autoscaler
+	KPA = &amp;quot;kpa.autoscaling.knative.dev&amp;quot;
+	// HPA is Kubernetes Horizontal Pod Autoscaler
+	HPA = &amp;quot;hpa.autoscaling.knative.dev&amp;quot;
+
+	// MinScaleAnnotationKey is the annotation to specify the minimum number of Pods
+	// the PodAutoscaler should provision. For example,
+	//   autoscaling.knative.dev/minScale: &amp;quot;1&amp;quot;
+	MinScaleAnnotationKey = GroupName + &amp;quot;/minScale&amp;quot;
+	// MaxScaleAnnotationKey is the annotation to specify the maximum number of Pods
+	// the PodAutoscaler should provision. For example,
+	//   autoscaling.knative.dev/maxScale: &amp;quot;10&amp;quot;
+	MaxScaleAnnotationKey = GroupName + &amp;quot;/maxScale&amp;quot;
+
+	// MetricAnnotationKey is the annotation to specify what metric the PodAutoscaler
+	// should be scaled on. For example,
+	//   autoscaling.knative.dev/metric: cpu
+	MetricAnnotationKey = GroupName + &amp;quot;/metric&amp;quot;
+	// Concurrency is the number of requests in-flight at any given time.
+	Concurrency = &amp;quot;concurrency&amp;quot;
+	// CPU is the amount of the requested cpu actually being consumed by the Pod.
+	CPU = &amp;quot;cpu&amp;quot;
+
+	// TargetAnnotationKey is the annotation to specify what metric value the
+	// PodAutoscaler should attempt to maintain. For example,
+	//   autoscaling.knative.dev/metric: cpu
+	//   autoscaling.knative.dev/target: 75   # target 75% cpu utilization
+	TargetAnnotationKey = GroupName + &amp;quot;/target&amp;quot;
+
+	// KPALabelKey is the label key attached to a K8s Service to hint to the KPA
+	// which services/endpoints should trigger reconciles.
+	KPALabelKey = GroupName + &amp;quot;/kpa&amp;quot;
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;source-to-url-go&#34;&gt;source-to-url-go&lt;/h2&gt;
+
+&lt;p&gt;TODO&lt;/p&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【Istio源码】Mixer</title>
       <link>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-mixer/</link>
       <pubDate>Sun, 17 Mar 2019 17:23:52 +0800</pubDate>
@@ -2419,43 +2729,6 @@ func (c App) Index() revel.Result {
 
 &lt;pre&gt;&lt;code&gt;go run app_name
 &lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>Go-Revel:开发环境</title>
-      <link>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</link>
-      <pubDate>Tue, 20 Aug 2013 16:38:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</guid>
-      
-        <description>&lt;p&gt;环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享&lt;/p&gt;
-
-&lt;p&gt;Go&lt;br&gt;
-英文&lt;a href=&#34;http://golang.org/doc/install#osx&#34;&gt;http://golang.org/doc/install#osx&lt;/a&gt; （墙）&lt;br&gt;
-中文&lt;a href=&#34;http://zh.golanger.com/doc/install#osx&#34;&gt;http://zh.golanger.com/doc/install#osx&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Revel&lt;br&gt;
-&lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Revel配置过程中GOPATH和Revel command的配置可以直接编辑.bash_profile，个人感觉这样更简单直接&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#编辑.bash_profile
-$ vi ~/.bash_profile
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#添加两行
-export GOPATH=gocode_path 			#gocode_path自己的工作目录
-export PATH=$PATH:$GOPATH/bin		#PATH可能原来也有其他的配置，继续追加就行，&amp;quot;:&amp;quot;分割
-
-#编辑完成，重启终端
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;开发工具我还是喜欢Sublime Text 2，LiteIDE也试过，感觉一般&lt;br&gt;
-&lt;a href=&#34;http://www.sublimetext.com/&#34;&gt;http://www.sublimetext.com/&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;再推荐个Mac小工具Go2Shell，安装后添加到Finder的工具栏上，直接在当前目录下启动终端，没用过的同学可以装下，很方便&lt;br&gt;
-&lt;a href=&#34;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&#34;&gt;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&lt;/a&gt;&lt;/p&gt;</description>
       
     </item>
     

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Knative on Hobo&#39;s Blog - 技术实践</title>
+    <link>http://hbchen.com/tags/knative/</link>
+    <description>Recent content in Knative on Hobo&#39;s Blog - 技术实践</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <copyright>HB Studio</copyright>
+    <lastBuildDate>Fri, 22 Mar 2019 20:15:14 +0800</lastBuildDate>
+    
+	<atom:link href="http://hbchen.com/tags/knative/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>【Knative】Quick Start</title>
+      <link>http://hbchen.com/post/native/2019-03-22-knative-quick-start/</link>
+      <pubDate>Fri, 22 Mar 2019 20:15:14 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/native/2019-03-22-knative-quick-start/</guid>
+      <description>&lt;p&gt;Knative快速开始示例&lt;/p&gt;
+
+&lt;ul class=&#34;task-list&#34;&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; checked disabled class=&#34;task-list-item&#34;&gt; hello-world&lt;/label&gt;&lt;/li&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; checked disabled class=&#34;task-list-item&#34;&gt; autoscale-go&lt;/label&gt;&lt;/li&gt;
+&lt;li&gt;&lt;label&gt;&lt;input type=&#34;checkbox&#34; disabled class=&#34;task-list-item&#34;&gt; source-to-url-go&lt;/label&gt;&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
