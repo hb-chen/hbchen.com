@@ -554,7 +554,7 @@ func (e *Ephemeral) BuildSnapshot() (*Snapshot, error) {
 &lt;li&gt;&lt;a href=&#34;#optional&#34;&gt;Optional&lt;/a&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;code&gt;ServiceAccount&lt;/code&gt;，&lt;code&gt;ServiceRoleBinding&lt;/code&gt;&lt;code&gt;subjects&lt;/code&gt;的&lt;code&gt;user&lt;/code&gt;条件
+&lt;li&gt;&lt;code&gt;ServiceAccount&lt;/code&gt;，&lt;code&gt;ServiceRoleBinding&lt;/code&gt;.&lt;code&gt;subjects&lt;/code&gt;的&lt;code&gt;user&lt;/code&gt;条件
 &lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
 &lt;/ul&gt;

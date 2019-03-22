@@ -32,7 +32,7 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
     - `ServiceRole`，角色权限规则
     - `ServiceRoleBinding`，角色绑定规则
 - [Optional](#optional)
-    - `ServiceAccount`，`ServiceRoleBinding``subjects`的`user`条件
+    - `ServiceAccount`，`ServiceRoleBinding`.`subjects`的`user`条件
     
 假设场景
 ---
