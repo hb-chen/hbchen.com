@@ -284,14 +284,5 @@ go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
 &lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     
-    <item>
-      <title></title>
-      <link>http://hbchen.com/post/servicemesh/knative/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://hbchen.com/post/servicemesh/knative/</guid>
-      <description>kubectl apply --filename https://github.com/knative/serving/releases/download/v0.4.0/serving.yaml \ --filename https://github.com/knative/serving/releases/download/v0.4.0/monitoring-metrics-prometheus.yaml \ --filename https://github.com/knative/build/releases/download/v0.4.0/build.yaml \ --filename https://raw.githubusercontent.com/knative/serving/v0.4.0/third_party/config/build/clusterrole.yaml  kubectl get pods --namespace knative-serving kubectl get pods --namespace knative-build kubectl get pods --namespace knative-monitoring kubectl get pods --namespace knative-eventing kubectl get pods --namespace knative-sources  root@iZt4n3cxtzylaam81i4vyaZ:~/go/src/github.com/knative# kubectl get pods --namespace knative-serving NAME READY STATUS RESTARTS AGE activator-56555cfd8f-gj9cq 2/2 Running 2 1m autoscaler-6d768b4f67-c5lld 2/2 Running 2 1m controller-6cf6f85976-4rpf2 1/1 Running 0 1m webhook-6f7dfd6946-7q87q 1/1 Running 0 1m root@iZt4n3cxtzylaam81i4vyaZ:~/go/src/github.</description>
-    </item>
-    
   </channel>
 </rss>

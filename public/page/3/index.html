@@ -318,54 +318,6 @@ go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
 </article>
 
     
-      <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title"><a class="post-link" href="/post/servicemesh/knative/"></a></h1>
-    <div class="post-meta">
-      <span class="post-time"> 0001-01-01 </span>
-      
-      <span class="more-meta"> 约 441 字 </span>
-      <span class="more-meta"> 预计阅读 3 分钟 </span>
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      kubectl apply --filename https://github.com/knative/serving/releases/download/v0.4.0/serving.yaml \ --filename https://github.com/knative/serving/releases/download/v0.4.0/monitoring-metrics-prometheus.yaml \ --filename https://github.com/knative/build/releases/download/v0.4.0/build.yaml \ --filename https://raw.githubusercontent.com/knative/serving/v0.4.0/third_party/config/build/clusterrole.yaml  kubectl get pods --namespace knative-serving kubectl get pods --namespace knative-build kubectl get pods --namespace knative-monitoring kubectl get pods --namespace knative-eventing kubectl get pods --namespace knative-sources  root@iZt4n3cxtzylaam81i4vyaZ:~/go/src/github.com/knative# kubectl get pods --namespace knative-serving NAME READY STATUS RESTARTS AGE activator-56555cfd8f-gj9cq 2/2 Running 2 1m autoscaler-6d768b4f67-c5lld 2/2 Running 2 1m controller-6cf6f85976-4rpf2 1/1 Running 0 1m webhook-6f7dfd6946-7q87q 1/1 Running 0 1m root@iZt4n3cxtzylaam81i4vyaZ:~/go/src/github.
-    </div>
-    <div class="read-more">
-      <a href="/post/servicemesh/knative/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
-
-    
-      <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title"><a class="post-link" href="/post/servicemesh/tmp/"></a></h1>
-    <div class="post-meta">
-      <span class="post-time"> 0001-01-01 </span>
-      
-      <span class="more-meta"> 约 2202 字 </span>
-      <span class="more-meta"> 预计阅读 11 分钟 </span>
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      配置更新与解析 mixer/pkg/server/server.go // New instantiates a fully functional Mixer server, ready for traffic. func New(a *Args) (*Server, error) { return newServer(a, newPatchTable()) } func newPatchTable() *patchTable { return &amp;patchTable{ newRuntime: runtime.New, configTracing: tracing.Configure, startMonitor: startMonitor, listen: net.Listen, configLog: log.Configure, runtimeListen: func(rt *runtime.Runtime) error { return rt.StartListening() }, remove: os.Remove, newOpenCensusExporter: func() (view.Exporter, error) { return prometheus.NewExporter(prometheus.Options{Registry: oprometheus.DefaultRegisterer.(*oprometheus.Registry)}) }, registerOpenCensusViews: view.Register, } } func newServer(a *Args, p *patchTable) (*Server, error) { if err := a.
-    </div>
-    <div class="read-more">
-      <a href="/post/servicemesh/tmp/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
-
-    
   </section>
 
   

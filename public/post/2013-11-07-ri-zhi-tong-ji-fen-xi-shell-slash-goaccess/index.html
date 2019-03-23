@@ -248,25 +248,16 @@
 
   
 
-  <div id="comments-gitment"></div>
-  <link rel="stylesheet" href="/lib/gitment/gitment-0.0.3.min.css">
-    <script src="/lib/gitment/gitment-0.0.3.min.js"></script>
-  <script type="text/javascript">
-  const gitment = new Gitment({
-    id: '2013-11-07 18:36:00 \x2b0800 CST',
-    title: '日志统计分析-Shell\/Goaccess',
-    link: decodeURI(location.href),
-    desc: '\x3cp\x3e对Nginx或其他日志进行简单的统计分析\x3c\/p\x3e\n\n\x3cp\x3eShell\n对某一列进行统计，可以分析Status Code,URL等\x3c\/p\x3e\n\n\x3cpre\x3e\x3ccode\x3e#cat access.log | awk \x27{print $9}\x27|sort|uniq -c | sort -r -n \x26gt; stat.log\n或\n#cat access.log |grep \x26quot;200\x26quot; | awk \x27{print $7}\x27|sort|uniq -c | sort -r -n \x26gt; stat.log\n#vi stat.log\n\x3c\/code\x3e\x3c\/pre\x3e',
-    owner: 'hb-chen',
-    repo: 'hbchen.com',
-    oauth: {
-      client_id: '0db80a5eb074f34c9f3a',
-      client_secret: 'e24e8c38bf765dd215fd444cea6ead43345fc9a3'
-    }
-  })
-  gitment.render('comments-gitment')
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
   </script>
-  <noscript>Please enable JavaScript to view the <a href="https://github.com/imsun/gitment">comments powered by gitment.</a></noscript>
+
+  
   </article>
         </div>
       </div>
