@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Fri, 22 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 30 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/istio/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio源码】Pilot Discovery</title>
+      <link>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/</link>
+      <pubDate>Sat, 30 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/</guid>
+      <description>流量管理是网格的基础，Pilot负责三个主要功能：服务治理istio-pilot、Sidecar注入istio-sidecar-inject</description>
+    </item>
     
     <item>
       <title>【Istio安全】服务间访问控制-RBAC</title>

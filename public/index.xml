@@ -39,6 +39,274 @@
     </item>
     
     <item>
+      <title>【Istio源码】Pilot Discovery</title>
+      <link>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/</link>
+      <pubDate>Sat, 30 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/</guid>
+      
+        <description>
+
+&lt;p&gt;流量管理是网格的基础，Pilot负责三个主要功能：服务治理&lt;code&gt;istio-pilot&lt;/code&gt;、Sidecar注入&lt;code&gt;istio-sidecar-injector&lt;/code&gt;、以及Sidecar&lt;code&gt;istio-proxy&lt;/code&gt;，
+分别由三个模块负责：&lt;code&gt;pilot-discovery&lt;/code&gt;、&lt;code&gt;sidecar-injector&lt;/code&gt;、&lt;code&gt;pilot-agent&lt;/code&gt;，这里从&lt;code&gt;pilot-discovery&lt;/code&gt;开始。&lt;/p&gt;
+
+&lt;h2 id=&#34;discovery运行序列&#34;&gt;Discovery运行序列&lt;/h2&gt;
+
+&lt;h3 id=&#34;kube环境简化序列&#34;&gt;kube环境简化序列&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;sequenceDiagram
+    participant s as server
+    participant f as fileWatcher
+    participant i as k8s.io/client-go&amp;lt;br/&amp;gt;informer
+    participant h as handler
+    
+    Note over s: mesh
+    s -&amp;gt;&amp;gt; f: addFieWatcher()
+    Note over s: meshNetworks
+    s -&amp;gt;&amp;gt; f: addFileWatcher()
+    Note over s: config
+        loop IstioConfigTypes
+        s -&amp;gt;&amp;gt; i: cache.NewSharedIndexInformer()
+        end
+    Note over s: service
+        s -&amp;gt;&amp;gt; i: Services().Informer()
+        s -&amp;gt;&amp;gt; i: Endpoints().Informer()
+        s -&amp;gt;&amp;gt; i: Nodes().Informer()
+        s -&amp;gt;&amp;gt; i: Pods().Informer()
+    Note over s: discovery
+        s -&amp;gt;&amp;gt; h: service.AppendServiceHandler()
+        s -&amp;gt;&amp;gt; h: service.AppendInstanceHandler()
+        s -&amp;gt;&amp;gt; h: config.RegisterEventHandler()
+    
+    alt fsnotify
+        f -&amp;gt;&amp;gt; s: fsnotify.Event()
+        s -&amp;gt;&amp;gt; s: discovery.ConfigUpdate(true)
+    end
+        
+    alt K8S
+        i -&amp;gt;&amp;gt; h: handler.Apply()
+        loop handler.funcs
+            h -&amp;gt;&amp;gt; s: discovery.ConfigUpdate()
+        end
+    end
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;详细序列&#34;&gt;详细序列&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;sequenceDiagram
+    participant b as bootstrap
+    participant kc as k8s.io/client-go
+    participant cmd as cmd
+    participant c as config/&amp;lt;br/&amp;gt;aggregate&amp;lt;br/&amp;gt;kube&amp;lt;br/&amp;gt;……
+    
+    participant k as kube
+    participant m as model
+    participant pe as proxy/envoy
+    participant sr as serviceregistry
+    
+    
+    b -&amp;gt;&amp;gt; b: NewServer()
+    Note left of b: initKubeClient()
+    b -&amp;gt;&amp;gt; k: kube.CreateClientset()
+    k --&amp;gt;&amp;gt; b: kubeClient *kubernetes.Clientset
+    
+    Note left of b: 网格配置&amp;lt;br/&amp;gt;initMesh()
+        Note over kc,cmd: 默认ConfigFile&amp;lt;br/&amp;gt;/etc/istio/config/mesh
+        alt args.Mesh.ConfigFile != &amp;quot;&amp;quot;
+        b -&amp;gt;&amp;gt; cmd: cmd.ReadMeshConfig(args.Mesh.ConfigFile)
+        cmd --&amp;gt;&amp;gt; b: mesh *meshconfig.MeshConfig
+        Note over b,c: ❤️❤️❤️️❤️️❤️&amp;lt;br/&amp;gt;️addFileWatcher(args.Mesh.ConfigFile)&amp;lt;br/&amp;gt;mesh reload&amp;lt;br/&amp;gt;✅s.EnvoyXdsServer.ConfigUpdate()
+        else K8s ConfigMap 获取配置
+        b -&amp;gt;&amp;gt; b: GetMeshConfig(s.kubeClient, kube.IstioNamespace, kube.IstioConfigMap)
+        b -&amp;gt;&amp;gt; m: model.DefaultMeshConfig()/model.ApplyMeshConfigDefaults(cfgYaml)
+        m --&amp;gt;&amp;gt; b: mesh meshconfig.MeshConfig
+        end
+    
+    Note left of b: Mesh网络配置&amp;lt;br/&amp;gt;initMeshNetworks()
+        Note over kc,cmd: 默认NetworksConfigFile&amp;lt;br/&amp;gt;/etc/istio/config/meshNetworks
+        alt args.NetworksConfigFile != &amp;quot;&amp;quot;
+        b -&amp;gt;&amp;gt; cmd: cmd.ReadMeshNetworksConfig()
+        cmd --&amp;gt;&amp;gt; b: meshNetworks *meshconfig.MeshNetworks
+        Note over b,c: ❤️❤️❤️️❤️️❤️&amp;lt;br/&amp;gt;addFileWatcher(args.NetworksConfigFile)&amp;lt;br/&amp;gt;meshNetworks reload&amp;lt;br/&amp;gt;✅s.EnvoyXdsServer.ConfigUpdate()
+        end
+    
+    Note left of b: Mixer&amp;lt;br/&amp;gt;initMixerSan()
+        alt s.mesh.DefaultConfig.ControlPlaneAuthPolicy == meshconfig.AuthenticationPolicy_MUTUAL_TLS
+        b -&amp;gt;&amp;gt; pe: envoy.GetMixerSAN(args.Namespace)
+        pe -&amp;gt;&amp;gt; b: SpiffeURI string
+        Note over kc,cmd: s.mixerSAN[SpiffeURI]&amp;lt;br/&amp;gt;NewDiscoveryService的Env
+        end
+    
+    Note left of b: 配置管理&amp;lt;br/&amp;gt;initConfigController()
+        alt len(args.MCPServerAddrs) &amp;gt; 0 || len(s.mesh.ConfigSources) &amp;gt; 0
+        Note over kc,cmd: s.initMCPConfigController()
+            Note over kc,cmd: var clients []*client.Client&amp;lt;br/&amp;gt;var clients2 []*sink.Client&amp;lt;br/&amp;gt;var conns []*grpc.ClientConn&amp;lt;br/&amp;gt;var configStores []model.ConfigStoreCache
+            loop s.mesh.ConfigSources
+                alt url.Scheme == fsScheme
+                b -&amp;gt;&amp;gt; c: memory.NewController(store)
+                c --&amp;gt;&amp;gt; b: configController model.ConfigStoreCache
+                Note over kc,cmd: configStores = append(configStores, configController)
+                else
+                b -&amp;gt;&amp;gt; c: coredatamodel.NewController()
+                c --&amp;gt;&amp;gt; b: mcpController CoreDataModel
+                Note over kc,cmd: clients = append(clients, mcpClient)&amp;lt;br/&amp;gt;clients2 = append(clients2, mcpClient2)&amp;lt;br/&amp;gt;mcpController是MCP Client的Updater&amp;lt;br/&amp;gt;当Client端收到Response时&amp;lt;br/&amp;gt;通过Updater.Apply()接口通知更新
+                Note over kc,cmd: conns = append(conns, conn)&amp;lt;br/&amp;gt;configStores = append(configStores, mcpController)
+                end
+            end
+            
+            alt len(configStores) == 0
+            Note over kc,cmd: ConfigSources未加载配置&amp;lt;br/&amp;gt;从MCPServerAddrs加载
+            loop args.MCPServerAddrs
+            b -&amp;gt;&amp;gt; c: coredatamodel.NewController()
+            c --&amp;gt;&amp;gt; b: mcpController CoreDataModel
+            Note over kc,cmd: conns = append(conns, conn)&amp;lt;br/&amp;gt;configStores = append(configStores, mcpController)
+            end
+            end
+            
+            
+            Note over b,c: ❤️❤️❤️️❤️️❤️&amp;lt;br/&amp;gt;s.addStartFunc(go func() {client.Run(ctx)}())&amp;lt;br/&amp;gt;MCP Clients启动&amp;lt;br/&amp;gt;接收到Response通知mcpController&amp;lt;br/&amp;gt;Apply(*Change)&amp;lt;br/&amp;gt;model.ServiceEntry.Type的修改通知到serviceEntryEvents()&amp;lt;br/&amp;gt;❗在external.NewServiceDiscovery()有model.ServiceEntry.Type的handler
+            Note over kc,cmd: 配置汇总
+            b -&amp;gt;&amp;gt; c: configaggregate.MakeCache(configStores)
+            c --&amp;gt;&amp;gt; b: aggregateMcpController model.ConfigStoreCache
+            
+        else args.Config.Controller != nil
+        Note over kc,cmd: s.configController = args.Config.Controller
+        else args.Config.FileDir != &amp;quot;&amp;quot;
+        Note over kc,cmd: configController := memory.NewController(store)
+        else 默认KubeConfig
+        Note over kc,cmd: controller, err := s.makeKubeConfigController(args)
+        end
+        
+        Note over b,c: ❤️❤️❤️️❤️️❤️&amp;lt;br/&amp;gt;s.addStartFunc ( go s.configController.Run(stop) )&amp;lt;br/&amp;gt;配置Controller启动&amp;lt;br/&amp;gt;处理配置变更的EventHandler&amp;lt;br/&amp;gt;memory、kube.crd的Controller有Run()实现
+        Note over kc,cmd: memory通过makeFileMonitor()监控文件&amp;lt;br/&amp;gt;接收资源变更时更新configStore&amp;lt;br/&amp;gt;并通过monitor.ScheduleProcessEvent()分发事件&amp;lt;br/&amp;gt;❗RegisterEventHandler将handler Append到monitor的handlers
+        Note over kc,cmd: kube.crd.cacheHandler运行informer&amp;lt;br/&amp;gt;informer监控不同ConfigType&amp;lt;br/&amp;gt;informer将资源Add、Update、Delete事件统一压入Queue&amp;lt;br/&amp;gt;Queue Run()逐个事件处理，即cacheHandler的hander.funcs&amp;lt;br/&amp;gt;❗RegisterEventHandler将handler Append到hander.funcs
+        Note over b,c: 💚💚💚💚💚&amp;lt;br/&amp;gt;RegisterEventHandler()&amp;lt;br/&amp;gt;&amp;lt;br/&amp;gt;❗在Discovery和ServiceRegistry有handler注册
+        
+        alt hasKubeRegistry(args) &amp;amp;&amp;amp; s.mesh.IngressControllerMode != meshconfig.MeshConfig_OFF
+        Note over kc,cmd: K8s ingress的ConfigController
+        b -&amp;gt;&amp;gt; c: ingress.NewController()
+        c --&amp;gt;&amp;gt; b: ingress model.ConfigStoreCache
+        b -&amp;gt;&amp;gt; c: configaggregate.MakeCache(s.configController, ingress)
+        c --&amp;gt;&amp;gt; b: configController model.ConfigStoreCache
+        b -&amp;gt;&amp;gt; c: ingress.NewStatusSyncer()
+        c --&amp;gt;&amp;gt; b: ingressSyncer *StatusSyncer
+        Note over b,c: ❤️❤️❤️️❤️️❤️&amp;lt;br/&amp;gt;s.addStartFunc ( go ingressSyncer.Run(stop) )&amp;lt;br/&amp;gt;Ingress Syncer启动
+        end
+        b -&amp;gt;&amp;gt; m: model.MakeIstioStore(s.configController)
+        m --&amp;gt;&amp;gt; b: istioConfigStore IstioConfigStore
+        Note over b,c: 💚💚💚💚💚&amp;lt;br/&amp;gt;istioConfigStore提供Istio配置获取&amp;lt;br/&amp;gt;主要为ConfigStore的List()接口
+    
+    Note left of b: 服务注册&amp;lt;br/&amp;gt;initServiceControllers()
+        b -&amp;gt;&amp;gt; sr: aggregate.NewController()
+        sr --&amp;gt;&amp;gt; b: serviceControllers *Controller
+        loop args.Service.Registries
+        Note over b,c: 💚💚💚💚💚&amp;lt;br/&amp;gt;多注册中心&amp;lt;br/&amp;gt;Controller通过AppendServiceHandler()、AppendInstanceHandler()接收外部Handler&amp;lt;br/&amp;gt;在有变更时轮询Handler&amp;lt;br/&amp;gt;❗Discovery会AppendHandler
+        alt serviceregistry.MockRegistry
+        b -&amp;gt;&amp;gt; b: s.initMemoryRegistry()
+        b -&amp;gt;&amp;gt; sr: srmemory.NewDiscovery() aggregate.Registry{}
+        b --&amp;gt;&amp;gt; b: serviceControllers.AddRegistry()
+        else serviceregistry.KubernetesRegistry
+        b -&amp;gt;&amp;gt; b: s.createK8sServiceControllers()
+        b -&amp;gt;&amp;gt; sr: kube.NewController()
+        b --&amp;gt;&amp;gt; b: serviceControllers.AddRegistry()
+        else serviceregistry.ConsulRegistry
+        b -&amp;gt;&amp;gt; b: s.initConsulRegistry()
+        b -&amp;gt;&amp;gt; sr: consul.NewController()
+        b --&amp;gt;&amp;gt; b: serviceControllers.AddRegistry()
+        else serviceregistry.MCPRegistry
+        Note over kc,cmd: no-op: get service info from MCP ServiceEntries.
+        end
+        end
+        b -&amp;gt;&amp;gt; sr: external.NewServiceDiscovery()
+        sr --&amp;gt;&amp;gt; b: serviceEntryStore *ServiceEntryStore
+        b --&amp;gt;&amp;gt; b: serviceControllers.AddRegistry()
+        Note over b,c: ❤️❤️❤️️❤️️❤️&amp;lt;br/&amp;gt;s.addStartFunc()&amp;lt;br/&amp;gt;服务注册Controllers启动
+    
+    Note left of b: 服务发现&amp;lt;br/&amp;gt;initDiscoveryService()&amp;lt;br/&amp;gt;gRPC和HTTP服务
+        b -&amp;gt;&amp;gt; pe: envoy.NewDiscoveryService()
+        Note over b,c: 💚💚💚💚💚ds.clearCache()封装为Handler&amp;lt;br/&amp;gt;接收s.ServiceController、s.configController的变更通知&amp;lt;br/&amp;gt;✅s.ServiceController.AppendServiceHandler()&amp;lt;br/&amp;gt;✅s.ServiceController.AppendInstanceHandler()&amp;lt;br/&amp;gt;✅s.configController.RegisterEventHandler()
+        pe --&amp;gt;&amp;gt; b: discovery *DiscoveryService
+        Note over kc,cmd: HTTP&amp;lt;br/&amp;gt;envoy.DiscoveryService提供/v1/registration以及/debug/pprof/* REST接口
+        b --&amp;gt; b: s.mux = discovery.RestContainer.ServeMux
+        b -&amp;gt;&amp;gt; pe: envoyv2.NewDiscoveryServer()
+        pe --&amp;gt;&amp;gt; b: s.EnvoyXdsServer *DiscoveryServer
+        Note over kc,cmd: gRPC&amp;lt;br/&amp;gt;envoyv2.DiscoveryServer&amp;lt;br/&amp;gt;只提供StreamAggregatedResources()服务&amp;lt;br/&amp;gt;xDS管理
+        Note over kc,cmd: s.initGrpcServer()&amp;lt;br/&amp;gt;s.httpServer&amp;lt;br/&amp;gt;http.Server{Handler: s.mux}        
+        Note over kc,cmd: http listener&amp;lt;br/&amp;gt;grpc listener
+        Note over b,c: ❤️❤️❤️️❤️❤️️s.addStartFunc()&amp;lt;br/&amp;gt;s.httpServer.Serve()&amp;lt;br/&amp;gt;s.grpcServer.Serve()
+        alt args.DiscoveryOptions.SecureGrpcAddr != &amp;quot;&amp;quot;
+        b -&amp;gt;&amp;gt; b: initSecureGrpcServer()
+            Note over kc,cmd: s.secureGRPCServer&amp;lt;br/&amp;gt;s.secureHTTPServer
+        Note over b,c: ❤️❤️❤️️❤️️❤️&amp;lt;br/&amp;gt;s.addStartFunc()&amp;lt;br/&amp;gt;s.secureHTTPServer.ServeTLS()
+        end
+        
+        Note right of b: 
+    
+    Note left of b: 监控&amp;lt;br/&amp;gt;initMonitor()
+        Note over b,c: ❤️❤️❤️️❤️️❤️&amp;lt;br/&amp;gt;s.addStartFunc()&amp;lt;br/&amp;gt;startMonitor()
+    
+    Note left of b: 集群&amp;lt;br/&amp;gt;initClusterRegistries()
+        b -&amp;gt;&amp;gt; c: clusterregistry.NewMulticluster()
+        c --&amp;gt;&amp;gt; b: multicluster *Multicluster
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;discovery-server流程&#34;&gt;Discovery Server流程&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;graph LR
+    
+    
+    s(ads.StreamAggregatedResources)
+    style s fill:#f9f
+    s --&amp;gt; rc(reqChannel)
+    s --&amp;gt; pc(pushChannel)
+    style rc fill:#f9f
+    style pc fill:#f9f
+    
+    subgraph reqChannel
+        rc --&amp;gt; dt{discReq.TypeUrl}
+        dt --&amp;gt;|ClusterType| pushCds[&amp;quot;pushCds()&amp;quot;]
+        dt --&amp;gt;|ListenerType| pushLds[&amp;quot;pushLds()&amp;quot;]
+        dt --&amp;gt;|RouteType| pushRoute[&amp;quot;pushRoute()&amp;quot;]
+        dt --&amp;gt;|EndpointType| pushEds[&amp;quot;pushEds()&amp;quot;]
+    end
+    
+    subgraph pushChannel
+        nd(&amp;quot;NewDiscoveryServer&amp;quot;) --&amp;gt; pr(&amp;quot;periodicRefresh&amp;quot;)
+        nd --&amp;gt; ash(&amp;quot;s.ServiceController.AppendServiceHandler()&amp;quot;)
+        nd --&amp;gt; aih(&amp;quot;s.ServiceController.AppendInstanceHandler()&amp;quot;)
+        nd --&amp;gt; reh(&amp;quot;s.configController.RegisterEventHandler()&amp;quot;)
+        ash --&amp;gt; clearCache(&amp;quot;clearCache()&amp;quot;)
+        aih --&amp;gt; clearCache
+        reh --&amp;gt; clearCache
+        clearCache --&amp;gt;|full=true| ds(&amp;quot;ds.ConfigUpdate()&amp;quot;)
+        pr --&amp;gt; pa(&amp;quot;ads.AdsPushAll()&amp;quot;)         
+        
+        sp(&amp;quot;ads.startPush()&amp;quot;) --&amp;gt; pc
+        
+        c(config) --MeshConfig/MeshNetworks/MCPConfig--&amp;gt; ds
+        ds --&amp;gt; dp(&amp;quot;doPush()&amp;quot;)
+        dp --&amp;gt; push(&amp;quot;Push()&amp;quot;)
+        
+        push --&amp;gt; pa
+        pa --&amp;gt; updateCluster[&amp;quot;eds.updateCluster()&amp;quot;]
+        push --&amp;gt; updateServiceShards[&amp;quot;eds.updateServiceShards()&amp;quot;]
+        pa --&amp;gt; ei(&amp;quot;eds.edsIncremental()&amp;quot;)
+        ei --&amp;gt; updateClusterInc(&amp;quot;eds.updateClusterInc()&amp;quot;)
+        pa --&amp;gt; sp
+        ei --&amp;gt; sp
+        updateClusterInc --&amp;gt; updateCluster
+        
+        
+        pc --&amp;gt; pushConn(pushConnection)
+        pushConn -.-&amp;gt; C/E/L/Rds
+    end
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+      
+    </item>
+    
+    <item>
       <title>【Istio安全】服务间访问控制-RBAC</title>
       <link>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</link>
       <pubDate>Fri, 22 Mar 2019 00:00:00 +0000</pubDate>
@@ -2419,43 +2687,6 @@ func (c App) Index() revel.Result {
 
 &lt;pre&gt;&lt;code&gt;go run app_name
 &lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>Go-Revel:开发环境</title>
-      <link>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</link>
-      <pubDate>Tue, 20 Aug 2013 16:38:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</guid>
-      
-        <description>&lt;p&gt;环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享&lt;/p&gt;
-
-&lt;p&gt;Go&lt;br&gt;
-英文&lt;a href=&#34;http://golang.org/doc/install#osx&#34;&gt;http://golang.org/doc/install#osx&lt;/a&gt; （墙）&lt;br&gt;
-中文&lt;a href=&#34;http://zh.golanger.com/doc/install#osx&#34;&gt;http://zh.golanger.com/doc/install#osx&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Revel&lt;br&gt;
-&lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Revel配置过程中GOPATH和Revel command的配置可以直接编辑.bash_profile，个人感觉这样更简单直接&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#编辑.bash_profile
-$ vi ~/.bash_profile
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#添加两行
-export GOPATH=gocode_path 			#gocode_path自己的工作目录
-export PATH=$PATH:$GOPATH/bin		#PATH可能原来也有其他的配置，继续追加就行，&amp;quot;:&amp;quot;分割
-
-#编辑完成，重启终端
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;开发工具我还是喜欢Sublime Text 2，LiteIDE也试过，感觉一般&lt;br&gt;
-&lt;a href=&#34;http://www.sublimetext.com/&#34;&gt;http://www.sublimetext.com/&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;再推荐个Mac小工具Go2Shell，安装后添加到Finder的工具栏上，直接在当前目录下启动终端，没用过的同学可以装下，很方便&lt;br&gt;
-&lt;a href=&#34;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&#34;&gt;https://itunes.apple.com/cn/app/go2shell/id445770608?mt=12&lt;/a&gt;&lt;/p&gt;</description>
       
     </item>
     
