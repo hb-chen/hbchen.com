@@ -45,9 +45,7 @@
       
       <guid>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/</guid>
       
-        <description>
-
-&lt;p&gt;流量管理是网格的基础，Pilot负责三个主要功能：服务治理&lt;code&gt;istio-pilot&lt;/code&gt;、Sidecar注入&lt;code&gt;istio-sidecar-injector&lt;/code&gt;、以及Sidecar&lt;code&gt;istio-proxy&lt;/code&gt;，
+        <description>&lt;p&gt;流量管理是网格的基础，Pilot负责三个主要功能：服务治理&lt;code&gt;istio-pilot&lt;/code&gt;、Sidecar注入&lt;code&gt;istio-sidecar-injector&lt;/code&gt;、以及Sidecar&lt;code&gt;istio-proxy&lt;/code&gt;，
 分别由三个模块负责：&lt;code&gt;pilot-discovery&lt;/code&gt;、&lt;code&gt;sidecar-injector&lt;/code&gt;、&lt;code&gt;pilot-agent&lt;/code&gt;，这里从&lt;code&gt;pilot-discovery&lt;/code&gt;开始。&lt;/p&gt;
 
 &lt;h2 id=&#34;discovery运行序列&#34;&gt;Discovery运行序列&lt;/h2&gt;
@@ -301,8 +299,7 @@
         pc --&amp;gt; pushConn(pushConnection)
         pushConn -.-&amp;gt; C/E/L/Rds
     end
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
     

@@ -16,6 +16,7 @@ tags: [
 
 流量管理是网格的基础，Pilot负责三个主要功能：服务治理`istio-pilot`、Sidecar注入`istio-sidecar-injector`、以及Sidecar`istio-proxy`，
 分别由三个模块负责：`pilot-discovery`、`sidecar-injector`、`pilot-agent`，这里从`pilot-discovery`开始。
+<!--more-->
 
 
 ## Discovery运行序列
