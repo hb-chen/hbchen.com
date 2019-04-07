@@ -64,7 +64,7 @@
 
 <meta itemprop="datePublished" content="2019-03-30T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-03-30T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="3793">
+<meta itemprop="wordCount" content="3861">
 
 
 
@@ -152,7 +152,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 约 3793 字 </span>
+        <span class="more-meta"> 约 3861 字 </span>
         <span class="more-meta"> 预计阅读 8 分钟 </span>
       </div>
     </header>
@@ -203,26 +203,34 @@
         s -&gt;&gt; i: cache.NewSharedIndexInformer()
         end
     Note over s: service
+        activate i
         s -&gt;&gt; i: Services().Informer()
         s -&gt;&gt; i: Endpoints().Informer()
         s -&gt;&gt; i: Nodes().Informer()
         s -&gt;&gt; i: Pods().Informer()
+        deactivate i
     Note over s: discovery
+        activate h
         s -&gt;&gt; h: service.AppendServiceHandler()
         s -&gt;&gt; h: service.AppendInstanceHandler()
         s -&gt;&gt; h: config.RegisterEventHandler()
-    
+        deactivate h
     alt fsnotify
         f -&gt;&gt; s: fsnotify.Event()
-        s -&gt;&gt; s: discovery.ConfigUpdate(true)
+        s -&gt;&gt; s: ds.ConfigUpdate()
     end
         
     alt K8S
         i -&gt;&gt; h: handler.Apply()
         loop handler.funcs
-            h -&gt;&gt; s: discovery.ConfigUpdate()
+            h -&gt;&gt; s: Event Handler
+            s -&gt;&gt; s: ds.ConfigUpdate()
         end
     end
+    activate s
+    s -&gt;&gt; s: pushChannel &lt;- XdsEvent
+    s -&gt;&gt; s: ds.StreamAggregatedResources()Push到xDS
+    deactivate s
 
 </code></pre>
 
@@ -406,7 +414,7 @@
     end
     
     subgraph pushChannel
-        nd(&quot;NewDiscoveryServer&quot;) --&gt; pr(&quot;periodicRefresh&quot;)
+        nd(&quot;DiscoveryServer&quot;) --&gt; pr(&quot;periodicRefresh&quot;)
         nd --&gt; ash(&quot;s.ServiceController.AppendServiceHandler()&quot;)
         nd --&gt; aih(&quot;s.ServiceController.AppendInstanceHandler()&quot;)
         nd --&gt; reh(&quot;s.configController.RegisterEventHandler()&quot;)
@@ -435,6 +443,8 @@
         pc --&gt; pushConn(pushConnection)
         pushConn -.-&gt; C/E/L/Rds
     end
+    
+    nd --&gt;|Serve gRPC| s
 </code></pre>
     </div>
 
@@ -473,6 +483,11 @@
       
       <nav class="post-nav">
         
+          <a class="prev" href="/post/servicemesh/2019-03-31-istio-code-pilot-agent/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">【Istio源码】Pilot Agent</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
         
           <a class="next" href="/post/servicemesh/2019-03-09-istio-rbac-quick-start/">
             <span class="next-text nav-default">【Istio安全】服务间访问控制-RBAC</span>

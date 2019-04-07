@@ -38,26 +38,34 @@ sequenceDiagram
         s ->> i: cache.NewSharedIndexInformer()
         end
     Note over s: service
+        activate i
         s ->> i: Services().Informer()
         s ->> i: Endpoints().Informer()
         s ->> i: Nodes().Informer()
         s ->> i: Pods().Informer()
+        deactivate i
     Note over s: discovery
+        activate h
         s ->> h: service.AppendServiceHandler()
         s ->> h: service.AppendInstanceHandler()
         s ->> h: config.RegisterEventHandler()
-    
+        deactivate h
     alt fsnotify
         f ->> s: fsnotify.Event()
-        s ->> s: discovery.ConfigUpdate(true)
+        s ->> s: ds.ConfigUpdate()
     end
         
     alt K8S
         i ->> h: handler.Apply()
         loop handler.funcs
-            h ->> s: discovery.ConfigUpdate()
+            h ->> s: Event Handler
+            s ->> s: ds.ConfigUpdate()
         end
     end
+    activate s
+    s ->> s: pushChannel <- XdsEvent
+    s ->> s: ds.StreamAggregatedResources()Push到xDS
+    deactivate s
 
 ```
 ### 详细序列
@@ -240,7 +248,7 @@ graph LR
     end
     
     subgraph pushChannel
-        nd("NewDiscoveryServer") --> pr("periodicRefresh")
+        nd("DiscoveryServer") --> pr("periodicRefresh")
         nd --> ash("s.ServiceController.AppendServiceHandler()")
         nd --> aih("s.ServiceController.AppendInstanceHandler()")
         nd --> reh("s.configController.RegisterEventHandler()")
@@ -269,4 +277,6 @@ graph LR
         pc --> pushConn(pushConnection)
         pushConn -.-> C/E/L/Rds
     end
+    
+    nd -->|Serve gRPC| s
 ```

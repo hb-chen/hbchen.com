@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Sat, 30 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 07 Apr 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/service-mesh/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio源码】Pilot Agent</title>
+      <link>http://hbchen.com/post/servicemesh/2019-03-31-istio-code-pilot-agent/</link>
+      <pubDate>Sun, 07 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-03-31-istio-code-pilot-agent/</guid>
+      <description>&lt;p&gt;接上一篇&lt;a href=&#34;http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/&#34;&gt;《【Istio源码】Pilot Discovery》&lt;/a&gt;，这篇继续分析&lt;strong&gt;Pilot&lt;/strong&gt;的&lt;code&gt;pilot-agent&lt;/code&gt;模块。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【Istio源码】Pilot Discovery</title>

@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Sat, 30 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 07 Apr 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio源码】Pilot Agent</title>
+      <link>http://hbchen.com/post/servicemesh/2019-03-31-istio-code-pilot-agent/</link>
+      <pubDate>Sun, 07 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-03-31-istio-code-pilot-agent/</guid>
+      <description>&lt;p&gt;接上一篇&lt;a href=&#34;http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/&#34;&gt;《【Istio源码】Pilot Discovery》&lt;/a&gt;，这篇继续分析&lt;strong&gt;Pilot&lt;/strong&gt;的&lt;code&gt;pilot-agent&lt;/code&gt;模块。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【Istio源码】Pilot Discovery</title>
@@ -276,22 +285,6 @@ go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;</description>
-    </item>
-    
-    <item>
-      <title>Go-Revel:开发环境</title>
-      <link>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</link>
-      <pubDate>Tue, 20 Aug 2013 16:38:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-08-20-go-revel-kai-fa-huan-jing/</guid>
-      <description>&lt;p&gt;环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享&lt;/p&gt;
-
-&lt;p&gt;Go&lt;br&gt;
-英文&lt;a href=&#34;http://golang.org/doc/install#osx&#34;&gt;http://golang.org/doc/install#osx&lt;/a&gt; （墙）&lt;br&gt;
-中文&lt;a href=&#34;http://zh.golanger.com/doc/install#osx&#34;&gt;http://zh.golanger.com/doc/install#osx&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Revel&lt;br&gt;
-&lt;a href=&#34;http://robfig.github.io/revel/tutorial/gettingstarted.html&#34;&gt;http://robfig.github.io/revel/tutorial/gettingstarted.html&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     
   </channel>

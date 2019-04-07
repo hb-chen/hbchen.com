@@ -39,6 +39,71 @@
     </item>
     
     <item>
+      <title>【Istio源码】Pilot Agent</title>
+      <link>http://hbchen.com/post/servicemesh/2019-03-31-istio-code-pilot-agent/</link>
+      <pubDate>Sun, 07 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-03-31-istio-code-pilot-agent/</guid>
+      
+        <description>&lt;p&gt;接上一篇&lt;a href=&#34;http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/&#34;&gt;《【Istio源码】Pilot Discovery》&lt;/a&gt;，这篇继续分析&lt;strong&gt;Pilot&lt;/strong&gt;的&lt;code&gt;pilot-agent&lt;/code&gt;模块。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;pilot-agent&lt;/code&gt;相对&lt;code&gt;pilot-discovery&lt;/code&gt;在控制平面比较简单，&lt;strong&gt;agent&lt;/strong&gt;更多的能力是在数据平面的&lt;code&gt;envoy&lt;/code&gt;，agent主要负责监控&lt;code&gt;ingress&lt;/code&gt;、&lt;code&gt;mTLS&lt;/code&gt;的证书，发生变更后重启&lt;code&gt;envoy&lt;/code&gt;，以及提供&lt;strong&gt;agent&lt;/strong&gt;状态的HTTP服务(&lt;em&gt;可选服务&lt;/em&gt;)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;sequenceDiagram
+    participant a as agent
+    participant pa as proxy/agent
+    participant ew as envoy/watcher
+    participant ep as envoy/proxy
+    participant s as status
+    participant fw as fsnotify.Watcher 
+    
+    Note over a,fw: agent状态服务
+    a -&amp;gt;&amp;gt; s: NewServer()
+    s --&amp;gt;&amp;gt; a: statusServer *Server
+    a -&amp;gt;&amp;gt; s: statusServer.Run()
+
+    a -&amp;gt;&amp;gt; ep: NewProxy(proxyConfig)
+    ep --&amp;gt;&amp;gt; a: envoyProxy proxy.Proxy
+    a -&amp;gt;&amp;gt; pa: NewAgent(envoyProxy)
+    pa --&amp;gt; a: agent Agent
+    a -&amp;gt;&amp;gt; ew: NewWatcher(agent.ConfigCh)，updates = agent.ConfigCh
+    ew --&amp;gt;&amp;gt; a: watcher Watcher
+    
+    Note over a,fw: watcher监控配置变更，通知agent重启envoy
+    loop: go
+        a -&amp;gt;&amp;gt; ew: watcher.Run()
+        ew -&amp;gt;&amp;gt; fw: fw.Watch(certs)，AuthCertsPath、IngressCertsPath
+        fw --&amp;gt;&amp;gt; ew: w.watchFileEvents()
+        ew -&amp;gt;&amp;gt; ew: &amp;lt;-timeChan，10s延迟
+        ew -&amp;gt;&amp;gt; ew: SendConfig()
+        ew -&amp;gt;&amp;gt; pa: updates&amp;lt;-
+        Note over pa: &amp;lt;-configCh
+    end    
+    
+    Note over a,fw: agent做envoy重启操作，包括频率控制、失败重试等
+    loop : go
+        a -&amp;gt;&amp;gt; pa: agent.Run()
+        Note over pa: rateLimiter.Wait()&amp;lt;br/&amp;gt;控制频率
+        alt &amp;lt;-configCh
+            Note over pa: 配置更新Envoy热重启&amp;lt;br/&amp;gt;reconcile()
+        else &amp;lt;-statusCh  
+            Note over pa: Envoy重启后通知处理&amp;lt;br/&amp;gt;失败重试逻辑
+        else &amp;lt;-reconcileTimer.C
+            Note over pa: 失败重试计时重启&amp;lt;br/&amp;gt;reconcile()
+        end
+    end
+    
+    pa -&amp;gt;&amp;gt; pa: reconcile()
+    Note over ep: 默认服务发现地址:&amp;lt;br/&amp;gt;istio-pilot:15010&amp;lt;br/&amp;gt;对应pilot-discovery的地址:&amp;lt;br/&amp;gt;grpcAddr=15010
+    pa -&amp;gt;&amp;gt; ep: proxy.Run(&amp;lt;-abort)
+    ep --&amp;gt;&amp;gt; pa: err error
+    pa -&amp;gt;&amp;gt; pa: statusCh&amp;lt;-
+    
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【Istio源码】Pilot Discovery</title>
       <link>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/</link>
       <pubDate>Sat, 30 Mar 2019 00:00:00 +0000</pubDate>
@@ -67,26 +132,34 @@
         s -&amp;gt;&amp;gt; i: cache.NewSharedIndexInformer()
         end
     Note over s: service
+        activate i
         s -&amp;gt;&amp;gt; i: Services().Informer()
         s -&amp;gt;&amp;gt; i: Endpoints().Informer()
         s -&amp;gt;&amp;gt; i: Nodes().Informer()
         s -&amp;gt;&amp;gt; i: Pods().Informer()
+        deactivate i
     Note over s: discovery
+        activate h
         s -&amp;gt;&amp;gt; h: service.AppendServiceHandler()
         s -&amp;gt;&amp;gt; h: service.AppendInstanceHandler()
         s -&amp;gt;&amp;gt; h: config.RegisterEventHandler()
-    
+        deactivate h
     alt fsnotify
         f -&amp;gt;&amp;gt; s: fsnotify.Event()
-        s -&amp;gt;&amp;gt; s: discovery.ConfigUpdate(true)
+        s -&amp;gt;&amp;gt; s: ds.ConfigUpdate()
     end
         
     alt K8S
         i -&amp;gt;&amp;gt; h: handler.Apply()
         loop handler.funcs
-            h -&amp;gt;&amp;gt; s: discovery.ConfigUpdate()
+            h -&amp;gt;&amp;gt; s: Event Handler
+            s -&amp;gt;&amp;gt; s: ds.ConfigUpdate()
         end
     end
+    activate s
+    s -&amp;gt;&amp;gt; s: pushChannel &amp;lt;- XdsEvent
+    s -&amp;gt;&amp;gt; s: ds.StreamAggregatedResources()Push到xDS
+    deactivate s
 
 &lt;/code&gt;&lt;/pre&gt;
 
@@ -270,7 +343,7 @@
     end
     
     subgraph pushChannel
-        nd(&amp;quot;NewDiscoveryServer&amp;quot;) --&amp;gt; pr(&amp;quot;periodicRefresh&amp;quot;)
+        nd(&amp;quot;DiscoveryServer&amp;quot;) --&amp;gt; pr(&amp;quot;periodicRefresh&amp;quot;)
         nd --&amp;gt; ash(&amp;quot;s.ServiceController.AppendServiceHandler()&amp;quot;)
         nd --&amp;gt; aih(&amp;quot;s.ServiceController.AppendInstanceHandler()&amp;quot;)
         nd --&amp;gt; reh(&amp;quot;s.configController.RegisterEventHandler()&amp;quot;)
@@ -299,6 +372,8 @@
         pc --&amp;gt; pushConn(pushConnection)
         pushConn -.-&amp;gt; C/E/L/Rds
     end
+    
+    nd --&amp;gt;|Serve gRPC| s
 &lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
@@ -2506,183 +2581,6 @@ StevenMacBookAir:~ root# appending output to nohup.out
 exit
 logout
 StevenMacBookAir:~ Hobo$ 
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>Go-Revel:Gorp连接MySQL</title>
-      <link>http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/</link>
-      <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/</guid>
-      
-        <description>&lt;p&gt;Revel连接数据库可以参考官方的Booking示例&lt;/p&gt;
-
-&lt;p&gt;除了Revel需要Gorp和MySQL驱动两个库&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#Gorp
-go get github.com/coopernurse/gorp
-
-#MySQL驱动
-go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;
-
-&lt;p&gt;配置conf/app.conf&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;# DB username:@tcp(yourhost:port)/dbname
-db.import = github.com/Go-SQL-Driver/mysql
-db.driver = mysql
-db.spec   = root:@tcp(localhost:3306)/db_name
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建models/user.go，先只定义几个测试字段&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package models
-
-type User struct {
-	UserId							int
-	Name               	string
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建controllers/init.go&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package controllers
-
-import &amp;quot;github.com/robfig/revel&amp;quot;
-
-func init() {
-	revel.OnAppStart(Init)
-	revel.InterceptMethod((*GorpController).Begin, revel.BEFORE)
-	revel.InterceptMethod((*GorpController).Commit, revel.AFTER)
-	revel.InterceptMethod((*GorpController).Rollback, revel.FINALLY)
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建controllers/gorp.go&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package controllers
-
-import (
-	&amp;quot;database/sql&amp;quot;
-	&amp;quot;github.com/coopernurse/gorp&amp;quot;
-	_ &amp;quot;github.com/Go-SQL-Driver/mysql&amp;quot;
-	r &amp;quot;github.com/robfig/revel&amp;quot;
-	&amp;quot;github.com/robfig/revel/modules/db/app&amp;quot;
-	&amp;quot;app_name/app/models&amp;quot;
-)
-
-var (
-	Dbm *gorp.DbMap
-)
-
-func Init() {
-	db.Init()
-	//MySQL InnoDB UTF8
-	Dbm = &amp;amp;gorp.DbMap{Db: db.Db, Dialect: gorp.MySQLDialect{&amp;quot;InnoDB&amp;quot;, &amp;quot;UTF8&amp;quot;}}
-
-	setColumnSizes := func(t *gorp.TableMap, colSizes map[string]int) {
-		for col, size := range colSizes {
-			t.ColMap(col).MaxSize = size
-		}
-	}
-
-	//创建一个User测试表
-	t := Dbm.AddTable(models.User{}).SetKeys(true, &amp;quot;UserId&amp;quot;)
-	setColumnSizes(t, map[string]int{
-		&amp;quot;Name&amp;quot;: 20,
-	})
-
-	Dbm.TraceOn(&amp;quot;[gorp]&amp;quot;, r.INFO)
-	Dbm.CreateTables()
-
-	//插入一组测试数据
-	demoUser := &amp;amp;models.User{0, &amp;quot;Hobo&amp;quot;}
-	if err := Dbm.Insert(demoUser); err != nil {
-		panic(err)
-	}
-
-}
-
-type GorpController struct {
-	*r.Controller
-	Txn *gorp.Transaction
-}
-
-func (c *GorpController) Begin() r.Result {
-	txn, err := Dbm.Begin()
-	if err != nil {
-		panic(err)
-	}
-	c.Txn = txn
-	return nil
-}
-
-func (c *GorpController) Commit() r.Result {
-	if c.Txn == nil {
-		return nil
-	}
-	if err := c.Txn.Commit(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
-		panic(err)
-	}
-	c.Txn = nil
-	return nil
-}
-
-func (c *GorpController) Rollback() r.Result {
-	if c.Txn == nil {
-		return nil
-	}
-	if err := c.Txn.Rollback(); err != nil &amp;amp;&amp;amp; err != sql.ErrTxDone {
-		panic(err)
-	}
-	c.Txn = nil
-	return nil
-}
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;修改controllers/app.go&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;#import添加
-&amp;quot;app_name/app/models&amp;quot;
-
-#包含GorpController
-type App struct {
-	GorpController
-}
-
-#测试查询
-func (c App) Index() revel.Result {
-	greeting := &amp;quot;It works!&amp;quot;
-
-	users, err := c.Txn.Select(models.User{}, `select * from user where Name=&amp;quot;Hobo&amp;quot;`)
-	if len(users) == 0 {
-		greeting = &amp;quot;Null&amp;quot;
-	} else {
-		user := users[0].(*models.User)
-		greeting = user.Name
-	}
-	if err != nil {
-		panic(err)
-	}
-	return c.Render(greeting)
-}
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;修改views/App/Index.html&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#&amp;lt;h1&amp;gt;It works&amp;lt;/h1&amp;gt;
-&amp;lt;h1&amp;gt;/{/{.greeting/}/}&amp;lt;/h1&amp;gt;		#去掉反斜杠
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;运行测试下&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;go run app_name
 &lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
