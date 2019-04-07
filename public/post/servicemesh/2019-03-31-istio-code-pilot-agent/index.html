@@ -62,7 +62,7 @@
 
 <meta itemprop="datePublished" content="2019-04-07T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-04-07T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="716">
+<meta itemprop="wordCount" content="751">
 
 
 
@@ -149,7 +149,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 约 716 字 </span>
+        <span class="more-meta"> 约 751 字 </span>
         <span class="more-meta"> 预计阅读 2 分钟 </span>
       </div>
     </header>
@@ -168,7 +168,7 @@
     <div class="post-content">
       <p>接上一篇<a href="/post/servicemesh/2019-03-17-istio-code-pilot-discovery/">《【Istio源码】Pilot Discovery》</a>，这篇继续分析<strong>Pilot</strong>的<code>pilot-agent</code>模块。</p>
 
-<p><code>pilot-agent</code>相对<code>pilot-discovery</code>在控制平面比较简单，<strong>agent</strong>更多的能力是在数据平面的<code>envoy</code>，agent主要负责监控<code>ingress</code>、<code>mTLS</code>的证书，发生变更后重启<code>envoy</code>，以及提供<strong>agent</strong>状态的HTTP服务(<em>可选服务</em>)</p>
+<p><code>pilot-agent</code>相对<code>pilot-discovery</code>在控制平面比较简单，<strong>agent</strong>更多的能力是在数据平面的<code>envoy</code>，<code>envoy</code>通过<code>xDS</code>协议与<code>pilot-discovery</code>服务进行通信。agent主要负责监控<code>ingress</code>、<code>mTLS</code>的证书，发生变更后重启<code>envoy</code>，以及提供<strong>agent</strong>状态的HTTP服务(<em>可选服务</em>)</p>
 
 <pre><code class="language-mermaid">sequenceDiagram
     participant a as agent
@@ -214,11 +214,13 @@
         end
     end
     
-    pa -&gt;&gt; pa: reconcile()
-    Note over ep: 默认服务发现地址:&lt;br/&gt;istio-pilot:15010&lt;br/&gt;对应pilot-discovery的地址:&lt;br/&gt;grpcAddr=15010
-    pa -&gt;&gt; ep: proxy.Run(&lt;-abort)
-    ep --&gt;&gt; pa: err error
-    pa -&gt;&gt; pa: statusCh&lt;-
+    loop: envoy重启
+        pa -&gt;&gt; pa: reconcile()
+        Note over ep: 默认服务发现地址:&lt;br/&gt;istio-pilot:15010&lt;br/&gt;对应pilot-discovery的地址:&lt;br/&gt;gRPC port:15010
+        pa -&gt;&gt; ep: proxy.Run(&lt;-abort)
+        ep --&gt;&gt; pa: err error
+        pa -&gt;&gt; pa: statusCh&lt;-
+    end
     
 </code></pre>
     </div>

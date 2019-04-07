@@ -47,7 +47,7 @@
       
         <description>&lt;p&gt;接上一篇&lt;a href=&#34;http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/&#34;&gt;《【Istio源码】Pilot Discovery》&lt;/a&gt;，这篇继续分析&lt;strong&gt;Pilot&lt;/strong&gt;的&lt;code&gt;pilot-agent&lt;/code&gt;模块。&lt;/p&gt;
 
-&lt;p&gt;&lt;code&gt;pilot-agent&lt;/code&gt;相对&lt;code&gt;pilot-discovery&lt;/code&gt;在控制平面比较简单，&lt;strong&gt;agent&lt;/strong&gt;更多的能力是在数据平面的&lt;code&gt;envoy&lt;/code&gt;，agent主要负责监控&lt;code&gt;ingress&lt;/code&gt;、&lt;code&gt;mTLS&lt;/code&gt;的证书，发生变更后重启&lt;code&gt;envoy&lt;/code&gt;，以及提供&lt;strong&gt;agent&lt;/strong&gt;状态的HTTP服务(&lt;em&gt;可选服务&lt;/em&gt;)&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;pilot-agent&lt;/code&gt;相对&lt;code&gt;pilot-discovery&lt;/code&gt;在控制平面比较简单，&lt;strong&gt;agent&lt;/strong&gt;更多的能力是在数据平面的&lt;code&gt;envoy&lt;/code&gt;，&lt;code&gt;envoy&lt;/code&gt;通过&lt;code&gt;xDS&lt;/code&gt;协议与&lt;code&gt;pilot-discovery&lt;/code&gt;服务进行通信。agent主要负责监控&lt;code&gt;ingress&lt;/code&gt;、&lt;code&gt;mTLS&lt;/code&gt;的证书，发生变更后重启&lt;code&gt;envoy&lt;/code&gt;，以及提供&lt;strong&gt;agent&lt;/strong&gt;状态的HTTP服务(&lt;em&gt;可选服务&lt;/em&gt;)&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-mermaid&#34;&gt;sequenceDiagram
     participant a as agent
@@ -93,11 +93,13 @@
         end
     end
     
-    pa -&amp;gt;&amp;gt; pa: reconcile()
-    Note over ep: 默认服务发现地址:&amp;lt;br/&amp;gt;istio-pilot:15010&amp;lt;br/&amp;gt;对应pilot-discovery的地址:&amp;lt;br/&amp;gt;grpcAddr=15010
-    pa -&amp;gt;&amp;gt; ep: proxy.Run(&amp;lt;-abort)
-    ep --&amp;gt;&amp;gt; pa: err error
-    pa -&amp;gt;&amp;gt; pa: statusCh&amp;lt;-
+    loop: envoy重启
+        pa -&amp;gt;&amp;gt; pa: reconcile()
+        Note over ep: 默认服务发现地址:&amp;lt;br/&amp;gt;istio-pilot:15010&amp;lt;br/&amp;gt;对应pilot-discovery的地址:&amp;lt;br/&amp;gt;gRPC port:15010
+        pa -&amp;gt;&amp;gt; ep: proxy.Run(&amp;lt;-abort)
+        ep --&amp;gt;&amp;gt; pa: err error
+        pa -&amp;gt;&amp;gt; pa: statusCh&amp;lt;-
+    end
     
 &lt;/code&gt;&lt;/pre&gt;</description>
       
