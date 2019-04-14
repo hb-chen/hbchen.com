@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Sun, 07 Apr 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 11 Apr 2019 16:08:16 +0800</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio安全】网格边缘-Egress</title>
+      <link>http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/</link>
+      <pubDate>Thu, 11 Apr 2019 16:08:16 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/</guid>
+      <description>&lt;p&gt;接上一篇《&lt;a href=&#34;http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/&#34;&gt;【Istio安全】服务间访问控制-RBAC&lt;/a&gt;》，本文主要介绍网格边缘Egress相关的配置，&lt;code&gt;HTTP&lt;/code&gt;、&lt;code&gt;HTTPS&lt;/code&gt;以及&lt;code&gt;HTTP&lt;/code&gt;转&lt;code&gt;TLS&lt;/code&gt;。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【Istio源码】Pilot Agent</title>
@@ -265,26 +274,6 @@ vi /usr/local/etc/mongod.conf
 
 &lt;pre&gt;&lt;code&gt;quit/exit
 &lt;/code&gt;&lt;/pre&gt;</description>
-    </item>
-    
-    <item>
-      <title>Go-Revel:Gorp连接MySQL</title>
-      <link>http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/</link>
-      <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-08-24-go-revel-gorplian-jie-mysql/</guid>
-      <description>&lt;p&gt;Revel连接数据库可以参考官方的Booking示例&lt;/p&gt;
-
-&lt;p&gt;除了Revel需要Gorp和MySQL驱动两个库&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#Gorp
-go get github.com/coopernurse/gorp
-
-#MySQL驱动
-go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;创建一个新的Revel工程app_name&lt;/p&gt;</description>
     </item>
     
   </channel>

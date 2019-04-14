@@ -10,6 +10,13 @@
   </url>
   
   <url>
+    <loc>http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/</loc>
+    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>http://hbchen.com/post/servicemesh/2019-03-31-istio-code-pilot-agent/</loc>
     <lastmod>2019-04-07T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -212,14 +219,14 @@
   </url>
   
   <url>
-    <loc>http://hbchen.com/categories/go/</loc>
+    <loc>http://hbchen.com/tags/go/</loc>
     <lastmod>2018-03-27T19:09:32+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://hbchen.com/tags/go/</loc>
+    <loc>http://hbchen.com/categories/go/</loc>
     <lastmod>2018-03-27T19:09:32+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
@@ -248,7 +255,7 @@
   
   <url>
     <loc>http://hbchen.com/tags/istio/</loc>
-    <lastmod>2019-04-07T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -276,7 +283,7 @@
   
   <url>
     <loc>http://hbchen.com/post/</loc>
-    <lastmod>2019-04-07T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -317,15 +324,15 @@
   </url>
   
   <url>
-    <loc>http://hbchen.com/categories/service-mesh/</loc>
-    <lastmod>2019-04-07T00:00:00+00:00</lastmod>
+    <loc>http://hbchen.com/tags/service-mesh/</loc>
+    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://hbchen.com/tags/service-mesh/</loc>
-    <lastmod>2019-04-07T00:00:00+00:00</lastmod>
+    <loc>http://hbchen.com/categories/service-mesh/</loc>
+    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -338,14 +345,14 @@
   </url>
   
   <url>
-    <loc>http://hbchen.com/categories/spark/</loc>
+    <loc>http://hbchen.com/tags/spark/</loc>
     <lastmod>2018-10-24T16:23:46+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://hbchen.com/tags/spark/</loc>
+    <loc>http://hbchen.com/categories/spark/</loc>
     <lastmod>2018-10-24T16:23:46+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
@@ -402,7 +409,7 @@
   
   <url>
     <loc>http://hbchen.com/tags/%E5%AE%89%E5%85%A8/</loc>
-    <lastmod>2019-03-22T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -415,14 +422,14 @@
   </url>
   
   <url>
-    <loc>http://hbchen.com/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/</loc>
+    <loc>http://hbchen.com/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/</loc>
     <lastmod>2019-02-21T16:59:37+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://hbchen.com/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/</loc>
+    <loc>http://hbchen.com/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/</loc>
     <lastmod>2019-02-21T16:59:37+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>

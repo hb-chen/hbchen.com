@@ -54,7 +54,7 @@
 <meta property="og:description" content="Hobo&#39;s Blog." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="http://hbchen.com/" />
-<meta property="og:updated_time" content="2014-03-05T18:30:00&#43;08:00"/>
+<meta property="og:updated_time" content="2014-03-06T19:00:00&#43;08:00"/>
 
 <meta itemprop="name" content="Hobo&#39;s Blog - 技术实践">
 <meta itemprop="description" content="Hobo&#39;s Blog.">
@@ -133,6 +133,48 @@
   <section id="posts" class="posts">
     
     
+    
+      <article class="post bg-white">
+  <header class="post-header">
+    <h1 class="post-title"><a class="post-link" href="/post/2014-03-06-bae-redisshi-xian-thinkphpcache/">BAE Cache&amp;Redis实现ThinkPHP的Cache驱动</a></h1>
+    <div class="post-meta">
+      <span class="post-time"> 2014-03-06 </span>
+      <div class="post-category">
+          
+            <a href="/categories/php/"> PHP </a>
+          
+        </div>
+      <span class="more-meta"> 约 1291 字 </span>
+      <span class="more-meta"> 预计阅读 3 分钟 </span>
+    </div>
+  </header>
+  
+  <div class="post-content">
+    
+    <div class="post-summary">
+      <p>在BAE环境下有单独的Cache，同时也有Redis，可以同时用来做不同的Cache服务，先从Redis开始</p>
+
+<p>1、Redis相关配置</p>
+
+<pre><code class="language-php">//conf.php
+#BAE API Key与Secret Key
+'BAE_AK' 	=&gt; 'XXX',
+'BAE_SK'	=&gt; 'XXX',
+
+#BAE Redis扩展配置
+'BAE_REDIS_HOST'   =&gt;	'redis.duapp.com',
+'BAE_REDIS_PORT'   =&gt;	80,
+'BAE_REDIS_DBNAME' =&gt;	'XXX',
+
+</code></pre>
+    </div>
+    <div class="read-more">
+      <a href="/post/2014-03-06-bae-redisshi-xian-thinkphpcache/" class="read-more-link">阅读全文</a>
+    </div>
+    
+  </div>
+</article>
+
     
       <article class="post bg-white">
   <header class="post-header">
@@ -351,41 +393,6 @@ go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
 </article>
 
     
-      <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title"><a class="post-link" href="/post/2013-08-20-go-revel-kai-fa-huan-jing/">Go-Revel:开发环境</a></h1>
-    <div class="post-meta">
-      <span class="post-time"> 2013-08-20 </span>
-      <div class="post-category">
-          
-            <a href="/categories/go/"> Go </a>
-          
-        </div>
-      <span class="more-meta"> 约 383 字 </span>
-      <span class="more-meta"> 预计阅读 1 分钟 </span>
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      <p>环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享</p>
-
-<p>Go<br>
-英文<a href="http://golang.org/doc/install#osx">http://golang.org/doc/install#osx</a> （墙）<br>
-中文<a href="http://zh.golanger.com/doc/install#osx">http://zh.golanger.com/doc/install#osx</a></p>
-
-<p>Revel<br>
-<a href="http://robfig.github.io/revel/tutorial/gettingstarted.html">http://robfig.github.io/revel/tutorial/gettingstarted.html</a></p>
-    </div>
-    <div class="read-more">
-      <a href="/post/2013-08-20-go-revel-kai-fa-huan-jing/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
-
-    
   </section>
 
   
@@ -420,6 +427,10 @@ go get github.com/go-sql-driver/mysql  #也可以用其他的驱动库
     
     <li  class="active" >
       <a href="/page/3/">3</a>
+    </li>
+    
+    <li >
+      <a href="/page/4/">4</a>
     </li>
     
   </nav>

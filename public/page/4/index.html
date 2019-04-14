@@ -54,6 +54,7 @@
 <meta property="og:description" content="Hobo&#39;s Blog." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="http://hbchen.com/" />
+<meta property="og:updated_time" content="2013-08-20T16:38:00&#43;08:00"/>
 
 <meta itemprop="name" content="Hobo&#39;s Blog - 技术实践">
 <meta itemprop="description" content="Hobo&#39;s Blog.">
@@ -135,22 +136,33 @@
     
       <article class="post bg-white">
   <header class="post-header">
-    <h1 class="post-title"><a class="post-link" href="/post/servicemesh/tmp/"></a></h1>
+    <h1 class="post-title"><a class="post-link" href="/post/2013-08-20-go-revel-kai-fa-huan-jing/">Go-Revel:开发环境</a></h1>
     <div class="post-meta">
-      <span class="post-time"> 0001-01-01 </span>
-      
-      <span class="more-meta"> 约 2202 字 </span>
-      <span class="more-meta"> 预计阅读 11 分钟 </span>
+      <span class="post-time"> 2013-08-20 </span>
+      <div class="post-category">
+          
+            <a href="/categories/go/"> Go </a>
+          
+        </div>
+      <span class="more-meta"> 约 383 字 </span>
+      <span class="more-meta"> 预计阅读 1 分钟 </span>
     </div>
   </header>
   
   <div class="post-content">
     
     <div class="post-summary">
-      配置更新与解析 mixer/pkg/server/server.go // New instantiates a fully functional Mixer server, ready for traffic. func New(a *Args) (*Server, error) { return newServer(a, newPatchTable()) } func newPatchTable() *patchTable { return &amp;patchTable{ newRuntime: runtime.New, configTracing: tracing.Configure, startMonitor: startMonitor, listen: net.Listen, configLog: log.Configure, runtimeListen: func(rt *runtime.Runtime) error { return rt.StartListening() }, remove: os.Remove, newOpenCensusExporter: func() (view.Exporter, error) { return prometheus.NewExporter(prometheus.Options{Registry: oprometheus.DefaultRegisterer.(*oprometheus.Registry)}) }, registerOpenCensusViews: view.Register, } } func newServer(a *Args, p *patchTable) (*Server, error) { if err := a.
+      <p>环境安装都直接看官方文档最靠谱，经他人加工后的经常容易误导，后面也会有一些安装体会分享</p>
+
+<p>Go<br>
+英文<a href="http://golang.org/doc/install#osx">http://golang.org/doc/install#osx</a> （墙）<br>
+中文<a href="http://zh.golanger.com/doc/install#osx">http://zh.golanger.com/doc/install#osx</a></p>
+
+<p>Revel<br>
+<a href="http://robfig.github.io/revel/tutorial/gettingstarted.html">http://robfig.github.io/revel/tutorial/gettingstarted.html</a></p>
     </div>
     <div class="read-more">
-      <a href="/post/servicemesh/tmp/" class="read-more-link">阅读全文</a>
+      <a href="/post/2013-08-20-go-revel-kai-fa-huan-jing/" class="read-more-link">阅读全文</a>
     </div>
     
   </div>

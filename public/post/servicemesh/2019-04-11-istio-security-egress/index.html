@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【Istio安全】网格边缘-Egress - Hobo&#39;s Blog - 技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="接上一篇《【Istio安全】服务间访问控制-RBAC》，本文主要介绍网格边缘Egress相关的配置，HTTP、HTTPS以及HTTP转TLS。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【Istio安全】网格边缘-Egress" />
+<meta property="og:description" content="接上一篇《【Istio安全】服务间访问控制-RBAC》，本文主要介绍网格边缘Egress相关的配置，HTTP、HTTPS以及HTTP转TLS。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/" /><meta property="article:published_time" content="2019-04-11T16:08:16&#43;08:00"/>
+<meta property="article:modified_time" content="2019-04-14T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="【Istio安全】网格边缘-Egress">
+<meta itemprop="description" content="接上一篇《【Istio安全】服务间访问控制-RBAC》，本文主要介绍网格边缘Egress相关的配置，HTTP、HTTPS以及HTTP转TLS。">
+
+
+<meta itemprop="datePublished" content="2019-04-11T16:08:16&#43;08:00" />
+<meta itemprop="dateModified" content="2019-04-14T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="2971">
+
+
+
+<meta itemprop="keywords" content="Service Mesh,Istio,安全," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【Istio安全】网格边缘-Egress"/>
+<meta name="twitter:description" content="接上一篇《【Istio安全】服务间访问控制-RBAC》，本文主要介绍网格边缘Egress相关的配置，HTTP、HTTPS以及HTTP转TLS。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【Istio安全】网格边缘-Egress</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-04-11 </span>
+        <div class="post-category">
+            
+              <a href="/categories/service-mesh/"> Service Mesh </a>
+            
+          </div>
+        <span class="more-meta"> 约 2971 字 </span>
+        <span class="more-meta"> 预计阅读 6 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#开始前的准备">开始前的准备</a></li>
+<li><a href="#sidecar方式">Sidecar方式</a>
+<ul>
+<li><a href="#http">HTTP</a></li>
+<li><a href="#http-https">HTTP &amp; HTTPS</a></li>
+<li><a href="#http转tls">HTTP转TLS</a></li>
+</ul></li>
+<li><a href="#gateway方式">Gateway方式</a>
+<ul>
+<li><a href="#http-1">HTTP</a></li>
+<li><a href="#http转tls-1">HTTP转TLS</a></li>
+</ul></li>
+<li><a href="#直接调用外部服务">直接调用外部服务</a></li>
+<li><a href="#总结">总结</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>接上一篇《<a href="/post/servicemesh/2019-03-09-istio-rbac-quick-start/">【Istio安全】服务间访问控制-RBAC</a>》，本文主要介绍网格边缘Egress相关的配置，<code>HTTP</code>、<code>HTTPS</code>以及<code>HTTP</code>转<code>TLS</code>。</p>
+
+<blockquote>
+<ul>
+<li>Istio版本 <strong>1.1.1</strong></li>
+</ul>
+</blockquote>
+
+<h2 id="开始前的准备">开始前的准备</h2>
+
+<blockquote>
+<pre><code class="language-yaml">  # Set the default behavior of the sidecar for handling outbound traffic from the application:
+  # ALLOW_ANY - outbound traffic to unknown destinations will be allowed, in case there are no
+  #   services or ServiceEntries for the destination port
+  # REGISTRY_ONLY - restrict outbound traffic to services defined in the service registry as well
+  #   as those defined through ServiceEntries
+  # ALLOW_ANY is the default in 1.1.  This means each pod will be able to make outbound requests 
+  # to services outside of the mesh without any ServiceEntry.
+  # REGISTRY_ONLY was the default in 1.0.  If this behavior is desired, set the value below to REGISTRY_ONLY.
+  outboundTrafficPolicy:
+    mode: ALLOW_ANY
+</code></pre>
+</blockquote>
+
+<p>Istio部署配置的<code>global.outboundTrafficPolicy</code>参数，在1.1开始默认<code>ALLOW_ANY</code>，这种情况下如果不配置<code>ServiceEntry</code>，访问外包HTTP流量返回<code>404</code>，而HTTPS流量可以正常访问，为了测试<code>ServiceEntry</code>配置效果，将配置改为<code>REGISTRY_ONLY</code>，方便观察<code>ServiceEntry</code>配置的效果</p>
+
+<blockquote>
+<p>本文示例Istio使用helm的values-istio-demo.yaml配置安装</p>
+</blockquote>
+
+<p>部署测试用例<code>sleep</code></p>
+
+<pre><code class="language-bash">$ kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.1/samples/sleep/sleep.yaml
+
+$ export SOURCE_POD=$(kubectl get pod -l app=sleep -o jsonpath={.items..metadata.name})
+</code></pre>
+
+<p><strong>访问测试</strong><code>outboundTrafficPolicy=ALLOW_ANY</code></p>
+
+<pre><code class="language-bash">$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - http://hbchen.com
+HTTP/1.1 404 Not Found
+
+$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - http://www.aliyun.com
+HTTP/1.1 404 Not Found
+
+$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - https://www.aliyun.com
+HTTP/2 200
+</code></pre>
+
+<p>修改<code>values-istio-demo.yaml</code></p>
+
+<pre><code class="language-yaml">  outboundTrafficPolicy:
+    mode: REGISTRY_ONLY
+</code></pre>
+
+<p>重新部署Istio</p>
+
+<pre><code class="language-bash">$ helm template install/kubernetes/helm/istio --name istio --namespace istio-system --values install/kubernetes/helm/istio/values-istio-demo.yaml | kubectl apply -f -
+</code></pre>
+
+<p>重新部署测试用例<code>sleep</code></p>
+
+<pre><code class="language-bash">$ kubectl delete -f https://raw.githubusercontent.com/istio/istio/release-1.1/samples/sleep/sleep.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.1/samples/sleep/sleep.yaml
+
+$ export SOURCE_POD=$(kubectl get pod -l app=sleep -o jsonpath={.items..metadata.name})
+</code></pre>
+
+<h2 id="sidecar方式">Sidecar方式</h2>
+
+<p><img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio/egress-sidecar.png" alt="ServiceEntry" /></p>
+
+<h3 id="http">HTTP</h3>
+
+<p>先定义一个<code>ServiceEntry</code>，开启<code>www.aliyun.com</code>、<code>hbchen.com</code>的外部访问</p>
+
+<pre><code class="language-yaml">$ kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: entry-x
+spec:
+  hosts:
+  - www.aliyun.com
+  - hbchen.com
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+  resolution: NONE
+EOF
+</code></pre>
+
+<p><strong>访问测试</strong></p>
+
+<pre><code class="language-bash">$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - http://hbchen.com
+HTTP/1.1 200 OK
+
+$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - http://www.aliyun.com
+HTTP/1.1 301 Moved Permanently
+...
+command terminated with exit code 35
+
+$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - https://www.aliyun.com
+command terminated with exit code 35
+</code></pre>
+
+<h3 id="http-https">HTTP &amp; HTTPS</h3>
+
+<p>只开<code>80</code>端口，<code>HTTP</code>正常，而对于<code>HTTPS</code>以及有<code>HTTP</code>重定向<code>HTTPS</code>的请求仍会失败<code>command terminated with exit code 35</code>，所以实践中外部服务一般同时开启<code>80</code>、<code>443</code>端口</p>
+
+<pre><code class="language-yaml">$ kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: entry-x
+spec:
+  hosts:
+  - www.aliyun.com
+  - hbchen.com
+  ports:
+  - number: 80
+    name: http-port
+    protocol: HTTP
+  - number: 443
+    name: https-port
+    protocol: HTTPS
+  resolution: NONE
+EOF
+</code></pre>
+
+<p><strong>访问测试</strong></p>
+
+<pre><code class="language-bash">$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - http://www.aliyun.com
+HTTP/1.1 301 Moved Permanently
+...
+HTTP/2 200
+
+$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - https://www.aliyun.com
+HTTP/2 200
+...
+</code></pre>
+
+<h3 id="http转tls">HTTP转TLS</h3>
+
+<p>这时我们看到另一个问题，需要升级<code>HTTPS</code>的<code>HTTP</code>请求每次都要<code>301</code>重定向一次，在不修改代码的情况下可以在<code>proxy</code>将<code>HTTP</code>请求升级为<code>TLS</code>，避免二次跳转，需要加<code>VirtualService</code> + <code>DestinationRule</code>来实现。</p>
+
+<p>在官方示例<a href="https://istio.io/zh/docs/examples/advanced-gateways/egress-tls-origination/#%E5%87%BA%E5%8F%A3%E6%B5%81%E9%87%8F%E7%9A%84-tls">出口流量的-tls</a>中，仅将<code>HTTP</code>升级到<code>TLS</code>，而对正常的<code>HTTPS</code>没有支持，这里稍作改动，在<code>VirtualService</code>中为<code>80</code>端口的<code>destination</code>定义<code>subset</code>，这样在<code>DestinationRule</code>中默认<code>trafficPolicy</code>不做处理，仅对指定的<code>subset</code>做<code>HTTPS</code>转发，使网格内无论发起<code>HTTP</code>还是<code>HTTPS</code>的外网请求都可以正常访问。</p>
+
+<pre><code class="language-yaml">kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: entry-x
+spec:
+  hosts:
+  - www.aliyun.com
+  - hbchen.com
+  ports:
+  - number: 80
+    name: http-port
+    protocol: HTTP
+  - number: 443
+    name: https-port
+    protocol: HTTPS
+  resolution: DNS
+  location: MESH_EXTERNAL
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: rewrite-port-for-entry
+spec:
+  hosts:
+  - www.aliyun.com
+  http:
+  - match:
+      - port: 80
+    route:
+    - destination:
+        # NOTE: 为HTTP升级流量指定subset
+        subset: originate-tls
+        host: www.aliyun.com
+        port:
+          number: 443
+  tls:
+  - match:
+      - port: 443
+        sniHosts:
+        - www.aliyun.com
+    route:
+    - destination:
+        host: www.aliyun.com
+        port:
+          number: 443
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: originate-tls-for-entry
+spec:
+  host: www.aliyun.com
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+  subsets:
+    - name: originate-tls
+      trafficPolicy:
+        loadBalancer:
+          simple: ROUND_ROBIN
+        portLevelSettings:
+        - port:
+            number: 443
+          tls:
+            mode: SIMPLE
+EOF
+</code></pre>
+
+<p><strong>访问测试</strong></p>
+
+<pre><code class="language-bash">$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - http://hbchen.com
+HTTP/1.1 200 OK
+
+$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - http://www.aliyun.com
+HTTP/1.1 200 OK
+
+$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - https://www.aliyun.com
+HTTP/2 200
+</code></pre>
+
+<h2 id="gateway方式">Gateway方式</h2>
+
+<p><img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio/egress-gateway.png" alt="ServiceEntry" /></p>
+
+<blockquote>
+<p>官方示例<a href="https://istio.io/zh/docs/examples/advanced-gateways/egress-gateway/">配置 Egress gateway</a></p>
+</blockquote>
+
+<p>Gateway与Sidecar的区别是将出口流量都转到<code>egressgateway</code>，再由Gateway进行转发处理，无论Gateway还是Sidecar<code>ServiceEntry</code>的配置规则都是需要的，这里我们直接开启<code>80</code>、<code>433</code>，注意<code>resolution</code>=<code>DNS</code></p>
+
+<pre><code class="language-yaml">apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: entry-x
+spec:
+  hosts:
+  - www.aliyun.com
+  ports:
+  - number: 80
+    name: http-port
+    protocol: HTTP
+  - number: 443
+    name: https-port
+    protocol: HTTPS
+  resolution: DNS
+</code></pre>
+
+<p><em>访问测试（略）</em></p>
+
+<h3 id="http-1">HTTP</h3>
+
+<p>流程如下</p>
+
+<pre><code class="language-mermaid">graph LR;
+   S[Siedcar]--&gt;|&quot;①HTTP&quot;|VS[VirtualService&lt;br/&gt;www.aliyun.com]
+   VS--&gt;|&quot;②gateway=mesh&quot;|EG[EgressGateway]
+   EG--&gt;|&quot;③HTTP&quot;|VS
+   VS--&gt;|&quot;④gateway=istio-egressgateway&quot;|E[External]
+</code></pre>
+
+<pre><code class="language-yaml">kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-egressgateway
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - port:
+      number: 80
+      name: http-port
+      protocol: HTTP
+    hosts:
+    - www.aliyun.com
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: egressgateway-for-aliyun
+spec:
+  host: istio-egressgateway.istio-system.svc.cluster.local
+  subsets:
+  - name: aliyun
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: aliyun-through-egress-gateway
+spec:
+  hosts:
+  - www.aliyun.com
+  gateways:
+  - istio-egressgateway
+  - mesh
+  http:
+  - match:
+    - gateways:
+      - mesh
+      port: 80
+    route:
+    - destination:
+        host: istio-egressgateway.istio-system.svc.cluster.local
+        subset: aliyun
+        port:
+          number: 80
+      weight: 100
+  - match:
+    - gateways:
+      - istio-egressgateway
+      port: 80
+    route:
+    - destination:
+        host: www.aliyun.com
+        port:
+          number: 80
+      weight: 100
+EOF
+</code></pre>
+
+<p><strong>访问测试</strong>(<em>这里只有HTTP</em>)</p>
+
+<pre><code class="language-bash">kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - http://www.aliyun.com
+HTTP/1.1 301 Moved Permanently
+...
+HTTP/2 200
+...
+</code></pre>
+
+<h3 id="http转tls-1">HTTP转TLS</h3>
+
+<pre><code class="language-mermaid">graph LR;
+   S[Siedcar]--&gt;|&quot;①HTTP&quot;|VS[VirtualService&lt;br/&gt;www.aliyun.com]
+   VS--&gt;|&quot;②gateway=mesh&quot;|EG[EgressGateway]
+   EG--&gt;|&quot;③HTTP&quot;|VS
+   VS--&gt;|&quot;④gateway=istio-egressgateway&lt;br/&gt;DestinationRule为Subset升级TLS&quot;|E[External]
+</code></pre>
+
+<p>与Sidecar方式类似，对于有<code>HTTP</code>重定向到<code>HTTPS</code>的流量可以在Gateway代理直接升级为<code>TLS</code>，减少跳转，实现方式与Sidecar方式类似，为<code>HOST</code>增加<code>DestinationRule</code>规则为<code>HTTP</code>流量发起<code>TLS</code>请求。</p>
+
+<pre><code class="language-yaml">kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-egressgateway
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+  - port:
+      number: 80
+      name: http-port
+      protocol: HTTP
+    hosts:
+    - www.aliyun.com
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: egressgateway-for-aliyun
+spec:
+  host: istio-egressgateway.istio-system.svc.cluster.local
+  subsets:
+  - name: aliyun
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: aliyun-through-egress-gateway
+spec:
+  hosts:
+  - www.aliyun.com
+  gateways:
+  - istio-egressgateway
+  - mesh
+  http:
+  - match:
+    - gateways:
+      - mesh
+      port: 80
+    route:
+    - destination:
+        host: istio-egressgateway.istio-system.svc.cluster.local
+        subset: aliyun
+        port:
+          number: 80
+      weight: 100
+  - match:
+    - gateways:
+      - istio-egressgateway
+      port: 80
+    route:
+    - destination:
+        host: www.aliyun.com
+        # NOTE: 为HTTP升级流量指定subset
+        subset: originate-tls
+        port:
+          number: 443
+      weight: 100
+---
+# NOTE: 注意这里与Sidecar方式类似，需要对HTTP流量单独配置subset，否则影响正常HTTPS流量
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: originate-tls-for-aliyun
+spec:
+  host: www.aliyun.com
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+  subsets:
+    - name: originate-tls
+      trafficPolicy:
+        loadBalancer:
+          simple: ROUND_ROBIN
+        portLevelSettings:
+        - port:
+            number: 443
+          tls:
+            mode: SIMPLE
+EOF
+</code></pre>
+
+<p><strong>访问测试</strong></p>
+
+<pre><code class="language-bash">$ kubectl exec -it $SOURCE_POD -c sleep -- curl -sL -o /dev/null -D - http://www.aliyun.com
+HTTP/1.1 200 OK
+</code></pre>
+
+<blockquote>
+<p>双向<code>TLS</code>、<code>HTTTPS</code>透传等这里没有再做测试，有兴趣可以参考官方示例<a href="https://istio.io/zh/docs/examples/advanced-gateways/egress-gateway/">配置 Egress gateway</a></p>
+</blockquote>
+
+<h2 id="直接调用外部服务">直接调用外部服务</h2>
+
+<p><img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio/egress-sidecar-ip.png" alt="ServiceEntry" /></p>
+
+<blockquote>
+<p>Istio文档<a href="https://istio.io/zh/docs/tasks/traffic-management/egress/#%E7%9B%B4%E6%8E%A5%E8%B0%83%E7%94%A8%E5%A4%96%E9%83%A8%E6%9C%8D%E5%8A%A1">直接调用外部服务</a></p>
+</blockquote>
+
+<p>需要修改helm的values配置更新部署。并且要让新的<code>istio-sidecar-injector</code>生效，重新部署<code>sleep</code>用例。这种方式在Sidecar的Proxy中跳过了外部IP，虽然也有<code>excludeIPRanges</code>方式，但修改麻烦需要更新sidecar，并且这样也失去了Istio的其它能力，所以不怎么实用。</p>
+
+<pre><code class="language-yaml">  proxy:
+    # Minikube
+    includeIPRanges: &quot;10.0.0.1/24&quot;
+</code></pre>
+
+<h2 id="总结">总结</h2>
+
+<p><code>ServiceEntry</code>配合<code>VirtualService</code>、<code>DestinationRule</code>可以使外部流量做比较灵活的管控，并且可以对外部服务使用流量管理的相关功能，Gateway相对Sidecar配置还是略显复杂，而在性能方面官方Blog<a href="https://istio.io/zh/blog/2019/egress-performance/">Egress gateway 性能测试</a>给出的比较结果两者相差不大，至于直接调用方式相对就不怎么实用了。</p>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-04-14</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/service-mesh/">Service Mesh</a>
+          
+          <a href="/tags/istio/">Istio</a>
+          
+          <a href="/tags/%E5%AE%89%E5%85%A8/">安全</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/servicemesh/2019-03-31-istio-code-pilot-agent/">
+            <span class="next-text nav-default">【Istio源码】Pilot Agent</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script>
+
+<script type="text/javascript" src="https://unpkg.com/mermaid@8.0.0/dist/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: "forest"
+    });
+</script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>
