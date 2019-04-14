@@ -1,6 +1,6 @@
 ---
 title: "【Istio安全】网格边缘-Egress"
-date: 2019-04-11T16:08:16+08:00
+date: 2019-04-14
 lastmod: 2019-04-14
 draft: false
 mermaid: true

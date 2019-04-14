@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Thu, 11 Apr 2019 16:08:16 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 14 Apr 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/service-mesh/index.xml" rel="self" type="application/rss+xml" />
     
@@ -15,7 +15,7 @@
     <item>
       <title>【Istio安全】网格边缘-Egress</title>
       <link>http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/</link>
-      <pubDate>Thu, 11 Apr 2019 16:08:16 +0800</pubDate>
+      <pubDate>Sun, 14 Apr 2019 00:00:00 +0000</pubDate>
       
       <guid>http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/</guid>
       <description>&lt;p&gt;接上一篇《&lt;a href=&#34;http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/&#34;&gt;【Istio安全】服务间访问控制-RBAC&lt;/a&gt;》，本文主要介绍网格边缘Egress相关的配置，&lt;code&gt;HTTP&lt;/code&gt;、&lt;code&gt;HTTPS&lt;/code&gt;以及&lt;code&gt;HTTP&lt;/code&gt;转&lt;code&gt;TLS&lt;/code&gt;。&lt;/p&gt;</description>
