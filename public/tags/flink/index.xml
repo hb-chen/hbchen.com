@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Flink on Hobo&#39;s Blog - 技术实践</title>
+    <link>http://hbchen.com/tags/flink/</link>
+    <description>Recent content in Flink on Hobo&#39;s Blog - 技术实践</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <copyright>HB Studio</copyright>
+    <lastBuildDate>Mon, 29 Apr 2019 18:42:22 +0800</lastBuildDate>
+    
+	<atom:link href="http://hbchen.com/tags/flink/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>【Flink实践】实时消费阿里云SLS&#43;输出到ES</title>
+      <link>http://hbchen.com/post/flink/2019-04-29-sls&#43;es/</link>
+      <pubDate>Mon, 29 Apr 2019 18:42:22 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/flink/2019-04-29-sls&#43;es/</guid>
+      <description>环境 Flink 1.8 ES 6.3.2 假设场景 日志结构 request_time: 1556415329 uri: /analysis/path?id=1 系统AccessLog通过Logtai采集到阿里云SLS，指定request_time为日志时间字段。示</description>
+    </item>
+    
+  </channel>
+</rss>

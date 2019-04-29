@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【Flink实践】实时消费阿里云SLS&#43;输出到ES - Hobo&#39;s Blog - 技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="环境 Flink 1.8 ES 6.3.2 假设场景 日志结构 request_time: 1556415329 uri: /analysis/path?id=1 系统AccessLog通过Logtai采集到阿里云SLS，指定request_time为日志时间字段。示" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/flink/2019-04-29-sls&#43;es/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【Flink实践】实时消费阿里云SLS&#43;输出到ES" />
+<meta property="og:description" content="环境 Flink 1.8 ES 6.3.2 假设场景 日志结构 request_time: 1556415329 uri: /analysis/path?id=1 系统AccessLog通过Logtai采集到阿里云SLS，指定request_time为日志时间字段。示" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/flink/2019-04-29-sls&#43;es/" /><meta property="article:published_time" content="2019-04-29T18:42:22&#43;08:00"/>
+<meta property="article:modified_time" content="2019-04-29T18:42:22&#43;08:00"/>
+
+<meta itemprop="name" content="【Flink实践】实时消费阿里云SLS&#43;输出到ES">
+<meta itemprop="description" content="环境 Flink 1.8 ES 6.3.2 假设场景 日志结构 request_time: 1556415329 uri: /analysis/path?id=1 系统AccessLog通过Logtai采集到阿里云SLS，指定request_time为日志时间字段。示">
+
+
+<meta itemprop="datePublished" content="2019-04-29T18:42:22&#43;08:00" />
+<meta itemprop="dateModified" content="2019-04-29T18:42:22&#43;08:00" />
+<meta itemprop="wordCount" content="2085">
+
+
+
+<meta itemprop="keywords" content="Flink,Elasticsearch,SLS," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【Flink实践】实时消费阿里云SLS&#43;输出到ES"/>
+<meta name="twitter:description" content="环境 Flink 1.8 ES 6.3.2 假设场景 日志结构 request_time: 1556415329 uri: /analysis/path?id=1 系统AccessLog通过Logtai采集到阿里云SLS，指定request_time为日志时间字段。示"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【Flink实践】实时消费阿里云SLS&#43;输出到ES</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-04-29 </span>
+        <div class="post-category">
+            
+              <a href="/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE/"> 大数据 </a>
+            
+          </div>
+        <span class="more-meta"> 约 2085 字 </span>
+        <span class="more-meta"> 预计阅读 5 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#环境">环境</a></li>
+<li><a href="#假设场景">假设场景</a></li>
+<li><a href="#流程解析">流程解析</a>
+<ul>
+<li><a href="#gradle添加依赖">Gradle添加依赖</a></li>
+<li><a href="#参数-配置-可忽略">参数&amp;配置（可忽略）</a></li>
+<li><a href="#日志消费">日志消费</a></li>
+<li><a href="#批量日志展开">批量日志展开</a></li>
+<li><a href="#eventtime-timewindow">EventTime &amp; timeWindow</a></li>
+<li><a href="#输出到es">输出到ES</a></li>
+<li><a href="#测试-打包">测试 &amp; 打包</a></li>
+<li><a href="#提交job到flink运行">提交Job到Flink运行</a></li>
+<li><a href="#到kibana看下结果">到Kibana看下结果</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+<h2 id="环境">环境</h2>
+
+<ul>
+<li>Flink
+
+<ul>
+<li>1.8</li>
+</ul></li>
+<li>ES
+
+<ul>
+<li>6.3.2</li>
+</ul></li>
+</ul>
+
+<h2 id="假设场景">假设场景</h2>
+
+<p><em>日志结构</em></p>
+
+<pre><code class="language-bash">request_time: 1556415329
+uri: /analysis/path?id=1
+</code></pre>
+
+<p>系统AccessLog通过Logtai采集到阿里云SLS，指定<code>request_time</code>为日志时间字段。示例场景需求统计指定<code>uri.path</code>+<code>uri.query.id</code>分组统计访问计数。</p>
+
+<ul>
+<li>实时消费<code>SLS</code>日志</li>
+<li>筛选<code>uri.path</code>=<code>/analysis/path</code>(<em>简化只统计单个<code>path</code>，实际场景可能是多个<code>path</code>的访问统计，相应的<code>key</code>参数规则也会不同</em>)</li>
+<li>解析<code>uri.query</code>参数<code>id</code></li>
+</ul>
+
+<p><strong>创建ES索引</strong></p>
+
+<pre><code class="language-bash">PUT sls_analysis
+
+PUT sls_analysis/_mapping/_doc
+{
+  &quot;properties&quot;: {
+    &quot;path&quot;: {
+      &quot;type&quot;: &quot;text&quot;
+    },
+    &quot;key&quot;: {
+      &quot;type&quot;: &quot;integer&quot;
+    },
+    &quot;count&quot;: {
+      &quot;type&quot;: &quot;integer&quot;
+    },
+    &quot;timestamp&quot;: {
+      &quot;type&quot;:&quot;long&quot;
+    }
+  }
+}
+</code></pre>
+
+<h2 id="流程解析">流程解析</h2>
+
+<p>接下来结合<a href="https://github.com/hb-chen/flink-practice/tree/master/sls">hb-chen/flink-practice</a>源码对流程进行解析。</p>
+
+<h3 id="gradle添加依赖">Gradle添加依赖</h3>
+
+<pre><code>    // ES
+    flinkShadowJar &quot;org.apache.flink:flink-connector-elasticsearch6_${scalaBinaryVersion}:${flinkVersion}&quot;
+
+    // SLS
+    flinkShadowJar &quot;com.aliyun.openservices:flink-log-connector:0.1.7&quot;
+    flinkShadowJar &quot;com.aliyun.openservices:aliyun-log:0.6.19&quot;
+    flinkShadowJar &quot;com.aliyun.openservices:log-loghub-producer:0.1.8&quot;
+    flinkShadowJar &quot;com.google.protobuf:protobuf-java:2.5.0&quot;
+    
+    // YAML解析
+    flinkShadowJar &quot;org.yaml:snakeyaml:1.24&quot;
+</code></pre>
+
+<h3 id="参数-配置-可忽略">参数&amp;配置（可忽略）</h3>
+
+<p>虽然只是示例还是做了<code>args</code>参数及<code>config.yml</code>配置的获取，方便配置</p>
+
+<pre><code class="language-java">public static void main(String[] args) throws Exception {
+    final ParameterTool params = ParameterTool.fromArgs(args);
+    String analysisPath = params.getRequired(&quot;path&quot;);
+    String analysisQueryKey = params.get(&quot;key&quot;, &quot;id&quot;);
+    LOG.info(&quot;access log analysis path:&quot; + analysisPath + &quot; key:&quot; + analysisQueryKey);
+
+    Config config = getConfig();
+    
+    // ……
+}
+
+private static Config getConfig() {
+    Constructor constructor = new Constructor(Config.class);
+    org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(constructor);
+
+    Config config = yaml.loadAs(SlsAnalysis.class.getClassLoader().getResourceAsStream(&quot;config.yml&quot;), Config.class);
+    return config;
+}
+</code></pre>
+
+<h3 id="日志消费">日志消费</h3>
+
+<p>首先参考<a href="https://help.aliyun.com/document_detail/63594.html">官方文档</a>通过<code>SLS</code>的各种配置创建一个<code>Consumer</code>，获得<code>SLS</code>日志流<code>DataStream&lt;RawLogGroupList&gt; logStream</code></p>
+
+<pre><code class="language-java">    // SLS消费
+    // https://help.aliyun.com/document_detail/63594.html
+    Properties configProps = new Properties();
+    // 设置访问日志服务的域名
+    configProps.put(ConfigConstants.LOG_ENDPOINT, config.getSls().getEndpoint());
+    // 设置访问ak
+    configProps.put(ConfigConstants.LOG_ACCESSSKEYID, config.getSls().getAk());
+    configProps.put(ConfigConstants.LOG_ACCESSKEY, config.getSls().getSk());
+    // 设置日志服务的project
+    configProps.put(ConfigConstants.LOG_PROJECT, config.getSls().getProject());
+    // 设置日志服务的Logstore
+    configProps.put(ConfigConstants.LOG_LOGSTORE, config.getSls().getLogStore());
+    // 设置消费日志服务起始位置
+    configProps.put(ConfigConstants.LOG_CONSUMER_BEGIN_POSITION, &quot;&quot; + (System.currentTimeMillis() / 1000L));
+    // 设置日志拉取时间间隔及每次调用拉取的日志数量
+    configProps.put(ConfigConstants.LOG_FETCH_DATA_INTERVAL_MILLIS, &quot;1000&quot;);
+    configProps.put(ConfigConstants.LOG_MAX_NUMBER_PER_FETCH, &quot;100&quot;);
+    // 设置Shards发现周期
+    configProps.put(ConfigConstants.LOG_SHARDS_DISCOVERY_INTERVAL_MILLIS, Consts.DEFAULT_SHARDS_DISCOVERY_INTERVAL_MILLIS);
+
+    // 设置日志服务的消息反序列化方法
+    RawLogGroupListDeserializer deserializer = new RawLogGroupListDeserializer();
+    final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+    DataStream&lt;RawLogGroupList&gt; logStream = env.addSource(new FlinkLogConsumer&lt;RawLogGroupList&gt;(deserializer, configProps));
+</code></pre>
+
+<p>通过<code>RawLogGroupList</code>结构知道<code>logStream</code>获得的是批量的<code>SLS</code>日志，单条日志是分组的<code>RawLog</code>列表，这就需要首先对批量的数据进行展开(<code>flatMap()</code>)来获得单条数据流</p>
+
+<pre><code class="language-java">public class RawLogGroupList implements Serializable {
+    public List&lt;RawLogGroup&gt; rawLogGroups = new ArrayList();
+}
+
+public class RawLogGroup implements Serializable {
+    public String source;
+    public String topic = &quot;&quot;;
+    public Map&lt;String, String&gt; tags = new HashMap();
+    public List&lt;RawLog&gt; logs = new ArrayList();
+}
+</code></pre>
+
+<h3 id="批量日志展开">批量日志展开</h3>
+
+<p>这是整个过流程最关键的一环，这里要定义展开后数据流的结构，不啰嗦直接看结构<code>Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt;</code></p>
+
+<ul>
+<li><code>f0</code>:<code>AccessLogAnalysis</code>是解析<code>uri</code>的<code>path</code>+<code>key</code>的对象，也就是要用做<code>keyBy</code>的属性</li>
+<li><code>f1</code>:<code>Integer</code>统计数量，单条日志全计为1(<em>根据需求这里可以考些优化，比如Group内有序可以在range过程直接对相同<code>request_time</code>做聚合</em>)</li>
+<li><code>f2</code>:<code>Long</code>日志时间戳，考虑后续作为<code>EventTime</code>使用，所以将<code>request_time</code>转为毫秒</li>
+<li><code>f3</code>:<code>Long</code>批量日志的最小时间戳，因为<code>SLS</code>日志是时间有序的，且单个<code>RawLogGroup</code>日志升序，所以自然的考虑使用最小时间戳作为<code>watermark</code>，这样也避免了<strong>arrive late</strong>的出现</li>
+</ul>
+
+<pre><code class="language-java">    // SLS批量日志展开
+    DataStream&lt;Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt;&gt; flatStream = logStream.flatMap(new FlatMapFunction&lt;RawLogGroupList, Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt;&gt;() {
+        @Override
+        public void flatMap(RawLogGroupList value, Collector&lt;Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt;&gt; out) throws Exception {
+            // Log group内时间升序，记录所有分组最小时间戳，即为watermark位置
+            long minTimestamp = Long.MAX_VALUE;
+            for (RawLogGroup group : value.getRawLogGroups()) {
+                if (group.getLogs().size() &gt; 0) {
+                    RawLog log = group.getLogs().get(0);
+                    long rt = Optional.ofNullable(log.getContents().get(&quot;request_time&quot;)).map(Long::new).orElse(Long.MAX_VALUE);
+                    minTimestamp = rt &lt; minTimestamp ? rt : minTimestamp;
+                }
+            }
+            // 取毫秒，排除MAX_VALUE
+            minTimestamp = minTimestamp == Long.MAX_VALUE ? minTimestamp : minTimestamp * 1000;
+
+            Integer count = 0;
+            for (RawLogGroup group : value.getRawLogGroups()) {
+                count += group.getLogs().size();
+                for (RawLog log : group.getLogs()) {
+                    // URI解析
+                    QueryStringDecoder decoder = new QueryStringDecoder(log.getContents().get(&quot;uri&quot;));
+                    String path = decoder.path();
+                    List&lt;String&gt; keyList = decoder.parameters().get(analysisQueryKey);
+                    if (path.equalsIgnoreCase(analysisPath) &amp;&amp; keyList != null &amp;&amp; keyList.size() &gt; 0) {
+                        Integer id = Optional.ofNullable(keyList.get(0)).map(Integer::new).orElse(0);
+                        AccessLogAnalysis ala = new AccessLogAnalysis();
+                        ala.setKey(id);
+                        ala.setPath(path);
+
+                        Long timestamp = Optional.ofNullable(log.getContents().get(&quot;request_time&quot;)).map(Long::new).orElse(0L);
+                        timestamp *= 1000;
+
+                        out.collect(new Tuple4&lt;&gt;(ala, 1, timestamp, minTimestamp));
+                    }
+
+                }
+            }
+            LOG.info(&quot;raw log count:&quot; + count + &quot; timestamp:&quot; + minTimestamp);
+        }
+    });
+</code></pre>
+
+<h3 id="eventtime-timewindow">EventTime &amp; timeWindow</h3>
+
+<p>有了<code>flatStream</code>的结果，自定义<code>EventTime</code>以及<code>Watermark</code>就比较简单。<br/><code>.keyBy(0).timeWindow(Time.seconds(60)).sum(1)</code>流程以<code>f0</code>为<code>key</code>分隔，60s为时间窗口对<code>f1</code>求和。</p>
+
+<pre><code class="language-java">DataStream result = flatStream.assignTimestampsAndWatermarks(new AssignerWithPunctuatedWatermarks&lt;Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt;&gt;() {
+    @Nullable
+    @Override
+    public Watermark checkAndGetNextWatermark(Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt; lastElement, long extractedTimestamp) {
+        return lastElement.f3 &lt;= extractedTimestamp ? new Watermark(lastElement.f3) : null;
+    }
+
+    @Override
+    public long extractTimestamp(Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt; element, long previousElementTimestamp) {
+        if (element.f2 &gt; 0L) {
+            return element.f2;
+        } else {
+            return previousElementTimestamp;
+        }
+    }
+})
+.keyBy(0)
+.timeWindow(Time.seconds(60))
+.sum(1);
+</code></pre>
+
+<h3 id="输出到es">输出到ES</h3>
+
+<p>大致参考<a href="https://ci.apache.org/projects/flink/flink-docs-release-1.8/dev/connectors/elasticsearch.html">官方文档</a>即可，
+只是没有认证(<em>生产环境必不可少，想到ES社区的分享，在<a href="https://www.shodan.io">shodan.io</a>上找各种公开免费ES资源😏</em>)</p>
+
+<pre><code class="language-java">// Sink:Elasticsearch
+List&lt;HttpHost&gt; httpHosts = new ArrayList&lt;&gt;();
+httpHosts.add(new HttpHost(config.getEs().getHostname(), 9200, &quot;http&quot;));
+
+// use a ElasticsearchSink.Builder to create an ElasticsearchSink
+ElasticsearchSink.Builder&lt;Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt;&gt; esSinkBuilder = new ElasticsearchSink.Builder&lt;&gt;(httpHosts, new ElasticsearchSinkFunction&lt;Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt;&gt;() {
+    public IndexRequest createIndexRequest(Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt; element) {
+        Map&lt;String, String&gt; json = new HashMap&lt;&gt;();
+        json.put(&quot;path&quot;, element.f0.getPath());
+        json.put(&quot;key&quot;, element.f0.getKey().toString());
+        json.put(&quot;count&quot;, element.f1.toString());
+        json.put(&quot;timestamp&quot;, element.f3.toString());
+
+        return Requests.indexRequest().index(&quot;sls_analysis&quot;).type(&quot;_doc&quot;).source(json);
+    }
+
+    @Override
+    public void process(Tuple4&lt;AccessLogAnalysis, Integer, Long, Long&gt; element, RuntimeContext runtimeContext, RequestIndexer requestIndexer) {
+        requestIndexer.add(createIndexRequest(element));
+    }
+});
+
+// configuration for the bulk requests; this instructs the sink to emit after every element, otherwise they would be buffered
+esSinkBuilder.setBulkFlushMaxActions(1);
+
+// provide a RestClientFactory for custom configuration on the internally created REST client
+String esUsername = config.getEs().getUsername();
+String esPassword = config.getEs().getPassword();
+esSinkBuilder.setRestClientFactory(restClientBuilder -&gt; {
+    // restClientBuilder.setDefaultHeaders(headers);
+    // restClientBuilder.setMaxRetryTimeoutMillis(...)
+    // restClientBuilder.setPathPrefix(...)
+    restClientBuilder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+        @Override
+        public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpAsyncClientBuilder) {
+            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(esUsername, esPassword));
+            return httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+        }
+    });
+});
+
+// finally, build and add the sink to the job's pipeline
+result.addSink(esSinkBuilder.build());
+</code></pre>
+
+<p>这里还遇到个小坑（Java丢的太久了😂），在<code>UsernamePasswordCredentials()</code>中直接使用<code>config.getEs().getUsername()</code> <code>config.getEs().getPassword()</code>，导致序列化错误，相关参考<a href="https://yuzhouwan.com/posts/20644/">Apache Flink#踩过的坑</a></p>
+
+<pre><code class="language-java">Exception in thread &quot;main&quot; org.apache.flink.api.common.InvalidProgramException: The implementation of the ElasticsearchSinkBase is not serializable. The object probably contains or references non serializable fields.
+</code></pre>
+
+<h3 id="测试-打包">测试 &amp; 打包</h3>
+
+<pre><code class="language-bash"># 测试
+$ ./gradlew sls:run --args=&quot;--path /analysis/path&quot;
+
+# 打包
+$ ./gradlew clean sls:shadowJar
+</code></pre>
+
+<h3 id="提交job到flink运行">提交Job到Flink运行</h3>
+
+<p>上传<code>.jar</code>到Flink</p>
+
+<pre><code class="language-java">Program Arguments
+--path /analysis/path
+</code></pre>
+
+<p><img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/flink/sls+es-dashboard.png" alt="auth-adapter" /></p>
+
+<h3 id="到kibana看下结果">到Kibana看下结果</h3>
+
+<p><img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/flink/sls+es-kibana.png" alt="auth-adapter" /></p>
+
+<pre><code class="language-bash">GET /sls_analysis/_search
+{
+  &quot;aggs&quot;: {
+    &quot;2&quot;: {
+      &quot;terms&quot;: {
+        &quot;field&quot;: &quot;key&quot;,
+        &quot;size&quot;: 20,
+        &quot;order&quot;: {
+          &quot;1&quot;: &quot;desc&quot;
+        }
+      },
+      &quot;aggs&quot;: {
+        &quot;1&quot;: {
+          &quot;sum&quot;: {
+            &quot;field&quot;: &quot;count&quot;
+          }
+        }
+      }
+    }
+  },
+  &quot;size&quot;: 0,
+  &quot;_source&quot;: {
+    &quot;excludes&quot;: []
+  },
+  &quot;stored_fields&quot;: [
+    &quot;*&quot;
+  ],
+  &quot;script_fields&quot;: {},
+  &quot;docvalue_fields&quot;: [],
+  &quot;query&quot;: {
+    &quot;bool&quot;: {
+      &quot;must&quot;: [
+        {
+          &quot;match_all&quot;: {}
+        },
+        {
+          &quot;match_phrase&quot;: {
+            &quot;path&quot;: {
+              &quot;query&quot;: &quot;/analysis/path&quot;
+            }
+          }
+        }
+      ],
+      &quot;filter&quot;: [],
+      &quot;should&quot;: [],
+      &quot;must_not&quot;: []
+    }
+  }
+}
+</code></pre>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-04-29</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/flink/">Flink</a>
+          
+          <a href="/tags/elasticsearch/">Elasticsearch</a>
+          
+          <a href="/tags/sls/">SLS</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/servicemesh/2019-04-11-istio-security-egress/">
+            <span class="next-text nav-default">【Istio安全】网格边缘-Egress</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

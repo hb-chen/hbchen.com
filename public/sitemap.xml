@@ -10,6 +10,13 @@
   </url>
   
   <url>
+    <loc>http://hbchen.com/post/flink/2019-04-29-sls&#43;es/</loc>
+    <lastmod>2019-04-29T18:42:22+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/</loc>
     <lastmod>2019-04-14T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -199,7 +206,14 @@
   
   <url>
     <loc>http://hbchen.com/tags/elasticsearch/</loc>
-    <lastmod>2018-10-24T16:23:46+08:00</lastmod>
+    <lastmod>2019-04-29T18:42:22+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/flink/</loc>
+    <lastmod>2019-04-29T18:42:22+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -283,7 +297,7 @@
   
   <url>
     <loc>http://hbchen.com/post/</loc>
-    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-29T18:42:22+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -340,6 +354,13 @@
   <url>
     <loc>http://hbchen.com/tags/shell/</loc>
     <lastmod>2013-11-07T18:36:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/sls/</loc>
+    <lastmod>2019-04-29T18:42:22+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -403,6 +424,13 @@
   <url>
     <loc>http://hbchen.com/tags/%E4%BC%98%E5%8C%96/</loc>
     <lastmod>2013-11-07T18:36:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE/</loc>
+    <lastmod>2019-04-29T18:42:22+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>

@@ -39,6 +39,368 @@
     </item>
     
     <item>
+      <title>【Flink实践】实时消费阿里云SLS&#43;输出到ES</title>
+      <link>http://hbchen.com/post/flink/2019-04-29-sls&#43;es/</link>
+      <pubDate>Mon, 29 Apr 2019 18:42:22 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/flink/2019-04-29-sls&#43;es/</guid>
+      
+        <description>
+
+&lt;h2 id=&#34;环境&#34;&gt;环境&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Flink
+
+&lt;ul&gt;
+&lt;li&gt;1.8&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;ES
+
+&lt;ul&gt;
+&lt;li&gt;6.3.2&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;假设场景&#34;&gt;假设场景&lt;/h2&gt;
+
+&lt;p&gt;&lt;em&gt;日志结构&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;request_time: 1556415329
+uri: /analysis/path?id=1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;系统AccessLog通过Logtai采集到阿里云SLS，指定&lt;code&gt;request_time&lt;/code&gt;为日志时间字段。示例场景需求统计指定&lt;code&gt;uri.path&lt;/code&gt;+&lt;code&gt;uri.query.id&lt;/code&gt;分组统计访问计数。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;实时消费&lt;code&gt;SLS&lt;/code&gt;日志&lt;/li&gt;
+&lt;li&gt;筛选&lt;code&gt;uri.path&lt;/code&gt;=&lt;code&gt;/analysis/path&lt;/code&gt;(&lt;em&gt;简化只统计单个&lt;code&gt;path&lt;/code&gt;，实际场景可能是多个&lt;code&gt;path&lt;/code&gt;的访问统计，相应的&lt;code&gt;key&lt;/code&gt;参数规则也会不同&lt;/em&gt;)&lt;/li&gt;
+&lt;li&gt;解析&lt;code&gt;uri.query&lt;/code&gt;参数&lt;code&gt;id&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;创建ES索引&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;PUT sls_analysis
+
+PUT sls_analysis/_mapping/_doc
+{
+  &amp;quot;properties&amp;quot;: {
+    &amp;quot;path&amp;quot;: {
+      &amp;quot;type&amp;quot;: &amp;quot;text&amp;quot;
+    },
+    &amp;quot;key&amp;quot;: {
+      &amp;quot;type&amp;quot;: &amp;quot;integer&amp;quot;
+    },
+    &amp;quot;count&amp;quot;: {
+      &amp;quot;type&amp;quot;: &amp;quot;integer&amp;quot;
+    },
+    &amp;quot;timestamp&amp;quot;: {
+      &amp;quot;type&amp;quot;:&amp;quot;long&amp;quot;
+    }
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;流程解析&#34;&gt;流程解析&lt;/h2&gt;
+
+&lt;p&gt;接下来结合&lt;a href=&#34;https://github.com/hb-chen/flink-practice/tree/master/sls&#34;&gt;hb-chen/flink-practice&lt;/a&gt;源码对流程进行解析。&lt;/p&gt;
+
+&lt;h3 id=&#34;gradle添加依赖&#34;&gt;Gradle添加依赖&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;    // ES
+    flinkShadowJar &amp;quot;org.apache.flink:flink-connector-elasticsearch6_${scalaBinaryVersion}:${flinkVersion}&amp;quot;
+
+    // SLS
+    flinkShadowJar &amp;quot;com.aliyun.openservices:flink-log-connector:0.1.7&amp;quot;
+    flinkShadowJar &amp;quot;com.aliyun.openservices:aliyun-log:0.6.19&amp;quot;
+    flinkShadowJar &amp;quot;com.aliyun.openservices:log-loghub-producer:0.1.8&amp;quot;
+    flinkShadowJar &amp;quot;com.google.protobuf:protobuf-java:2.5.0&amp;quot;
+    
+    // YAML解析
+    flinkShadowJar &amp;quot;org.yaml:snakeyaml:1.24&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;参数-配置-可忽略&#34;&gt;参数&amp;amp;配置（可忽略）&lt;/h3&gt;
+
+&lt;p&gt;虽然只是示例还是做了&lt;code&gt;args&lt;/code&gt;参数及&lt;code&gt;config.yml&lt;/code&gt;配置的获取，方便配置&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;public static void main(String[] args) throws Exception {
+    final ParameterTool params = ParameterTool.fromArgs(args);
+    String analysisPath = params.getRequired(&amp;quot;path&amp;quot;);
+    String analysisQueryKey = params.get(&amp;quot;key&amp;quot;, &amp;quot;id&amp;quot;);
+    LOG.info(&amp;quot;access log analysis path:&amp;quot; + analysisPath + &amp;quot; key:&amp;quot; + analysisQueryKey);
+
+    Config config = getConfig();
+    
+    // ……
+}
+
+private static Config getConfig() {
+    Constructor constructor = new Constructor(Config.class);
+    org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(constructor);
+
+    Config config = yaml.loadAs(SlsAnalysis.class.getClassLoader().getResourceAsStream(&amp;quot;config.yml&amp;quot;), Config.class);
+    return config;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;日志消费&#34;&gt;日志消费&lt;/h3&gt;
+
+&lt;p&gt;首先参考&lt;a href=&#34;https://help.aliyun.com/document_detail/63594.html&#34;&gt;官方文档&lt;/a&gt;通过&lt;code&gt;SLS&lt;/code&gt;的各种配置创建一个&lt;code&gt;Consumer&lt;/code&gt;，获得&lt;code&gt;SLS&lt;/code&gt;日志流&lt;code&gt;DataStream&amp;lt;RawLogGroupList&amp;gt; logStream&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;    // SLS消费
+    // https://help.aliyun.com/document_detail/63594.html
+    Properties configProps = new Properties();
+    // 设置访问日志服务的域名
+    configProps.put(ConfigConstants.LOG_ENDPOINT, config.getSls().getEndpoint());
+    // 设置访问ak
+    configProps.put(ConfigConstants.LOG_ACCESSSKEYID, config.getSls().getAk());
+    configProps.put(ConfigConstants.LOG_ACCESSKEY, config.getSls().getSk());
+    // 设置日志服务的project
+    configProps.put(ConfigConstants.LOG_PROJECT, config.getSls().getProject());
+    // 设置日志服务的Logstore
+    configProps.put(ConfigConstants.LOG_LOGSTORE, config.getSls().getLogStore());
+    // 设置消费日志服务起始位置
+    configProps.put(ConfigConstants.LOG_CONSUMER_BEGIN_POSITION, &amp;quot;&amp;quot; + (System.currentTimeMillis() / 1000L));
+    // 设置日志拉取时间间隔及每次调用拉取的日志数量
+    configProps.put(ConfigConstants.LOG_FETCH_DATA_INTERVAL_MILLIS, &amp;quot;1000&amp;quot;);
+    configProps.put(ConfigConstants.LOG_MAX_NUMBER_PER_FETCH, &amp;quot;100&amp;quot;);
+    // 设置Shards发现周期
+    configProps.put(ConfigConstants.LOG_SHARDS_DISCOVERY_INTERVAL_MILLIS, Consts.DEFAULT_SHARDS_DISCOVERY_INTERVAL_MILLIS);
+
+    // 设置日志服务的消息反序列化方法
+    RawLogGroupListDeserializer deserializer = new RawLogGroupListDeserializer();
+    final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+    DataStream&amp;lt;RawLogGroupList&amp;gt; logStream = env.addSource(new FlinkLogConsumer&amp;lt;RawLogGroupList&amp;gt;(deserializer, configProps));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;通过&lt;code&gt;RawLogGroupList&lt;/code&gt;结构知道&lt;code&gt;logStream&lt;/code&gt;获得的是批量的&lt;code&gt;SLS&lt;/code&gt;日志，单条日志是分组的&lt;code&gt;RawLog&lt;/code&gt;列表，这就需要首先对批量的数据进行展开(&lt;code&gt;flatMap()&lt;/code&gt;)来获得单条数据流&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;public class RawLogGroupList implements Serializable {
+    public List&amp;lt;RawLogGroup&amp;gt; rawLogGroups = new ArrayList();
+}
+
+public class RawLogGroup implements Serializable {
+    public String source;
+    public String topic = &amp;quot;&amp;quot;;
+    public Map&amp;lt;String, String&amp;gt; tags = new HashMap();
+    public List&amp;lt;RawLog&amp;gt; logs = new ArrayList();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;批量日志展开&#34;&gt;批量日志展开&lt;/h3&gt;
+
+&lt;p&gt;这是整个过流程最关键的一环，这里要定义展开后数据流的结构，不啰嗦直接看结构&lt;code&gt;Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt;&lt;/code&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;f0&lt;/code&gt;:&lt;code&gt;AccessLogAnalysis&lt;/code&gt;是解析&lt;code&gt;uri&lt;/code&gt;的&lt;code&gt;path&lt;/code&gt;+&lt;code&gt;key&lt;/code&gt;的对象，也就是要用做&lt;code&gt;keyBy&lt;/code&gt;的属性&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;f1&lt;/code&gt;:&lt;code&gt;Integer&lt;/code&gt;统计数量，单条日志全计为1(&lt;em&gt;根据需求这里可以考些优化，比如Group内有序可以在range过程直接对相同&lt;code&gt;request_time&lt;/code&gt;做聚合&lt;/em&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;f2&lt;/code&gt;:&lt;code&gt;Long&lt;/code&gt;日志时间戳，考虑后续作为&lt;code&gt;EventTime&lt;/code&gt;使用，所以将&lt;code&gt;request_time&lt;/code&gt;转为毫秒&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;f3&lt;/code&gt;:&lt;code&gt;Long&lt;/code&gt;批量日志的最小时间戳，因为&lt;code&gt;SLS&lt;/code&gt;日志是时间有序的，且单个&lt;code&gt;RawLogGroup&lt;/code&gt;日志升序，所以自然的考虑使用最小时间戳作为&lt;code&gt;watermark&lt;/code&gt;，这样也避免了&lt;strong&gt;arrive late&lt;/strong&gt;的出现&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;    // SLS批量日志展开
+    DataStream&amp;lt;Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt;&amp;gt; flatStream = logStream.flatMap(new FlatMapFunction&amp;lt;RawLogGroupList, Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt;&amp;gt;() {
+        @Override
+        public void flatMap(RawLogGroupList value, Collector&amp;lt;Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt;&amp;gt; out) throws Exception {
+            // Log group内时间升序，记录所有分组最小时间戳，即为watermark位置
+            long minTimestamp = Long.MAX_VALUE;
+            for (RawLogGroup group : value.getRawLogGroups()) {
+                if (group.getLogs().size() &amp;gt; 0) {
+                    RawLog log = group.getLogs().get(0);
+                    long rt = Optional.ofNullable(log.getContents().get(&amp;quot;request_time&amp;quot;)).map(Long::new).orElse(Long.MAX_VALUE);
+                    minTimestamp = rt &amp;lt; minTimestamp ? rt : minTimestamp;
+                }
+            }
+            // 取毫秒，排除MAX_VALUE
+            minTimestamp = minTimestamp == Long.MAX_VALUE ? minTimestamp : minTimestamp * 1000;
+
+            Integer count = 0;
+            for (RawLogGroup group : value.getRawLogGroups()) {
+                count += group.getLogs().size();
+                for (RawLog log : group.getLogs()) {
+                    // URI解析
+                    QueryStringDecoder decoder = new QueryStringDecoder(log.getContents().get(&amp;quot;uri&amp;quot;));
+                    String path = decoder.path();
+                    List&amp;lt;String&amp;gt; keyList = decoder.parameters().get(analysisQueryKey);
+                    if (path.equalsIgnoreCase(analysisPath) &amp;amp;&amp;amp; keyList != null &amp;amp;&amp;amp; keyList.size() &amp;gt; 0) {
+                        Integer id = Optional.ofNullable(keyList.get(0)).map(Integer::new).orElse(0);
+                        AccessLogAnalysis ala = new AccessLogAnalysis();
+                        ala.setKey(id);
+                        ala.setPath(path);
+
+                        Long timestamp = Optional.ofNullable(log.getContents().get(&amp;quot;request_time&amp;quot;)).map(Long::new).orElse(0L);
+                        timestamp *= 1000;
+
+                        out.collect(new Tuple4&amp;lt;&amp;gt;(ala, 1, timestamp, minTimestamp));
+                    }
+
+                }
+            }
+            LOG.info(&amp;quot;raw log count:&amp;quot; + count + &amp;quot; timestamp:&amp;quot; + minTimestamp);
+        }
+    });
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;eventtime-timewindow&#34;&gt;EventTime &amp;amp; timeWindow&lt;/h3&gt;
+
+&lt;p&gt;有了&lt;code&gt;flatStream&lt;/code&gt;的结果，自定义&lt;code&gt;EventTime&lt;/code&gt;以及&lt;code&gt;Watermark&lt;/code&gt;就比较简单。&lt;br/&gt;&lt;code&gt;.keyBy(0).timeWindow(Time.seconds(60)).sum(1)&lt;/code&gt;流程以&lt;code&gt;f0&lt;/code&gt;为&lt;code&gt;key&lt;/code&gt;分隔，60s为时间窗口对&lt;code&gt;f1&lt;/code&gt;求和。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;DataStream result = flatStream.assignTimestampsAndWatermarks(new AssignerWithPunctuatedWatermarks&amp;lt;Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt;&amp;gt;() {
+    @Nullable
+    @Override
+    public Watermark checkAndGetNextWatermark(Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt; lastElement, long extractedTimestamp) {
+        return lastElement.f3 &amp;lt;= extractedTimestamp ? new Watermark(lastElement.f3) : null;
+    }
+
+    @Override
+    public long extractTimestamp(Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt; element, long previousElementTimestamp) {
+        if (element.f2 &amp;gt; 0L) {
+            return element.f2;
+        } else {
+            return previousElementTimestamp;
+        }
+    }
+})
+.keyBy(0)
+.timeWindow(Time.seconds(60))
+.sum(1);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;输出到es&#34;&gt;输出到ES&lt;/h3&gt;
+
+&lt;p&gt;大致参考&lt;a href=&#34;https://ci.apache.org/projects/flink/flink-docs-release-1.8/dev/connectors/elasticsearch.html&#34;&gt;官方文档&lt;/a&gt;即可，
+只是没有认证(&lt;em&gt;生产环境必不可少，想到ES社区的分享，在&lt;a href=&#34;https://www.shodan.io&#34;&gt;shodan.io&lt;/a&gt;上找各种公开免费ES资源😏&lt;/em&gt;)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;// Sink:Elasticsearch
+List&amp;lt;HttpHost&amp;gt; httpHosts = new ArrayList&amp;lt;&amp;gt;();
+httpHosts.add(new HttpHost(config.getEs().getHostname(), 9200, &amp;quot;http&amp;quot;));
+
+// use a ElasticsearchSink.Builder to create an ElasticsearchSink
+ElasticsearchSink.Builder&amp;lt;Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt;&amp;gt; esSinkBuilder = new ElasticsearchSink.Builder&amp;lt;&amp;gt;(httpHosts, new ElasticsearchSinkFunction&amp;lt;Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt;&amp;gt;() {
+    public IndexRequest createIndexRequest(Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt; element) {
+        Map&amp;lt;String, String&amp;gt; json = new HashMap&amp;lt;&amp;gt;();
+        json.put(&amp;quot;path&amp;quot;, element.f0.getPath());
+        json.put(&amp;quot;key&amp;quot;, element.f0.getKey().toString());
+        json.put(&amp;quot;count&amp;quot;, element.f1.toString());
+        json.put(&amp;quot;timestamp&amp;quot;, element.f3.toString());
+
+        return Requests.indexRequest().index(&amp;quot;sls_analysis&amp;quot;).type(&amp;quot;_doc&amp;quot;).source(json);
+    }
+
+    @Override
+    public void process(Tuple4&amp;lt;AccessLogAnalysis, Integer, Long, Long&amp;gt; element, RuntimeContext runtimeContext, RequestIndexer requestIndexer) {
+        requestIndexer.add(createIndexRequest(element));
+    }
+});
+
+// configuration for the bulk requests; this instructs the sink to emit after every element, otherwise they would be buffered
+esSinkBuilder.setBulkFlushMaxActions(1);
+
+// provide a RestClientFactory for custom configuration on the internally created REST client
+String esUsername = config.getEs().getUsername();
+String esPassword = config.getEs().getPassword();
+esSinkBuilder.setRestClientFactory(restClientBuilder -&amp;gt; {
+    // restClientBuilder.setDefaultHeaders(headers);
+    // restClientBuilder.setMaxRetryTimeoutMillis(...)
+    // restClientBuilder.setPathPrefix(...)
+    restClientBuilder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+        @Override
+        public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpAsyncClientBuilder) {
+            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(esUsername, esPassword));
+            return httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+        }
+    });
+});
+
+// finally, build and add the sink to the job&#39;s pipeline
+result.addSink(esSinkBuilder.build());
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这里还遇到个小坑（Java丢的太久了😂），在&lt;code&gt;UsernamePasswordCredentials()&lt;/code&gt;中直接使用&lt;code&gt;config.getEs().getUsername()&lt;/code&gt; &lt;code&gt;config.getEs().getPassword()&lt;/code&gt;，导致序列化错误，相关参考&lt;a href=&#34;https://yuzhouwan.com/posts/20644/&#34;&gt;Apache Flink#踩过的坑&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;Exception in thread &amp;quot;main&amp;quot; org.apache.flink.api.common.InvalidProgramException: The implementation of the ElasticsearchSinkBase is not serializable. The object probably contains or references non serializable fields.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;测试-打包&#34;&gt;测试 &amp;amp; 打包&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 测试
+$ ./gradlew sls:run --args=&amp;quot;--path /analysis/path&amp;quot;
+
+# 打包
+$ ./gradlew clean sls:shadowJar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;提交job到flink运行&#34;&gt;提交Job到Flink运行&lt;/h3&gt;
+
+&lt;p&gt;上传&lt;code&gt;.jar&lt;/code&gt;到Flink&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;Program Arguments
+--path /analysis/path
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/flink/sls+es-dashboard.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;到kibana看下结果&#34;&gt;到Kibana看下结果&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/flink/sls+es-kibana.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;GET /sls_analysis/_search
+{
+  &amp;quot;aggs&amp;quot;: {
+    &amp;quot;2&amp;quot;: {
+      &amp;quot;terms&amp;quot;: {
+        &amp;quot;field&amp;quot;: &amp;quot;key&amp;quot;,
+        &amp;quot;size&amp;quot;: 20,
+        &amp;quot;order&amp;quot;: {
+          &amp;quot;1&amp;quot;: &amp;quot;desc&amp;quot;
+        }
+      },
+      &amp;quot;aggs&amp;quot;: {
+        &amp;quot;1&amp;quot;: {
+          &amp;quot;sum&amp;quot;: {
+            &amp;quot;field&amp;quot;: &amp;quot;count&amp;quot;
+          }
+        }
+      }
+    }
+  },
+  &amp;quot;size&amp;quot;: 0,
+  &amp;quot;_source&amp;quot;: {
+    &amp;quot;excludes&amp;quot;: []
+  },
+  &amp;quot;stored_fields&amp;quot;: [
+    &amp;quot;*&amp;quot;
+  ],
+  &amp;quot;script_fields&amp;quot;: {},
+  &amp;quot;docvalue_fields&amp;quot;: [],
+  &amp;quot;query&amp;quot;: {
+    &amp;quot;bool&amp;quot;: {
+      &amp;quot;must&amp;quot;: [
+        {
+          &amp;quot;match_all&amp;quot;: {}
+        },
+        {
+          &amp;quot;match_phrase&amp;quot;: {
+            &amp;quot;path&amp;quot;: {
+              &amp;quot;query&amp;quot;: &amp;quot;/analysis/path&amp;quot;
+            }
+          }
+        }
+      ],
+      &amp;quot;filter&amp;quot;: [],
+      &amp;quot;should&amp;quot;: [],
+      &amp;quot;must_not&amp;quot;: []
+    }
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+      
+    </item>
+    
+    <item>
       <title>【Istio安全】网格边缘-Egress</title>
       <link>http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/</link>
       <pubDate>Sun, 14 Apr 2019 00:00:00 +0000</pubDate>
@@ -2857,92 +3219,6 @@ wamp.com
 &lt;p&gt;Goaccess分析压缩日志&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;#zcat access.log-20130123.gz | goaccess
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>SVN:使用</title>
-      <link>http://hbchen.com/post/2013-11-07-svnshi-yong/</link>
-      <pubDate>Thu, 07 Nov 2013 18:15:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-11-07-svnshi-yong/</guid>
-      
-        <description>&lt;h4 id=&#34;1-系统&#34;&gt;1.系统&lt;/h4&gt;
-
-&lt;p&gt;Centos 6.4&lt;/p&gt;
-
-&lt;h4 id=&#34;2-安装svn&#34;&gt;2.安装svn&lt;/h4&gt;
-
-&lt;pre&gt;&lt;code&gt;#yum install subversion
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;3-建立版本库&#34;&gt;3.建立版本库&lt;/h4&gt;
-
-&lt;pre&gt;&lt;code&gt;#mkdir /mnt/svndata
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;启动服务&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#svnserve -d -r /mnt/svndata
-#svnadmin create /mnt/svndata/svn
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;4-修改配置&#34;&gt;4.修改配置&lt;/h4&gt;
-
-&lt;pre&gt;&lt;code&gt;#cd /mnt/svndata/svn/conf
-#vi svnserve.conf
-anon-access=none
-auth-access=write
-password-db=passwd
-
-#vi passwd
-[users]
-hobo=123456
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;5-实现svn与web同步&#34;&gt;5.实现SVN与WEB同步&lt;/h4&gt;
-
-&lt;p&gt;1)checkout一个test项目&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#svn co svn://localhost/svn /mnt/www/webroot/test
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;2)修改权限为WEB用户&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#chown -R apache:apache /mnt/www/webroot/test
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;3)建立同步脚本&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#cd /mnt/svndata/svn/hooks/
-#cp post-commit.tmpl post-commit
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;4)编辑post-commit，添加同步脚本&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#vi post-commit
-export LANG=en_US.UTF-8
-SVN=/usr/bin/svn
-WEB_TEST=/mnt/www/webroot/test
-$SVN update $WEB_TEST –username hobo –password 123456
-chown -R apache:apache $WEB
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;5)增加脚本执行权限&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#chmod +x post-commit
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Mac下Versions中.a包无法上传问题&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;cd filepath
-svn add libMobClickLibrary.a 
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;删除版本控制 / 删除多级.svn文件&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#find . -type d -name &amp;quot;.svn&amp;quot;|xargs rm -rf;
 &lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
