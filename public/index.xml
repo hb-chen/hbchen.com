@@ -39,7 +39,7 @@
     </item>
     
     <item>
-      <title>【Flink实践】实时消费阿里云SLS&#43;输出到ES</title>
+      <title>【Flink实践】实时消费阿里云SLS日志&#43;输出到ES</title>
       <link>http://hbchen.com/post/flink/2019-04-29-sls&#43;es/</link>
       <pubDate>Mon, 29 Apr 2019 18:42:22 +0800</pubDate>
       
