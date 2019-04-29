@@ -45,7 +45,7 @@
       
       <guid>http://hbchen.com/post/flink/2019-04-29-sls&#43;es/</guid>
       
-        <description>
+        <description>&lt;p&gt;本文介绍Flink在流计算场景的简单应用，实时消费SLS内的AccessLog，并将计算结果输出到Elasticsearch。&lt;/p&gt;
 
 &lt;h2 id=&#34;环境&#34;&gt;环境&lt;/h2&gt;
 
@@ -395,8 +395,7 @@ $ ./gradlew clean sls:shadowJar
     }
   }
 }
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
     

@@ -18,7 +18,7 @@
       <pubDate>Mon, 29 Apr 2019 18:42:22 +0800</pubDate>
       
       <guid>http://hbchen.com/post/flink/2019-04-29-sls&#43;es/</guid>
-      <description>环境 Flink 1.8 ES 6.3.2 假设场景 日志结构 request_time: 1556415329 uri: /analysis/path?id=1 系统AccessLog通过Logtai采集到阿里云SLS，指定request_time为日志时间字段。示</description>
+      <description>&lt;p&gt;本文介绍Flink在流计算场景的简单应用，实时消费SLS内的AccessLog，并将计算结果输出到Elasticsearch。&lt;/p&gt;</description>
     </item>
     
   </channel>
