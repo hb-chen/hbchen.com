@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Mon, 29 Apr 2019 18:42:22 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 05 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>分布式系统限流服务-Golang&amp;Redis</title>
+      <link>http://hbchen.com/post/distributed/2019-05-05-rate-limit/</link>
+      <pubDate>Sun, 05 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/distributed/2019-05-05-rate-limit/</guid>
+      <description>&lt;p&gt;本文参考两个使用Redis做限流的项目，分析分布式系统限流服务的实现，包括固定窗口以及滚动窗口的限流。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【Flink实践】实时消费阿里云SLS日志&#43;输出到ES</title>
@@ -249,22 +258,6 @@ vi /usr/local/etc/mongod.conf
 或
 #cat access.log |grep &amp;quot;200&amp;quot; | awk &#39;{print $7}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
 #vi stat.log
-&lt;/code&gt;&lt;/pre&gt;</description>
-    </item>
-    
-    <item>
-      <title>SVN:使用</title>
-      <link>http://hbchen.com/post/2013-11-07-svnshi-yong/</link>
-      <pubDate>Thu, 07 Nov 2013 18:15:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-11-07-svnshi-yong/</guid>
-      <description>&lt;h4 id=&#34;1-系统&#34;&gt;1.系统&lt;/h4&gt;
-
-&lt;p&gt;Centos 6.4&lt;/p&gt;
-
-&lt;h4 id=&#34;2-安装svn&#34;&gt;2.安装svn&lt;/h4&gt;
-
-&lt;pre&gt;&lt;code&gt;#yum install subversion
 &lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     

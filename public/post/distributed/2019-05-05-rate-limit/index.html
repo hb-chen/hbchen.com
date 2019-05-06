@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>分布式系统限流服务-Golang&amp;Redis - Hobo&#39;s Blog - 技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="本文参考两个使用Redis做限流的项目，分析分布式系统限流服务的实现，包括固定窗口以及滚动窗口的限流。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/distributed/2019-05-05-rate-limit/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="分布式系统限流服务-Golang&amp;Redis" />
+<meta property="og:description" content="本文参考两个使用Redis做限流的项目，分析分布式系统限流服务的实现，包括固定窗口以及滚动窗口的限流。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/distributed/2019-05-05-rate-limit/" /><meta property="article:published_time" content="2019-05-05T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-05-05T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="分布式系统限流服务-Golang&amp;Redis">
+<meta itemprop="description" content="本文参考两个使用Redis做限流的项目，分析分布式系统限流服务的实现，包括固定窗口以及滚动窗口的限流。">
+
+
+<meta itemprop="datePublished" content="2019-05-05T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-05-05T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="2090">
+
+
+
+<meta itemprop="keywords" content="Redis,Go," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="分布式系统限流服务-Golang&amp;Redis"/>
+<meta name="twitter:description" content="本文参考两个使用Redis做限流的项目，分析分布式系统限流服务的实现，包括固定窗口以及滚动窗口的限流。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">分布式系统限流服务-Golang&amp;Redis</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-05-05 </span>
+        <div class="post-category">
+            
+              <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/"> 分布式 </a>
+            
+          </div>
+        <span class="more-meta"> 约 2090 字 </span>
+        <span class="more-meta"> 预计阅读 5 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#固定窗口">固定窗口</a>
+<ul>
+<li><a href="#go-redis-redis-rate">go-redis/redis_rate</a></li>
+<li><a href="#adapter-redisquota-fixed-window">adapter/redisquota/fixed_window</a></li>
+<li><a href="#lua脚本获取时间戳">Lua脚本获取时间戳</a></li>
+</ul></li>
+<li><a href="#滚动窗口">滚动窗口</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>本文参考两个使用Redis做限流的项目，分析分布式系统限流服务的实现，包括固定窗口以及滚动窗口的限流。</p>
+
+<p><strong>参考项目</strong></p>
+
+<ul>
+<li>Istio项目<code>mixer</code>模块的<a href="https://github.com/istio/istio/tree/master/mixer/adapter/redisquota">adapter/redisquota</a></li>
+<li><a href="https://github.com/go-redis/redis_rate">go-redis/redis_rate</a></li>
+</ul>
+
+<h2 id="固定窗口">固定窗口</h2>
+
+<p><img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/distributed/rate-window-fixed.png" alt="fixed-window" /></p>
+
+<h3 id="go-redis-redis-rate">go-redis/redis_rate</h3>
+
+<p><code>redis_rate</code>使用<strong>窗口标识</strong>做<code>key</code>的字符串，用<code>INCRBY</code>统计窗口已使用流量<code>n</code>，且<code>key</code>在此窗口结束后自动过期。</p>
+
+<p><strong>窗口标识</strong>的生成：</p>
+
+<ul>
+<li><code>slot</code> = <code>utime</code>(<em>时间戳<code>s</code></em>)➗<code>udur</code>(<em>窗口大小<code>s</code>，<code>dur ≥ 1s</code></em>)</li>
+<li><code>key</code> = <code>name</code> + <code>slot</code></li>
+</ul>
+
+<blockquote>
+<p><code>utime</code>与系统时钟相关，考虑一种较为极端的情况，窗口大小<code>1s</code>，<code>A</code>、<code>B</code>两个系统时钟差<code>2s</code>，而<code>key</code>的过期时间与窗口大小相同<code>1s</code>，
+假设<code>key</code>在窗口最后有更新则<code>key</code>的生存周期是<code>2s</code>，而恰好时钟相差<code>2s</code>，这样<code>A</code>、<code>B</code>系统的分布式限流就变成了单机限流。<br/>
+虽然比较极端，但在使用时还是需要注意，根据需要可以适当加大<code>key</code>的过期时间，同时存活多个窗口，使存活窗口范围覆盖系统间的时钟误差。</p>
+</blockquote>
+
+<pre><code class="language-go">func (l *Limiter) AllowN(
+	name string, maxn int64, dur time.Duration, n int64,
+) (count int64, delay time.Duration, allow bool) {
+	udur := int64(dur / time.Second)
+	utime := time.Now().Unix()
+	slot := utime / udur
+	delay = time.Duration((slot+1)*udur-utime) * time.Second
+
+	if l.Fallback != nil {
+		allow = l.Fallback.Allow()
+	}
+
+	name = allowName(name, slot)
+	count, err := l.incr(name, dur, n)
+	if err == nil {
+		allow = count &lt;= maxn
+	}
+
+	return count, delay, allow
+}
+</code></pre>
+
+<h3 id="adapter-redisquota-fixed-window">adapter/redisquota/fixed_window</h3>
+
+<p><strong>redisquota</strong>使用<code>lua</code>脚本实现，设计上使用一个带有<code>token</code>和<code>expire</code>的哈希表，<code>key</code>过期时间为<code>windowLength</code>，窗口在<code>key</code>过期或<code>timestamp</code>≥<code>expire</code>时重置。
+另外<code>redisquota</code>根据场景做了<strong>幂等</strong>设计，同一<code>deduplicationid</code>在窗口有效期内不会重新分配<code>token</code></p>
+
+<blockquote>
+<p>因为<code>timestamp</code>与系统时钟相关，同样假设<code>A</code>、<code>B</code>两个系统时钟差<code>2s</code>(<code>A</code>&gt;<code>B</code>)，窗口大小<code>10s</code>，如果窗口①由<code>A</code>系统时间戳触发，而窗口②由<code>B</code>系统时间戳触发(<code>A</code>在后<code>2s</code>没有流量)，
+这样①实际窗口大小就是<code>12s</code>，这样继续到窗口③由<code>A</code>系统时间戳触发，②的实际窗口代销就是<code>8s</code>，所以在分布式环境下限流效果同样受系统时钟误差的影响。</p>
+</blockquote>
+
+<pre><code class="language-lua">local key_meta = KEYS[1]
+-- local key_data = KEYS[2]
+
+local credit = tonumber(ARGV[1])
+local windowLength = tonumber(ARGV[2])
+-- local bucketLength = tonumber(ARGV[3])
+local bestEffort = tonumber(ARGV[4])
+local token = tonumber(ARGV[5])
+local timestamp = tonumber(ARGV[6])
+local deduplicationid = ARGV[7]
+
+-- lookup previous response for the deduplicationid and returns if it is still valid
+--------------------------------------------------------------------------------
+if (deduplicationid or '') ~= '' then
+    local previous_token = tonumber(redis.call(&quot;HGET&quot;, deduplicationid .. &quot;-&quot; .. key_meta, &quot;token&quot;))
+    local previous_expire = tonumber(redis.call(&quot;HGET&quot;, deduplicationid .. &quot;-&quot; .. key_meta, &quot;expire&quot;))
+
+    if previous_token and previous_expire then
+        if timestamp &lt; previous_expire then
+            return {previous_token, previous_expire - timestamp}
+        end
+    end
+end
+
+-- read or initialize meta information
+--------------------------------------------------------------------------------
+local info_token = tonumber(redis.call(&quot;HGET&quot;, key_meta, &quot;token&quot;))
+local info_expire = tonumber(redis.call(&quot;HGET&quot;, key_meta, &quot;expire&quot;))
+
+if (not info_token or not info_expire) or (timestamp &gt;= info_expire) then
+    info_token = 0
+    info_expire = windowLength + timestamp
+
+    redis.call(&quot;HMSET&quot;, key_meta, &quot;token&quot;, info_token, &quot;expire&quot;, windowLength + timestamp)
+    -- set the expiration time for automatic cleanup
+    redis.call(&quot;PEXPIRE&quot;, key_meta, windowLength / 1000000)
+end
+
+if info_token + token &gt; credit then
+    if bestEffort == 1 then
+        local exceeded = info_token + token - credit
+
+        if exceeded &lt; token then
+            -- return maximum available allocated token
+            redis.call(&quot;HMSET&quot;, key_meta, &quot;token&quot;, credit)
+
+            -- save current request and set expiration time for auto cleanup
+            if (deduplicationid or '') ~= '' then
+                redis.call(&quot;HMSET&quot;, deduplicationid .. &quot;-&quot; .. key_meta, &quot;token&quot;, token - exceeded, &quot;expire&quot;, info_expire)
+                redis.call(&quot;PEXPIRE&quot;, deduplicationid .. &quot;-&quot; .. key_meta, math.floor((info_expire - timestamp) / 1000000))
+            end
+
+            return {token - exceeded, info_expire - timestamp}
+        else
+            -- not enough available credit
+            return {0, 0}
+        end
+    else
+        -- not enough available credit
+        return {0, 0}
+    end
+else
+    -- allocated token
+    redis.call(&quot;HMSET&quot;, key_meta, &quot;token&quot;, info_token + token)
+
+    -- save current request and set expiration time for auto cleanup
+    if (deduplicationid or '') ~= '' then
+        redis.call(&quot;HMSET&quot;, deduplicationid .. &quot;-&quot; .. key_meta, &quot;token&quot;, token, &quot;expire&quot;, info_expire)
+        redis.call(&quot;PEXPIRE&quot;, deduplicationid .. &quot;-&quot; .. key_meta, math.floor((info_expire - timestamp) / 1000000))
+    end
+
+    return {token, info_expire - timestamp}
+end
+</code></pre>
+
+<h3 id="lua脚本获取时间戳">Lua脚本获取时间戳</h3>
+
+<p>既然在分布式环境系统时钟有可能存在误差，那自然考虑将时间戳转到Redis中获取，消除时钟误差对窗口的影响，这里有一个限制条件是需要Lua脚本支持<strong>随机写入</strong>，
+有关Redis Lua脚本<strong>随机写入</strong>请参考此文《<a href="https://yq.aliyun.com/articles/195914">redis4.0之Lua脚本新姿势</a>》，结合这个特性可以将两个方案的时间戳由外部传入改为在Lua脚本中获取Redis系统时间，
+我在<a href="https://github.com/hb-go/pkg/tree/master/rate">hb-go/pkg/rate</a>包分别使用<code>SET</code>、<code>HSET</code>做了实现可以参考。</p>
+
+<pre><code class="language-lua">-- Redis version ≥ 3.2
+redis.replicate_commands()
+local now = redis.call('TIME')
+timestamp = (tonumber(now[1]) * 1e6 + tonumber(now[2])) * 1e3
+</code></pre>
+
+<h2 id="滚动窗口">滚动窗口</h2>
+
+<p><img src="https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/distributed/rate-window-rolling.png" alt="rolling-window" /></p>
+
+<p>滚动窗口在固定窗口基础上，将一个<code>window</code>拆成多个<code>bucket</code>，这样窗口根据<code>bucket</code>的大小向前移动。Redis的结构为哈希表：<code>token</code>、<code>bucket.token</code>、<code>bucket.timestamp</code>和<code>key</code>，
+以及一个存储<code>bucket</code>历史数据的有序集合(<em>以<code>bucket</code>的时间戳排序</em>)</p>
+
+<ul>
+<li><code>token</code>:窗口内已使用<code>token</code>数</li>
+<li><code>bucket.token</code>:当前桶内已使用<code>token</code>数</li>
+<li><code>bucket.timestamp</code>:当前桶的时间戳</li>
+<li><code>key</code>:累计<code>bucket</code>数量</li>
+</ul>
+
+<pre><code class="language-lua">local key_meta = KEYS[1]
+local key_data = KEYS[2]
+
+local credit = tonumber(ARGV[1])
+local windowLength = tonumber(ARGV[2])
+local bucketLength = tonumber(ARGV[3])
+local bestEffort = tonumber(ARGV[4])
+local token = tonumber(ARGV[5])
+local timestamp = tonumber(ARGV[6])
+local deduplicationid = ARGV[7]
+
+-- lookup previous response for the deduplicationid and returns if it is still valid
+--------------------------------------------------------------------------------
+if (deduplicationid or '') ~= '' then
+    local previous_token = tonumber(redis.call(&quot;HGET&quot;, deduplicationid .. &quot;-&quot; .. key_meta, &quot;token&quot;))
+    local previous_expire = tonumber(redis.call(&quot;HGET&quot;, deduplicationid .. &quot;-&quot; .. key_meta, &quot;expire&quot;))
+
+    if previous_token and previous_expire then
+        if timestamp &lt; previous_expire then
+            return {previous_token, previous_expire - timestamp}
+        end
+    end
+end
+
+-- read meta information
+--------------------------------------------------------------------------------
+local info_token = tonumber(redis.call(&quot;HGET&quot;, key_meta, &quot;token&quot;))
+local info_bucket_token = tonumber(redis.call(&quot;HGET&quot;, key_meta, &quot;bucket.token&quot;))
+local info_bucket_timestamp = tonumber(redis.call(&quot;HGET&quot;, key_meta, &quot;bucket.timestamp&quot;))
+
+-- initialize meta
+--------------------------------------------------------------------------------
+if not info_token or not info_bucket_token or not info_bucket_timestamp then
+    info_token = 0
+    info_bucket_token = 0
+    info_bucket_timestamp = timestamp
+
+    redis.call(&quot;HMSET&quot;, key_meta,
+        &quot;token&quot;, info_token,
+        &quot;bucket.token&quot;, info_bucket_token,
+        &quot;bucket.timestamp&quot;, info_bucket_timestamp,
+        &quot;key&quot;, 0)
+end
+
+
+-- move buffer to bucket list if bucket timer is older than bucket window
+--------------------------------------------------------------------------------
+if (timestamp - info_bucket_timestamp + 1) &gt; bucketLength then
+    if tonumber(info_bucket_token) &gt; 0 then
+        local nextKey = redis.call(&quot;HINCRBY&quot;, key_meta, &quot;key&quot;, 1)
+        local value = tostring(nextKey) .. &quot;.&quot; .. tostring(info_bucket_token)
+        redis.call(&quot;ZADD&quot;, key_data, info_bucket_timestamp, value);
+    end
+    redis.call(&quot;HMSET&quot;, key_meta,
+        &quot;bucket.token&quot;, 0,
+        &quot;bucket.timestamp&quot;, timestamp)
+end
+
+local time_to_expire = timestamp - windowLength
+
+-- reclaim tokens from expired records
+--------------------------------------------------------------------------------
+local reclaimed = 0
+local expired = redis.call(&quot;ZRANGEBYSCORE&quot;, key_data, 0, time_to_expire)
+
+for idx, value in ipairs(expired) do
+    reclaimed = reclaimed + tonumber(string.sub(value, string.find(value, &quot;%.&quot;)+1))
+end
+
+-- remove expired records
+--------------------------------------------------------------------------------
+redis.call(&quot;ZREMRANGEBYSCORE&quot;, key_data, 0, time_to_expire)
+
+-- update consumed token
+--------------------------------------------------------------------------------
+if reclaimed &gt; 0 then
+    info_token = info_token - reclaimed;
+    if info_token &lt; 0 then
+        info_token = 0
+    end
+    redis.call(&quot;HSET&quot;, key_meta, &quot;token&quot;, info_token)
+end
+
+-- update the expiration time for automatic cleanup
+--------------------------------------------------------------------------------
+redis.call(&quot;PEXPIRE&quot;, key_meta, windowLength / 1000000)
+redis.call(&quot;PEXPIRE&quot;, key_meta, windowLength / 1000000)
+
+-- calculate available token
+--------------------------------------------------------------------------------
+local available_token = credit - info_token
+
+-- check available token and requested token
+--------------------------------------------------------------------------------
+
+if available_token &lt;= 0 then
+    -- credit exhausted
+    return {0, 0}
+elseif available_token &gt;= token then
+    -- increase token and bucket.token by token
+    redis.call(&quot;HINCRBY&quot;, key_meta, &quot;token&quot;, token)
+    redis.call(&quot;HINCRBY&quot;, key_meta, &quot;bucket.token&quot;, token)
+
+    -- save current request and set expiration time for auto cleanup
+    if (deduplicationid or '') ~= '' then
+        redis.call(&quot;HMSET&quot;, deduplicationid .. &quot;-&quot; .. key_meta, &quot;token&quot;, token, &quot;expire&quot;, timestamp + windowLength)
+        redis.call(&quot;PEXPIRE&quot;, deduplicationid .. &quot;-&quot; .. key_meta, windowLength / 1000000)
+    end
+
+    return {token,  windowLength}
+else
+
+    if bestEffort == 0 then
+        -- not enough token
+        return {0, 0}
+    end
+
+    -- allocate available token only
+    redis.call(&quot;HINCRBY&quot;, key_meta, &quot;token&quot;, available_token)
+    redis.call(&quot;HINCRBY&quot;, key_meta, &quot;bucket.token&quot;, available_token)
+
+    -- save current request and set expiration time for auto cleanup
+    if (deduplicationid or '') ~= '' then
+        redis.call(&quot;HMSET&quot;, deduplicationid .. &quot;-&quot; .. key_meta, &quot;token&quot;, available_token, &quot;expire&quot;, timestamp + windowLength)
+        redis.call(&quot;PEXPIRE&quot;, deduplicationid .. &quot;-&quot; .. key_meta, windowLength / 1000000)
+    end
+
+    return {available_token, windowLength}
+end
+</code></pre>
+
+<blockquote>
+<p>限流的窗口与Flink的<a href="https://ci.apache.org/projects/flink/flink-docs-release-1.8/dev/stream/operators/windows.html#tumbling-windows">Window</a>类似，
+对于固定窗口结合使用场景的需求，可以借鉴Flink的<strong>Tumbling Window</strong>接口设计提供<code>offset</code></p>
+</blockquote>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-05-05</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/redis/">Redis</a>
+          
+          <a href="/tags/go/">Go</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/flink/2019-04-29-sls&#43;es/">
+            <span class="next-text nav-default">【Flink实践】实时消费阿里云SLS日志&#43;输出到ES</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

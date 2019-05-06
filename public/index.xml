@@ -39,6 +39,314 @@
     </item>
     
     <item>
+      <title>分布式系统限流服务-Golang&amp;Redis</title>
+      <link>http://hbchen.com/post/distributed/2019-05-05-rate-limit/</link>
+      <pubDate>Sun, 05 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/distributed/2019-05-05-rate-limit/</guid>
+      
+        <description>&lt;p&gt;本文参考两个使用Redis做限流的项目，分析分布式系统限流服务的实现，包括固定窗口以及滚动窗口的限流。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;参考项目&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Istio项目&lt;code&gt;mixer&lt;/code&gt;模块的&lt;a href=&#34;https://github.com/istio/istio/tree/master/mixer/adapter/redisquota&#34;&gt;adapter/redisquota&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/go-redis/redis_rate&#34;&gt;go-redis/redis_rate&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;固定窗口&#34;&gt;固定窗口&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/distributed/rate-window-fixed.png&#34; alt=&#34;fixed-window&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;go-redis-redis-rate&#34;&gt;go-redis/redis_rate&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;redis_rate&lt;/code&gt;使用&lt;strong&gt;窗口标识&lt;/strong&gt;做&lt;code&gt;key&lt;/code&gt;的字符串，用&lt;code&gt;INCRBY&lt;/code&gt;统计窗口已使用流量&lt;code&gt;n&lt;/code&gt;，且&lt;code&gt;key&lt;/code&gt;在此窗口结束后自动过期。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;窗口标识&lt;/strong&gt;的生成：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;slot&lt;/code&gt; = &lt;code&gt;utime&lt;/code&gt;(&lt;em&gt;时间戳&lt;code&gt;s&lt;/code&gt;&lt;/em&gt;)➗&lt;code&gt;udur&lt;/code&gt;(&lt;em&gt;窗口大小&lt;code&gt;s&lt;/code&gt;，&lt;code&gt;dur ≥ 1s&lt;/code&gt;&lt;/em&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;key&lt;/code&gt; = &lt;code&gt;name&lt;/code&gt; + &lt;code&gt;slot&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;utime&lt;/code&gt;与系统时钟相关，考虑一种较为极端的情况，窗口大小&lt;code&gt;1s&lt;/code&gt;，&lt;code&gt;A&lt;/code&gt;、&lt;code&gt;B&lt;/code&gt;两个系统时钟差&lt;code&gt;2s&lt;/code&gt;，而&lt;code&gt;key&lt;/code&gt;的过期时间与窗口大小相同&lt;code&gt;1s&lt;/code&gt;，
+假设&lt;code&gt;key&lt;/code&gt;在窗口最后有更新则&lt;code&gt;key&lt;/code&gt;的生存周期是&lt;code&gt;2s&lt;/code&gt;，而恰好时钟相差&lt;code&gt;2s&lt;/code&gt;，这样&lt;code&gt;A&lt;/code&gt;、&lt;code&gt;B&lt;/code&gt;系统的分布式限流就变成了单机限流。&lt;br/&gt;
+虽然比较极端，但在使用时还是需要注意，根据需要可以适当加大&lt;code&gt;key&lt;/code&gt;的过期时间，同时存活多个窗口，使存活窗口范围覆盖系统间的时钟误差。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func (l *Limiter) AllowN(
+	name string, maxn int64, dur time.Duration, n int64,
+) (count int64, delay time.Duration, allow bool) {
+	udur := int64(dur / time.Second)
+	utime := time.Now().Unix()
+	slot := utime / udur
+	delay = time.Duration((slot+1)*udur-utime) * time.Second
+
+	if l.Fallback != nil {
+		allow = l.Fallback.Allow()
+	}
+
+	name = allowName(name, slot)
+	count, err := l.incr(name, dur, n)
+	if err == nil {
+		allow = count &amp;lt;= maxn
+	}
+
+	return count, delay, allow
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;adapter-redisquota-fixed-window&#34;&gt;adapter/redisquota/fixed_window&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;redisquota&lt;/strong&gt;使用&lt;code&gt;lua&lt;/code&gt;脚本实现，设计上使用一个带有&lt;code&gt;token&lt;/code&gt;和&lt;code&gt;expire&lt;/code&gt;的哈希表，&lt;code&gt;key&lt;/code&gt;过期时间为&lt;code&gt;windowLength&lt;/code&gt;，窗口在&lt;code&gt;key&lt;/code&gt;过期或&lt;code&gt;timestamp&lt;/code&gt;≥&lt;code&gt;expire&lt;/code&gt;时重置。
+另外&lt;code&gt;redisquota&lt;/code&gt;根据场景做了&lt;strong&gt;幂等&lt;/strong&gt;设计，同一&lt;code&gt;deduplicationid&lt;/code&gt;在窗口有效期内不会重新分配&lt;code&gt;token&lt;/code&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;因为&lt;code&gt;timestamp&lt;/code&gt;与系统时钟相关，同样假设&lt;code&gt;A&lt;/code&gt;、&lt;code&gt;B&lt;/code&gt;两个系统时钟差&lt;code&gt;2s&lt;/code&gt;(&lt;code&gt;A&lt;/code&gt;&amp;gt;&lt;code&gt;B&lt;/code&gt;)，窗口大小&lt;code&gt;10s&lt;/code&gt;，如果窗口①由&lt;code&gt;A&lt;/code&gt;系统时间戳触发，而窗口②由&lt;code&gt;B&lt;/code&gt;系统时间戳触发(&lt;code&gt;A&lt;/code&gt;在后&lt;code&gt;2s&lt;/code&gt;没有流量)，
+这样①实际窗口大小就是&lt;code&gt;12s&lt;/code&gt;，这样继续到窗口③由&lt;code&gt;A&lt;/code&gt;系统时间戳触发，②的实际窗口代销就是&lt;code&gt;8s&lt;/code&gt;，所以在分布式环境下限流效果同样受系统时钟误差的影响。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-lua&#34;&gt;local key_meta = KEYS[1]
+-- local key_data = KEYS[2]
+
+local credit = tonumber(ARGV[1])
+local windowLength = tonumber(ARGV[2])
+-- local bucketLength = tonumber(ARGV[3])
+local bestEffort = tonumber(ARGV[4])
+local token = tonumber(ARGV[5])
+local timestamp = tonumber(ARGV[6])
+local deduplicationid = ARGV[7]
+
+-- lookup previous response for the deduplicationid and returns if it is still valid
+--------------------------------------------------------------------------------
+if (deduplicationid or &#39;&#39;) ~= &#39;&#39; then
+    local previous_token = tonumber(redis.call(&amp;quot;HGET&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, &amp;quot;token&amp;quot;))
+    local previous_expire = tonumber(redis.call(&amp;quot;HGET&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, &amp;quot;expire&amp;quot;))
+
+    if previous_token and previous_expire then
+        if timestamp &amp;lt; previous_expire then
+            return {previous_token, previous_expire - timestamp}
+        end
+    end
+end
+
+-- read or initialize meta information
+--------------------------------------------------------------------------------
+local info_token = tonumber(redis.call(&amp;quot;HGET&amp;quot;, key_meta, &amp;quot;token&amp;quot;))
+local info_expire = tonumber(redis.call(&amp;quot;HGET&amp;quot;, key_meta, &amp;quot;expire&amp;quot;))
+
+if (not info_token or not info_expire) or (timestamp &amp;gt;= info_expire) then
+    info_token = 0
+    info_expire = windowLength + timestamp
+
+    redis.call(&amp;quot;HMSET&amp;quot;, key_meta, &amp;quot;token&amp;quot;, info_token, &amp;quot;expire&amp;quot;, windowLength + timestamp)
+    -- set the expiration time for automatic cleanup
+    redis.call(&amp;quot;PEXPIRE&amp;quot;, key_meta, windowLength / 1000000)
+end
+
+if info_token + token &amp;gt; credit then
+    if bestEffort == 1 then
+        local exceeded = info_token + token - credit
+
+        if exceeded &amp;lt; token then
+            -- return maximum available allocated token
+            redis.call(&amp;quot;HMSET&amp;quot;, key_meta, &amp;quot;token&amp;quot;, credit)
+
+            -- save current request and set expiration time for auto cleanup
+            if (deduplicationid or &#39;&#39;) ~= &#39;&#39; then
+                redis.call(&amp;quot;HMSET&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, &amp;quot;token&amp;quot;, token - exceeded, &amp;quot;expire&amp;quot;, info_expire)
+                redis.call(&amp;quot;PEXPIRE&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, math.floor((info_expire - timestamp) / 1000000))
+            end
+
+            return {token - exceeded, info_expire - timestamp}
+        else
+            -- not enough available credit
+            return {0, 0}
+        end
+    else
+        -- not enough available credit
+        return {0, 0}
+    end
+else
+    -- allocated token
+    redis.call(&amp;quot;HMSET&amp;quot;, key_meta, &amp;quot;token&amp;quot;, info_token + token)
+
+    -- save current request and set expiration time for auto cleanup
+    if (deduplicationid or &#39;&#39;) ~= &#39;&#39; then
+        redis.call(&amp;quot;HMSET&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, &amp;quot;token&amp;quot;, token, &amp;quot;expire&amp;quot;, info_expire)
+        redis.call(&amp;quot;PEXPIRE&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, math.floor((info_expire - timestamp) / 1000000))
+    end
+
+    return {token, info_expire - timestamp}
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;lua脚本获取时间戳&#34;&gt;Lua脚本获取时间戳&lt;/h3&gt;
+
+&lt;p&gt;既然在分布式环境系统时钟有可能存在误差，那自然考虑将时间戳转到Redis中获取，消除时钟误差对窗口的影响，这里有一个限制条件是需要Lua脚本支持&lt;strong&gt;随机写入&lt;/strong&gt;，
+有关Redis Lua脚本&lt;strong&gt;随机写入&lt;/strong&gt;请参考此文《&lt;a href=&#34;https://yq.aliyun.com/articles/195914&#34;&gt;redis4.0之Lua脚本新姿势&lt;/a&gt;》，结合这个特性可以将两个方案的时间戳由外部传入改为在Lua脚本中获取Redis系统时间，
+我在&lt;a href=&#34;https://github.com/hb-go/pkg/tree/master/rate&#34;&gt;hb-go/pkg/rate&lt;/a&gt;包分别使用&lt;code&gt;SET&lt;/code&gt;、&lt;code&gt;HSET&lt;/code&gt;做了实现可以参考。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-lua&#34;&gt;-- Redis version ≥ 3.2
+redis.replicate_commands()
+local now = redis.call(&#39;TIME&#39;)
+timestamp = (tonumber(now[1]) * 1e6 + tonumber(now[2])) * 1e3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;滚动窗口&#34;&gt;滚动窗口&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/distributed/rate-window-rolling.png&#34; alt=&#34;rolling-window&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;滚动窗口在固定窗口基础上，将一个&lt;code&gt;window&lt;/code&gt;拆成多个&lt;code&gt;bucket&lt;/code&gt;，这样窗口根据&lt;code&gt;bucket&lt;/code&gt;的大小向前移动。Redis的结构为哈希表：&lt;code&gt;token&lt;/code&gt;、&lt;code&gt;bucket.token&lt;/code&gt;、&lt;code&gt;bucket.timestamp&lt;/code&gt;和&lt;code&gt;key&lt;/code&gt;，
+以及一个存储&lt;code&gt;bucket&lt;/code&gt;历史数据的有序集合(&lt;em&gt;以&lt;code&gt;bucket&lt;/code&gt;的时间戳排序&lt;/em&gt;)&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;token&lt;/code&gt;:窗口内已使用&lt;code&gt;token&lt;/code&gt;数&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;bucket.token&lt;/code&gt;:当前桶内已使用&lt;code&gt;token&lt;/code&gt;数&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;bucket.timestamp&lt;/code&gt;:当前桶的时间戳&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;key&lt;/code&gt;:累计&lt;code&gt;bucket&lt;/code&gt;数量&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-lua&#34;&gt;local key_meta = KEYS[1]
+local key_data = KEYS[2]
+
+local credit = tonumber(ARGV[1])
+local windowLength = tonumber(ARGV[2])
+local bucketLength = tonumber(ARGV[3])
+local bestEffort = tonumber(ARGV[4])
+local token = tonumber(ARGV[5])
+local timestamp = tonumber(ARGV[6])
+local deduplicationid = ARGV[7]
+
+-- lookup previous response for the deduplicationid and returns if it is still valid
+--------------------------------------------------------------------------------
+if (deduplicationid or &#39;&#39;) ~= &#39;&#39; then
+    local previous_token = tonumber(redis.call(&amp;quot;HGET&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, &amp;quot;token&amp;quot;))
+    local previous_expire = tonumber(redis.call(&amp;quot;HGET&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, &amp;quot;expire&amp;quot;))
+
+    if previous_token and previous_expire then
+        if timestamp &amp;lt; previous_expire then
+            return {previous_token, previous_expire - timestamp}
+        end
+    end
+end
+
+-- read meta information
+--------------------------------------------------------------------------------
+local info_token = tonumber(redis.call(&amp;quot;HGET&amp;quot;, key_meta, &amp;quot;token&amp;quot;))
+local info_bucket_token = tonumber(redis.call(&amp;quot;HGET&amp;quot;, key_meta, &amp;quot;bucket.token&amp;quot;))
+local info_bucket_timestamp = tonumber(redis.call(&amp;quot;HGET&amp;quot;, key_meta, &amp;quot;bucket.timestamp&amp;quot;))
+
+-- initialize meta
+--------------------------------------------------------------------------------
+if not info_token or not info_bucket_token or not info_bucket_timestamp then
+    info_token = 0
+    info_bucket_token = 0
+    info_bucket_timestamp = timestamp
+
+    redis.call(&amp;quot;HMSET&amp;quot;, key_meta,
+        &amp;quot;token&amp;quot;, info_token,
+        &amp;quot;bucket.token&amp;quot;, info_bucket_token,
+        &amp;quot;bucket.timestamp&amp;quot;, info_bucket_timestamp,
+        &amp;quot;key&amp;quot;, 0)
+end
+
+
+-- move buffer to bucket list if bucket timer is older than bucket window
+--------------------------------------------------------------------------------
+if (timestamp - info_bucket_timestamp + 1) &amp;gt; bucketLength then
+    if tonumber(info_bucket_token) &amp;gt; 0 then
+        local nextKey = redis.call(&amp;quot;HINCRBY&amp;quot;, key_meta, &amp;quot;key&amp;quot;, 1)
+        local value = tostring(nextKey) .. &amp;quot;.&amp;quot; .. tostring(info_bucket_token)
+        redis.call(&amp;quot;ZADD&amp;quot;, key_data, info_bucket_timestamp, value);
+    end
+    redis.call(&amp;quot;HMSET&amp;quot;, key_meta,
+        &amp;quot;bucket.token&amp;quot;, 0,
+        &amp;quot;bucket.timestamp&amp;quot;, timestamp)
+end
+
+local time_to_expire = timestamp - windowLength
+
+-- reclaim tokens from expired records
+--------------------------------------------------------------------------------
+local reclaimed = 0
+local expired = redis.call(&amp;quot;ZRANGEBYSCORE&amp;quot;, key_data, 0, time_to_expire)
+
+for idx, value in ipairs(expired) do
+    reclaimed = reclaimed + tonumber(string.sub(value, string.find(value, &amp;quot;%.&amp;quot;)+1))
+end
+
+-- remove expired records
+--------------------------------------------------------------------------------
+redis.call(&amp;quot;ZREMRANGEBYSCORE&amp;quot;, key_data, 0, time_to_expire)
+
+-- update consumed token
+--------------------------------------------------------------------------------
+if reclaimed &amp;gt; 0 then
+    info_token = info_token - reclaimed;
+    if info_token &amp;lt; 0 then
+        info_token = 0
+    end
+    redis.call(&amp;quot;HSET&amp;quot;, key_meta, &amp;quot;token&amp;quot;, info_token)
+end
+
+-- update the expiration time for automatic cleanup
+--------------------------------------------------------------------------------
+redis.call(&amp;quot;PEXPIRE&amp;quot;, key_meta, windowLength / 1000000)
+redis.call(&amp;quot;PEXPIRE&amp;quot;, key_meta, windowLength / 1000000)
+
+-- calculate available token
+--------------------------------------------------------------------------------
+local available_token = credit - info_token
+
+-- check available token and requested token
+--------------------------------------------------------------------------------
+
+if available_token &amp;lt;= 0 then
+    -- credit exhausted
+    return {0, 0}
+elseif available_token &amp;gt;= token then
+    -- increase token and bucket.token by token
+    redis.call(&amp;quot;HINCRBY&amp;quot;, key_meta, &amp;quot;token&amp;quot;, token)
+    redis.call(&amp;quot;HINCRBY&amp;quot;, key_meta, &amp;quot;bucket.token&amp;quot;, token)
+
+    -- save current request and set expiration time for auto cleanup
+    if (deduplicationid or &#39;&#39;) ~= &#39;&#39; then
+        redis.call(&amp;quot;HMSET&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, &amp;quot;token&amp;quot;, token, &amp;quot;expire&amp;quot;, timestamp + windowLength)
+        redis.call(&amp;quot;PEXPIRE&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, windowLength / 1000000)
+    end
+
+    return {token,  windowLength}
+else
+
+    if bestEffort == 0 then
+        -- not enough token
+        return {0, 0}
+    end
+
+    -- allocate available token only
+    redis.call(&amp;quot;HINCRBY&amp;quot;, key_meta, &amp;quot;token&amp;quot;, available_token)
+    redis.call(&amp;quot;HINCRBY&amp;quot;, key_meta, &amp;quot;bucket.token&amp;quot;, available_token)
+
+    -- save current request and set expiration time for auto cleanup
+    if (deduplicationid or &#39;&#39;) ~= &#39;&#39; then
+        redis.call(&amp;quot;HMSET&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, &amp;quot;token&amp;quot;, available_token, &amp;quot;expire&amp;quot;, timestamp + windowLength)
+        redis.call(&amp;quot;PEXPIRE&amp;quot;, deduplicationid .. &amp;quot;-&amp;quot; .. key_meta, windowLength / 1000000)
+    end
+
+    return {available_token, windowLength}
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;限流的窗口与Flink的&lt;a href=&#34;https://ci.apache.org/projects/flink/flink-docs-release-1.8/dev/stream/operators/windows.html#tumbling-windows&#34;&gt;Window&lt;/a&gt;类似，
+对于固定窗口结合使用场景的需求，可以借鉴Flink的&lt;strong&gt;Tumbling Window&lt;/strong&gt;接口设计提供&lt;code&gt;offset&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【Flink实践】实时消费阿里云SLS日志&#43;输出到ES</title>
       <link>http://hbchen.com/post/flink/2019-04-29-sls&#43;es/</link>
       <pubDate>Mon, 29 Apr 2019 18:42:22 +0800</pubDate>
@@ -395,7 +703,13 @@ $ ./gradlew clean sls:shadowJar
     }
   }
 }
-&lt;/code&gt;&lt;/pre&gt;</description>
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;todo&#34;&gt;TODO&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Checkpoint&lt;/li&gt;
+&lt;/ul&gt;</description>
       
     </item>
     
@@ -3180,44 +3494,6 @@ wamp.com
 #yum install -y mysqltuner
 运行：
 #mysqltuner
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>日志统计分析-Shell/Goaccess</title>
-      <link>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</link>
-      <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</guid>
-      
-        <description>&lt;p&gt;对Nginx或其他日志进行简单的统计分析&lt;/p&gt;
-
-&lt;p&gt;Shell
-对某一列进行统计，可以分析Status Code,URL等&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#cat access.log | awk &#39;{print $9}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
-或
-#cat access.log |grep &amp;quot;200&amp;quot; | awk &#39;{print $7}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
-#vi stat.log
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;指定String统计&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#cat access.log|grep &amp;quot;200&amp;quot;|wc -l 
-#cat access.log|grep &amp;quot;www.localhost.com&amp;quot;|wc -l
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Goaccess工具
-&lt;a href=&#34;http://goaccess.io/&#34;&gt;http://goaccess.io/&lt;/a&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#goaccess -f access.log
-#goaccess -f access.log -a -s -b
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Goaccess分析压缩日志&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#zcat access.log-20130123.gz | goaccess
 &lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
