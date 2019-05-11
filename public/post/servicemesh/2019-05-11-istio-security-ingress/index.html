@@ -19,7 +19,8 @@
 
 
 <meta name="author" content="Hobo Chen" />
-  <meta name="description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP" />
+  <meta name="description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTPS-种子TLS三种场景。
+" />
 
   <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
 
@@ -50,13 +51,15 @@
 
 
 <meta property="og:title" content="【Istio安全】网格边缘-Ingress" />
-<meta property="og:description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP" />
+<meta property="og:description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway，
+分为HTTP、HTTPS-不终止TLS和HTTPS-种子TLS三种场景。" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/" /><meta property="article:published_time" content="2019-05-11T00:00:00&#43;00:00"/>
 <meta property="article:modified_time" content="2019-05-11T00:00:00&#43;00:00"/>
 
 <meta itemprop="name" content="【Istio安全】网格边缘-Ingress">
-<meta itemprop="description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP">
+<meta itemprop="description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway，
+分为HTTP、HTTPS-不终止TLS和HTTPS-种子TLS三种场景。">
 
 
 <meta itemprop="datePublished" content="2019-05-11T00:00:00&#43;00:00" />
@@ -68,7 +71,8 @@
 <meta itemprop="keywords" content="Service Mesh,Istio,安全," />
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="【Istio安全】网格边缘-Ingress"/>
-<meta name="twitter:description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP"/>
+<meta name="twitter:description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway，
+分为HTTP、HTTPS-不终止TLS和HTTPS-种子TLS三种场景。"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -185,9 +189,7 @@
 
     
     <div class="post-content">
-      
-
-<p>接<a href="(/post/servicemesh/2019-04-11-istio-security-egress/)">【Istio安全】网格边缘-Egress</a>继续网格边缘的实践<code>ingress-gateway</code>，
+      <p>接<a href="(/post/servicemesh/2019-04-11-istio-security-egress/)">【Istio安全】网格边缘-Egress</a>继续网格边缘的实践<code>ingress-gateway</code>，
 分为<strong>HTTP</strong>、<strong>HTTPS-不终止TLS</strong>和<strong>HTTPS-种子TLS</strong>三种场景。</p>
 
 <h2 id="准备工作">准备工作</h2>
@@ -470,7 +472,6 @@ https://hbchen.com:$SECURE_INGRESS_PORT
 <h3 id="jwt">JWT</h3>
 
 <h3 id="authn">Authn</h3>
-
     </div>
 
     

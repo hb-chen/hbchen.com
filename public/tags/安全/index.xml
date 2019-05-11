@@ -18,7 +18,8 @@
       <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
       
       <guid>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</guid>
-      <description>接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP</description>
+      <description>&lt;p&gt;接&lt;a href=&#34;(/post/servicemesh/2019-04-11-istio-security-egress/)&#34;&gt;【Istio安全】网格边缘-Egress&lt;/a&gt;继续网格边缘的实践&lt;code&gt;ingress-gateway&lt;/code&gt;，
+分为&lt;strong&gt;HTTP&lt;/strong&gt;、&lt;strong&gt;HTTPS-不终止TLS&lt;/strong&gt;和&lt;strong&gt;HTTPS-种子TLS&lt;/strong&gt;三种场景。&lt;/p&gt;</description>
     </item>
     
     <item>

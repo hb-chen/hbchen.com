@@ -45,9 +45,7 @@
       
       <guid>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</guid>
       
-        <description>
-
-&lt;p&gt;接&lt;a href=&#34;(/post/servicemesh/2019-04-11-istio-security-egress/)&#34;&gt;【Istio安全】网格边缘-Egress&lt;/a&gt;继续网格边缘的实践&lt;code&gt;ingress-gateway&lt;/code&gt;，
+        <description>&lt;p&gt;接&lt;a href=&#34;(/post/servicemesh/2019-04-11-istio-security-egress/)&#34;&gt;【Istio安全】网格边缘-Egress&lt;/a&gt;继续网格边缘的实践&lt;code&gt;ingress-gateway&lt;/code&gt;，
 分为&lt;strong&gt;HTTP&lt;/strong&gt;、&lt;strong&gt;HTTPS-不终止TLS&lt;/strong&gt;和&lt;strong&gt;HTTPS-种子TLS&lt;/strong&gt;三种场景。&lt;/p&gt;
 
 &lt;h2 id=&#34;准备工作&#34;&gt;准备工作&lt;/h2&gt;
@@ -329,8 +327,7 @@ https://hbchen.com:$SECURE_INGRESS_PORT
 
 &lt;h3 id=&#34;jwt&#34;&gt;JWT&lt;/h3&gt;
 
-&lt;h3 id=&#34;authn&#34;&gt;Authn&lt;/h3&gt;
-</description>
+&lt;h3 id=&#34;authn&#34;&gt;Authn&lt;/h3&gt;</description>
       
     </item>
     

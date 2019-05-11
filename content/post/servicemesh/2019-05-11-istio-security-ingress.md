@@ -15,6 +15,8 @@ tags: [
 接[【Istio安全】网格边缘-Egress]((/post/servicemesh/2019-04-11-istio-security-egress/))继续网格边缘的实践`ingress-gateway`，
 分为**HTTP**、**HTTPS-不终止TLS**和**HTTPS-种子TLS**三种场景。
 
+<!--more-->
+
 ## 准备工作
 有了[Egress](/post/servicemesh/2019-04-11-istio-security-egress/)的实践，这里不使用`httpbin`做内部服务，而是用`egress-gateway`的成果，
 `www.aliyun.com`和`hbchen.com`的两个外部服务进行测试。
