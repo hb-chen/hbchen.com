@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【Istio安全】网格边缘-Ingress - Hobo&#39;s Blog - 技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【Istio安全】网格边缘-Ingress" />
+<meta property="og:description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/" /><meta property="article:published_time" content="2019-05-11T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-05-11T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="【Istio安全】网格边缘-Ingress">
+<meta itemprop="description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP">
+
+
+<meta itemprop="datePublished" content="2019-05-11T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-05-11T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="862">
+
+
+
+<meta itemprop="keywords" content="Service Mesh,Istio,安全," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【Istio安全】网格边缘-Ingress"/>
+<meta name="twitter:description" content="接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【Istio安全】网格边缘-Ingress</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-05-11 </span>
+        <div class="post-category">
+            
+              <a href="/categories/service-mesh/"> Service Mesh </a>
+            
+          </div>
+        <span class="more-meta"> 约 862 字 </span>
+        <span class="more-meta"> 预计阅读 2 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#准备工作">准备工作</a></li>
+<li><a href="#http-gateway">Http Gateway</a></li>
+<li><a href="#https-gateway-不终止-tls">Https Gateway-不终止<code>TLS</code></a></li>
+<li><a href="#https-gateway-终止-tls">Https Gateway-终止<code>TLS</code></a>
+<ul>
+<li><a href="#启用sds">启用SDS</a></li>
+<li><a href="#生成证书">生成证书</a></li>
+<li><a href="#创建-secret">创建<code>Secret</code></a></li>
+</ul></li>
+<li><a href="#todo">TODO</a>
+<ul>
+<li><a href="#jwt">JWT</a></li>
+<li><a href="#authn">Authn</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+<p>接<a href="(/post/servicemesh/2019-04-11-istio-security-egress/)">【Istio安全】网格边缘-Egress</a>继续网格边缘的实践<code>ingress-gateway</code>，
+分为<strong>HTTP</strong>、<strong>HTTPS-不终止TLS</strong>和<strong>HTTPS-种子TLS</strong>三种场景。</p>
+
+<h2 id="准备工作">准备工作</h2>
+
+<p>有了<a href="/post/servicemesh/2019-04-11-istio-security-egress/">Egress</a>的实践，这里不使用<code>httpbin</code>做内部服务，而是用<code>egress-gateway</code>的成果，
+<code>www.aliyun.com</code>和<code>hbchen.com</code>的两个外部服务进行测试。</p>
+
+<pre><code class="language-yaml">$ kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: entry-x
+spec:
+  hosts:
+  - www.aliyun.com
+  - hbchen.com
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+  resolution: NONE
+EOF
+
+$ kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: originate-tls-for-aliyun
+spec:
+  host: www.aliyun.com
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+  subsets:
+    - name: originate-tls
+      trafficPolicy:
+        loadBalancer:
+          simple: ROUND_ROBIN
+        portLevelSettings:
+        - port:
+            number: 443
+          tls:
+            mode: SIMPLE
+EOF
+</code></pre>
+
+<p><strong>环境变量</strong></p>
+
+<pre><code class="language-bash">export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name==&quot;http2&quot;)].nodePort}')
+export SECURE_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name==&quot;https&quot;)].nodePort}')
+
+export INGRESS_HOST=$(minikube ip)
+</code></pre>
+
+<blockquote>
+<p>接下来进入正文</p>
+</blockquote>
+
+<p>都只需要定义两个<code>.yaml</code>配置:</p>
+
+<ul>
+<li><strong>Gateway</strong>:<code>ingress-example-gateway</code></li>
+<li><strong>VirtualService</strong>:<code>ingress-example-svc</code></li>
+</ul>
+
+<h2 id="http-gateway">Http Gateway</h2>
+
+<p><img src="/img/istio/ingress-http.png" alt="ServiceEntry" /></p>
+
+<blockquote>
+<p>官方文档<a href="https://istio.io/zh/docs/tasks/traffic-management/ingress/">控制 Ingress 流量</a></p>
+</blockquote>
+
+<pre><code class="language-yaml">kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: ingress-example-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: http
+    hosts:
+    - &quot;hbchen.com&quot;
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ingress-example-svc
+spec:
+  hosts:
+  - &quot;hbchen.com&quot;
+  gateways:
+  - ingress-example-gateway
+  http:
+  - match:
+    - port: 80
+    route:
+    - destination:
+        host: hbchen.com
+        port:
+          number: 80
+EOF
+</code></pre>
+
+<p><strong>访问测试</strong></p>
+
+<pre><code class="language-bash">curl -I -v -HHost:hbchen.com http://$INGRESS_HOST:$INGRESS_PORT
+</code></pre>
+
+<h2 id="https-gateway-不终止-tls">Https Gateway-不终止<code>TLS</code></h2>
+
+<p><img src="/img/istio/ingress-https-passthrough.png" alt="ServiceEntry" /></p>
+
+<blockquote>
+<p>官方文档<a href="https://istio.io/zh/docs/examples/advanced-gateways/ingress-sni-passthrough/">没有 TLS 的 Ingress gateway</a></p>
+</blockquote>
+
+<p>不终止<code>TLS</code>即透传<code>https</code>请求到网格内服务，这里我们使用一个外部服务来模拟一个支持<code>https</code>的服务</p>
+
+<pre><code class="language-yaml">kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: ingress-example-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: http
+    hosts:
+    - &quot;www.aliyun.com&quot;
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: PASSTHROUGH
+    hosts:
+    - &quot;www.aliyun.com&quot;
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ingress-example-svc
+spec:
+  hosts:
+  - &quot;www.aliyun.com&quot;
+  gateways:
+  - ingress-example-gateway
+  http:
+  - match:
+    - port: 80
+    route:
+    - destination:
+        host: www.aliyun.com
+        subset: originate-tls
+        port:
+          number: 443
+  tls:
+  - match:
+    - port: 443
+      sni_hosts:
+      - www.aliyun.com
+    route:
+    - destination:
+        host: www.aliyun.com
+        port:
+          number: 443
+EOF
+</code></pre>
+
+<p><strong>访问测试</strong></p>
+
+<pre><code class="language-bash">curl -I -v -HHost:www.aliyun.com http://$INGRESS_HOST:$INGRESS_PORT
+curl -I -v --resolve www.aliyun.com:$SECURE_INGRESS_PORT:$INGRESS_HOST https://www.aliyun.com:$SECURE_INGRESS_PORT
+</code></pre>
+
+<h2 id="https-gateway-终止-tls">Https Gateway-终止<code>TLS</code></h2>
+
+<p><img src="/img/istio/ingress-https.png" alt="ServiceEntry" /></p>
+
+<blockquote>
+<p>官方文档<a href="https://istio.io/zh/docs/tasks/traffic-management/secure-ingress/sds/">使用 SDS 为 Gateway 提供 HTTPS 加密支持</a></p>
+</blockquote>
+
+<p>终止<code>TLS</code>即由<code>ingress-gateway</code>提供<code>https</code>服务，更符合<code>ingress-gateway</code>作为网格统一入口的需求</p>
+
+<h3 id="启用sds">启用SDS</h3>
+
+<p><code>SDS</code>默认是关闭的，所以首先需要开启<code>ingress-gateway</code>的<code>SDS</code></p>
+
+<pre><code class="language-bash">$ cd istio/path 
+
+# 生成.yaml
+$ helm template install/kubernetes/helm/istio/ --name istio \
+--namespace istio-system -x charts/gateways/templates/deployment.yaml \
+--set gateways.istio-egressgateway.enabled=false \
+--set gateways.istio-ingressgateway.sds.enabled=true &gt; \
+$HOME/istio-ingressgateway.yaml
+
+# 重新部署
+$ kubectl apply -f $HOME/istio-ingressgateway.yaml
+</code></pre>
+
+<h3 id="生成证书">生成证书</h3>
+
+<pre><code class="language-bash">$ git clone https://github.com/nicholasjackson/mtls-go-example
+
+$ cd mtls-go-example
+$ ./generate.sh hbchen.com 123456
+
+$ mkdir ./../hbchen.com &amp;&amp; mv 1_root 2_intermediate 3_application 4_client ./../hbchen.com
+$ cd ..
+</code></pre>
+
+<h3 id="创建-secret">创建<code>Secret</code></h3>
+
+<pre><code class="language-bash">$ kubectl create -n istio-system secret generic hbchen-credential \
+--from-file=key=hbchen.com/3_application/private/hbchen.com.key.pem \
+--from-file=cert=hbchen.com/3_application/certs/hbchen.com.cert.pem
+</code></pre>
+
+<pre><code class="language-yaml">kubectl apply -f - &lt;&lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: ingress-example-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: &quot;hbchen-credential&quot; # NOTE: 和 Secret 名称一致
+    hosts:
+    - &quot;hbchen.com&quot;
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ingress-example-svc
+spec:
+  hosts:
+  - &quot;hbchen.com&quot;
+  gateways:
+  - ingress-example-gateway
+  http:
+  - match:
+    - port: 443
+    route:
+    - destination:
+        host: hbchen.com
+        port:
+          number: 80
+EOF
+</code></pre>
+
+<p><strong>访问测试</strong></p>
+
+<pre><code class="language-bash">curl -I -v -HHost:hbchen.com \
+--resolve hbchen.com:$SECURE_INGRESS_PORT:$INGRESS_HOST \
+--cacert hbchen.com/2_intermediate/certs/ca-chain.cert.pem \
+https://hbchen.com:$SECURE_INGRESS_PORT
+</code></pre>
+
+<h2 id="todo">TODO</h2>
+
+<h3 id="jwt">JWT</h3>
+
+<h3 id="authn">Authn</h3>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-05-11</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/service-mesh/">Service Mesh</a>
+          
+          <a href="/tags/istio/">Istio</a>
+          
+          <a href="/tags/%E5%AE%89%E5%85%A8/">安全</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/distributed/2019-05-05-rate-limit/">
+            <span class="next-text nav-default">分布式系统限流服务-Golang&amp;Redis</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

@@ -10,6 +10,13 @@
   </url>
   
   <url>
+    <loc>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</loc>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>http://hbchen.com/post/distributed/2019-05-05-rate-limit/</loc>
     <lastmod>2019-05-05T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -276,7 +283,7 @@
   
   <url>
     <loc>http://hbchen.com/tags/istio/</loc>
-    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -304,7 +311,7 @@
   
   <url>
     <loc>http://hbchen.com/post/</loc>
-    <lastmod>2019-05-05T00:00:00+00:00</lastmod>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -346,14 +353,14 @@
   
   <url>
     <loc>http://hbchen.com/tags/service-mesh/</loc>
-    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://hbchen.com/categories/service-mesh/</loc>
-    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -451,7 +458,7 @@
   
   <url>
     <loc>http://hbchen.com/tags/%E5%AE%89%E5%85%A8/</loc>
-    <lastmod>2019-04-14T00:00:00+00:00</lastmod>
+    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -522,6 +529,13 @@
   <url>
     <loc>http://hbchen.com/tags/%E9%85%8D%E7%BD%AE/</loc>
     <lastmod>2013-11-07T18:15:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/%E9%99%90%E6%B5%81/</loc>
+    <lastmod>2019-05-05T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>

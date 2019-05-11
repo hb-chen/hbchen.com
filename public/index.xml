@@ -39,6 +39,302 @@
     </item>
     
     <item>
+      <title>【Istio安全】网格边缘-Ingress</title>
+      <link>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</link>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</guid>
+      
+        <description>
+
+&lt;p&gt;接&lt;a href=&#34;(/post/servicemesh/2019-04-11-istio-security-egress/)&#34;&gt;【Istio安全】网格边缘-Egress&lt;/a&gt;继续网格边缘的实践&lt;code&gt;ingress-gateway&lt;/code&gt;，
+分为&lt;strong&gt;HTTP&lt;/strong&gt;、&lt;strong&gt;HTTPS-不终止TLS&lt;/strong&gt;和&lt;strong&gt;HTTPS-种子TLS&lt;/strong&gt;三种场景。&lt;/p&gt;
+
+&lt;h2 id=&#34;准备工作&#34;&gt;准备工作&lt;/h2&gt;
+
+&lt;p&gt;有了&lt;a href=&#34;http://hbchen.com/post/servicemesh/2019-04-11-istio-security-egress/&#34;&gt;Egress&lt;/a&gt;的实践，这里不使用&lt;code&gt;httpbin&lt;/code&gt;做内部服务，而是用&lt;code&gt;egress-gateway&lt;/code&gt;的成果，
+&lt;code&gt;www.aliyun.com&lt;/code&gt;和&lt;code&gt;hbchen.com&lt;/code&gt;的两个外部服务进行测试。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;$ kubectl apply -f - &amp;lt;&amp;lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: entry-x
+spec:
+  hosts:
+  - www.aliyun.com
+  - hbchen.com
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+  resolution: NONE
+EOF
+
+$ kubectl apply -f - &amp;lt;&amp;lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: originate-tls-for-aliyun
+spec:
+  host: www.aliyun.com
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+  subsets:
+    - name: originate-tls
+      trafficPolicy:
+        loadBalancer:
+          simple: ROUND_ROBIN
+        portLevelSettings:
+        - port:
+            number: 443
+          tls:
+            mode: SIMPLE
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;环境变量&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath=&#39;{.spec.ports[?(@.name==&amp;quot;http2&amp;quot;)].nodePort}&#39;)
+export SECURE_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath=&#39;{.spec.ports[?(@.name==&amp;quot;https&amp;quot;)].nodePort}&#39;)
+
+export INGRESS_HOST=$(minikube ip)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;接下来进入正文&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;都只需要定义两个&lt;code&gt;.yaml&lt;/code&gt;配置:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Gateway&lt;/strong&gt;:&lt;code&gt;ingress-example-gateway&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;VirtualService&lt;/strong&gt;:&lt;code&gt;ingress-example-svc&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;http-gateway&#34;&gt;Http Gateway&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/istio/ingress-http.png&#34; alt=&#34;ServiceEntry&#34; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;官方文档&lt;a href=&#34;https://istio.io/zh/docs/tasks/traffic-management/ingress/&#34;&gt;控制 Ingress 流量&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;kubectl apply -f - &amp;lt;&amp;lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: ingress-example-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: http
+    hosts:
+    - &amp;quot;hbchen.com&amp;quot;
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ingress-example-svc
+spec:
+  hosts:
+  - &amp;quot;hbchen.com&amp;quot;
+  gateways:
+  - ingress-example-gateway
+  http:
+  - match:
+    - port: 80
+    route:
+    - destination:
+        host: hbchen.com
+        port:
+          number: 80
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;访问测试&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;curl -I -v -HHost:hbchen.com http://$INGRESS_HOST:$INGRESS_PORT
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;https-gateway-不终止-tls&#34;&gt;Https Gateway-不终止&lt;code&gt;TLS&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/istio/ingress-https-passthrough.png&#34; alt=&#34;ServiceEntry&#34; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;官方文档&lt;a href=&#34;https://istio.io/zh/docs/examples/advanced-gateways/ingress-sni-passthrough/&#34;&gt;没有 TLS 的 Ingress gateway&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;不终止&lt;code&gt;TLS&lt;/code&gt;即透传&lt;code&gt;https&lt;/code&gt;请求到网格内服务，这里我们使用一个外部服务来模拟一个支持&lt;code&gt;https&lt;/code&gt;的服务&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;kubectl apply -f - &amp;lt;&amp;lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: ingress-example-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: http
+    hosts:
+    - &amp;quot;www.aliyun.com&amp;quot;
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: PASSTHROUGH
+    hosts:
+    - &amp;quot;www.aliyun.com&amp;quot;
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ingress-example-svc
+spec:
+  hosts:
+  - &amp;quot;www.aliyun.com&amp;quot;
+  gateways:
+  - ingress-example-gateway
+  http:
+  - match:
+    - port: 80
+    route:
+    - destination:
+        host: www.aliyun.com
+        subset: originate-tls
+        port:
+          number: 443
+  tls:
+  - match:
+    - port: 443
+      sni_hosts:
+      - www.aliyun.com
+    route:
+    - destination:
+        host: www.aliyun.com
+        port:
+          number: 443
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;访问测试&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;curl -I -v -HHost:www.aliyun.com http://$INGRESS_HOST:$INGRESS_PORT
+curl -I -v --resolve www.aliyun.com:$SECURE_INGRESS_PORT:$INGRESS_HOST https://www.aliyun.com:$SECURE_INGRESS_PORT
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;https-gateway-终止-tls&#34;&gt;Https Gateway-终止&lt;code&gt;TLS&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/istio/ingress-https.png&#34; alt=&#34;ServiceEntry&#34; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;官方文档&lt;a href=&#34;https://istio.io/zh/docs/tasks/traffic-management/secure-ingress/sds/&#34;&gt;使用 SDS 为 Gateway 提供 HTTPS 加密支持&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;终止&lt;code&gt;TLS&lt;/code&gt;即由&lt;code&gt;ingress-gateway&lt;/code&gt;提供&lt;code&gt;https&lt;/code&gt;服务，更符合&lt;code&gt;ingress-gateway&lt;/code&gt;作为网格统一入口的需求&lt;/p&gt;
+
+&lt;h3 id=&#34;启用sds&#34;&gt;启用SDS&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;SDS&lt;/code&gt;默认是关闭的，所以首先需要开启&lt;code&gt;ingress-gateway&lt;/code&gt;的&lt;code&gt;SDS&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ cd istio/path 
+
+# 生成.yaml
+$ helm template install/kubernetes/helm/istio/ --name istio \
+--namespace istio-system -x charts/gateways/templates/deployment.yaml \
+--set gateways.istio-egressgateway.enabled=false \
+--set gateways.istio-ingressgateway.sds.enabled=true &amp;gt; \
+$HOME/istio-ingressgateway.yaml
+
+# 重新部署
+$ kubectl apply -f $HOME/istio-ingressgateway.yaml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;生成证书&#34;&gt;生成证书&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ git clone https://github.com/nicholasjackson/mtls-go-example
+
+$ cd mtls-go-example
+$ ./generate.sh hbchen.com 123456
+
+$ mkdir ./../hbchen.com &amp;amp;&amp;amp; mv 1_root 2_intermediate 3_application 4_client ./../hbchen.com
+$ cd ..
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;创建-secret&#34;&gt;创建&lt;code&gt;Secret&lt;/code&gt;&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ kubectl create -n istio-system secret generic hbchen-credential \
+--from-file=key=hbchen.com/3_application/private/hbchen.com.key.pem \
+--from-file=cert=hbchen.com/3_application/certs/hbchen.com.cert.pem
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;kubectl apply -f - &amp;lt;&amp;lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: ingress-example-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: &amp;quot;hbchen-credential&amp;quot; # NOTE: 和 Secret 名称一致
+    hosts:
+    - &amp;quot;hbchen.com&amp;quot;
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ingress-example-svc
+spec:
+  hosts:
+  - &amp;quot;hbchen.com&amp;quot;
+  gateways:
+  - ingress-example-gateway
+  http:
+  - match:
+    - port: 443
+    route:
+    - destination:
+        host: hbchen.com
+        port:
+          number: 80
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;访问测试&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;curl -I -v -HHost:hbchen.com \
+--resolve hbchen.com:$SECURE_INGRESS_PORT:$INGRESS_HOST \
+--cacert hbchen.com/2_intermediate/certs/ca-chain.cert.pem \
+https://hbchen.com:$SECURE_INGRESS_PORT
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;todo&#34;&gt;TODO&lt;/h2&gt;
+
+&lt;h3 id=&#34;jwt&#34;&gt;JWT&lt;/h3&gt;
+
+&lt;h3 id=&#34;authn&#34;&gt;Authn&lt;/h3&gt;
+</description>
+      
+    </item>
+    
+    <item>
       <title>分布式系统限流服务-Golang&amp;Redis</title>
       <link>http://hbchen.com/post/distributed/2019-05-05-rate-limit/</link>
       <pubDate>Sun, 05 May 2019 00:00:00 +0000</pubDate>
@@ -3469,31 +3765,6 @@ RewriteRule ^(.*)$ index.php/$1 [QAS,PT,L]
 
 &lt;pre&gt;&lt;code&gt;myhost.com
 wamp.com
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>MySql:优化工具</title>
-      <link>http://hbchen.com/post/2013-11-07-mysql-you-hua-gong-ju/</link>
-      <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-11-07-mysql-you-hua-gong-ju/</guid>
-      
-        <description>&lt;p&gt;脚本优化tuning-primer.sh&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#cd /etc/   (my.conf所在目录)
-#wget http://www.day32.com/MySQL/tuning-primer.sh
-#chmod +x tuning-primer.sh
-#./tuning-primer.sh
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;优化工具Mysqltuner&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;安装：
-#yum install -y mysqltuner
-运行：
-#mysqltuner
 &lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>

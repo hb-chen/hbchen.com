@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Sun, 14 Apr 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 11 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/categories/service-mesh/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio安全】网格边缘-Ingress</title>
+      <link>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</link>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</guid>
+      <description>接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP</description>
+    </item>
     
     <item>
       <title>【Istio安全】网格边缘-Egress</title>

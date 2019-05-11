@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Sun, 05 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 11 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio安全】网格边缘-Ingress</title>
+      <link>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</link>
+      <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</guid>
+      <description>接【Istio安全】网格边缘-Egress继续网格边缘的实践ingress-gateway， 分为HTTP、HTTPS-不终止TLS和HTTP</description>
+    </item>
     
     <item>
       <title>分布式系统限流服务-Golang&amp;Redis</title>
@@ -240,24 +249,6 @@ vi /usr/local/etc/mongod.conf
 #wget http://www.day32.com/MySQL/tuning-primer.sh
 #chmod +x tuning-primer.sh
 #./tuning-primer.sh
-&lt;/code&gt;&lt;/pre&gt;</description>
-    </item>
-    
-    <item>
-      <title>日志统计分析-Shell/Goaccess</title>
-      <link>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</link>
-      <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-11-07-ri-zhi-tong-ji-fen-xi-shell-slash-goaccess/</guid>
-      <description>&lt;p&gt;对Nginx或其他日志进行简单的统计分析&lt;/p&gt;
-
-&lt;p&gt;Shell
-对某一列进行统计，可以分析Status Code,URL等&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#cat access.log | awk &#39;{print $9}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
-或
-#cat access.log |grep &amp;quot;200&amp;quot; | awk &#39;{print $7}&#39;|sort|uniq -c | sort -r -n &amp;gt; stat.log
-#vi stat.log
 &lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
