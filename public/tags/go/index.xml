@@ -29,9 +29,7 @@
       <guid>http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/</guid>
       <description>&lt;h2 id=&#34;go-micro-https-github-com-micro-go-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-micro&#34;&gt;go-micro&lt;/a&gt;&lt;/h2&gt;
 
-&lt;p&gt;go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;</description>
+&lt;p&gt;go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展。&lt;/p&gt;</description>
     </item>
     
     <item>
