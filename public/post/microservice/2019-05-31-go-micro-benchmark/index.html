@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【go-micro】服务间通信插件Benchmark - Hobo&#39;s Blog - 技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="测试影响go-micro服务间通信效率的三个组件：transport、server以及codec，主要做不同插件间的横向对比。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/microservice/2019-05-31-go-micro-benchmark/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【go-micro】服务间通信插件Benchmark" />
+<meta property="og:description" content="测试影响go-micro服务间通信效率的三个组件：transport、server以及codec，主要做不同插件间的横向对比。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/microservice/2019-05-31-go-micro-benchmark/" /><meta property="article:published_time" content="2019-05-31T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-04-14T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="【go-micro】服务间通信插件Benchmark">
+<meta itemprop="description" content="测试影响go-micro服务间通信效率的三个组件：transport、server以及codec，主要做不同插件间的横向对比。">
+
+
+<meta itemprop="datePublished" content="2019-05-31T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-04-14T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="1618">
+
+
+
+<meta itemprop="keywords" content="go-micro,微服务," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【go-micro】服务间通信插件Benchmark"/>
+<meta name="twitter:description" content="测试影响go-micro服务间通信效率的三个组件：transport、server以及codec，主要做不同插件间的横向对比。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【go-micro】服务间通信插件Benchmark</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-05-31 </span>
+        <div class="post-category">
+            
+              <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
+            
+          </div>
+        <span class="more-meta"> 约 1618 字 </span>
+        <span class="more-meta"> 预计阅读 4 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#transport-server对比">Transport + Server对比</a>
+<ul>
+<li><a href="#结果对比">结果对比</a></li>
+</ul></li>
+<li><a href="#codec对比">Codec对比</a>
+<ul>
+<li><a href="#结果对比-1">结果对比</a></li>
+</ul></li>
+<li><a href="#详细数据">详细数据</a>
+<ul>
+<li><a href="#transport-server">Transport + Server</a>
+<ul>
+<li><a href="#测试命令">测试命令</a></li>
+</ul></li>
+<li><a href="#codec">Codec</a>
+<ul>
+<li><a href="#测试命令-1">测试命令</a></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>测试影响<code>go-micro</code>服务间通信效率的三个组件：<code>transport</code>、<code>server</code>以及<code>codec</code>，主要做不同插件间的横向对比。</p>
+
+<blockquote>
+<p>源码<a href="https://github.com/hb-go/micro/tree/master/benchmark">github.com/hb-go/micro/benchmark</a></p>
+</blockquote>
+
+<p><strong>测试环境</strong></p>
+
+<ul>
+<li>MBP</li>
+<li>go <strong>1.12.5</strong></li>
+<li>go-micro <strong>v1.2.0</strong></li>
+<li>go-plugins <strong>v1.1.0</strong></li>
+</ul>
+
+<h2 id="transport-server对比">Transport + Server对比</h2>
+
+<p><code>transport</code>和<code>server</code>的对比使用<code>100</code>并发，完成<code>10W</code>请求进行测试</p>
+
+<h3 id="结果对比">结果对比</h3>
+
+<p>从结果看<code>tcp</code>+<code>rpc</code>吞吐量最高，分别比较：</p>
+
+<ul>
+<li><code>transport</code>比较结果<code>tcp</code>&gt;<code>grpc</code>&gt;<code>utp</code></li>
+<li><code>server</code>比较结果大致为<code>rpc</code>&gt;<code>grpc</code>，但在<code>utp</code>情况下<code>grpc</code>&gt;<code>rpc</code></li>
+</ul>
+
+<table>
+<thead>
+<tr>
+<th>T+S</th>
+<th>平均<br/>(ms)</th>
+<th>中位<br/>(ms)</th>
+<th>最大<br/>(ms)</th>
+<th>最小<br/>(ms)</th>
+<th>P90<br/>(ms)</th>
+<th>P99<br/>(ms)</th>
+<th>TPS</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>tcp+rpc</td>
+<td>7.236</td>
+<td>5.629</td>
+<td>101.506</td>
+<td>0.177</td>
+<td>13.338</td>
+<td>35.880</td>
+<td>13192</td>
+</tr>
+
+<tr>
+<td>tcp+grpc</td>
+<td>9.006</td>
+<td>8.171</td>
+<td>110.580</td>
+<td>0.300</td>
+<td>13.510</td>
+<td>24.317</td>
+<td>10758</td>
+</tr>
+
+<tr>
+<td>grpc+rpc</td>
+<td>8.668</td>
+<td>7.964</td>
+<td>101.280</td>
+<td>0.251</td>
+<td>12.744</td>
+<td>21.672</td>
+<td>11166</td>
+</tr>
+
+<tr>
+<td>grpc+grpc</td>
+<td>8.924</td>
+<td>8.181</td>
+<td>134.434</td>
+<td>0.286</td>
+<td>13.211</td>
+<td>22.973</td>
+<td>10845</td>
+</tr>
+
+<tr>
+<td>utp+rpc</td>
+<td>11.824</td>
+<td>11.600</td>
+<td>53.183</td>
+<td>0.204</td>
+<td>15.575</td>
+<td>21.334</td>
+<td>8252</td>
+</tr>
+
+<tr>
+<td>utp+grpc</td>
+<td>9.063</td>
+<td>8.213</td>
+<td>102.052</td>
+<td>0.289</td>
+<td>13.553</td>
+<td>23.920</td>
+<td>10675</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="codec对比">Codec对比</h2>
+
+<p><code>transport</code>和<code>server</code>分别使用<code>tcp</code>和<code>rpc</code>对比不同<code>codec</code>性能，因为并发<code>100</code>时不同<code>codec</code>的失败率差别比较大，所以使用<code>50</code>并发，完成<code>10W</code>请求进行测试</p>
+
+<h3 id="结果对比-1">结果对比</h3>
+
+<p>对比结果：<code>protobuf</code>&gt;<code>proto-rpc</code>&gt;<code>grpc</code>&gt;<code>json</code>&gt;<code>grpc+json</code>&gt;<code>json-rpc</code>&gt;<code>bsonrpc</code></p>
+
+<table>
+<thead>
+<tr>
+<th>CODEC</th>
+<th>平均<br/>(ms)</th>
+<th>中位<br/>(ms)</th>
+<th>最大<br/>(ms)</th>
+<th>最小<br/>(ms)</th>
+<th>P90<br/>(ms)</th>
+<th>P99<br/>(ms)</th>
+<th>TPS</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>grpc</td>
+<td>3.937</td>
+<td>2.979</td>
+<td>90.004</td>
+<td>0.180</td>
+<td>7.184</td>
+<td>19.355</td>
+<td>12310</td>
+</tr>
+
+<tr>
+<td>grpc+json</td>
+<td>6.085</td>
+<td>4.694</td>
+<td>149.861</td>
+<td>0.342</td>
+<td>10.365</td>
+<td>31.837</td>
+<td>8000</td>
+</tr>
+
+<tr>
+<td>protobuf</td>
+<td>3.661</td>
+<td>2.707</td>
+<td>96.636</td>
+<td>0.156</td>
+<td>6.542</td>
+<td>20.261</td>
+<td>13150</td>
+</tr>
+
+<tr>
+<td>json</td>
+<td>5.402</td>
+<td>4.122</td>
+<td>122.360</td>
+<td>0.225</td>
+<td>9.186</td>
+<td>30.474</td>
+<td>8896</td>
+</tr>
+
+<tr>
+<td>json-rpc</td>
+<td>6.380</td>
+<td>4.878</td>
+<td>115.141</td>
+<td>0.288</td>
+<td>11.150</td>
+<td>33.395</td>
+<td>7631</td>
+</tr>
+
+<tr>
+<td>proto-rpc</td>
+<td>3.692</td>
+<td>2.729</td>
+<td>101.010</td>
+<td>0.180</td>
+<td>6.701</td>
+<td>19.454</td>
+<td>13041</td>
+</tr>
+
+<tr>
+<td>bsonrpc</td>
+<td>7.912</td>
+<td>5.979</td>
+<td>132.041</td>
+<td>0.354</td>
+<td>14.789</td>
+<td>40.414</td>
+<td>6145</td>
+</tr>
+</tbody>
+</table>
+
+<p>默认<code>chdec</code>如下</p>
+
+<pre><code class="language-go">DefaultCodecs = map[string]codec.NewCodec{
+    &quot;application/grpc&quot;:         grpc.NewCodec,
+    &quot;application/grpc+json&quot;:    grpc.NewCodec,
+    &quot;application/grpc+proto&quot;:   grpc.NewCodec,
+    &quot;application/json&quot;:         json.NewCodec,
+    &quot;application/json-rpc&quot;:     jsonrpc.NewCodec,
+    &quot;application/protobuf&quot;:     proto.NewCodec,
+    &quot;application/proto-rpc&quot;:    protorpc.NewCodec,
+    &quot;application/octet-stream&quot;: raw.NewCodec,
+}
+</code></pre>
+
+<p>另外<code>go-plugins</code>提供三个<code>codec</code>插件，在<code>server</code>和<code>client</code>初始化时自定义添加</p>
+
+<pre><code class="language-go">server.Codec(&quot;application/msgpackrpc&quot;, msgpackrpc.NewCodec),
+server.Codec(&quot;application/bsonrpc&quot;, bsonrpc.NewCodec),
+server.Codec(&quot;application/jsonrpc2&quot;, jsonrpc2.NewCodec),
+
+client.Codec(&quot;application/msgpackrpc&quot;, msgpackrpc.NewCodec),
+client.Codec(&quot;application/bsonrpc&quot;, bsonrpc.NewCodec),
+client.Codec(&quot;application/jsonrpc2&quot;, jsonrpc2.NewCodec),
+</code></pre>
+
+<p>实际测试时由于不同原因<code>raw</code> 、<code>msgpackrpc</code>和<code>jsonrpc2</code>运行失败未测试，<code>grpc+proto</code>与<code>grpc</code>实现一致未测试</p>
+
+<blockquote>
+<p>raw.NewCodec<br/>error:{&ldquo;id&rdquo;:&ldquo;go.micro.client.codec&rdquo;,&ldquo;code&rdquo;:500,&ldquo;detail&rdquo;:&ldquo;failed to write: field1:……<br/>
+ msgpackrpc.NewCodec，需要实现EncodeMsg(*Writer)<br/>error:{&ldquo;id&rdquo;:&ldquo;go.micro.client.codec&rdquo;,&ldquo;code&rdquo;:500,&ldquo;detail&rdquo;:&ldquo;Not encodable&rdquo;,&ldquo;status&rdquo;:&ldquo;Internal Server Error&rdquo;}<br/>
+ jsonrpc2.NewCodec<br/>error:{&ldquo;id&rdquo;:&ldquo;go.micro.client.transport&rdquo;,&ldquo;code&rdquo;:500,&ldquo;detail&rdquo;:&ldquo;EOF&rdquo;,&ldquo;status&rdquo;:&ldquo;Internal Server Error&rdquo;}</p>
+</blockquote>
+
+<h2 id="详细数据">详细数据</h2>
+
+<h3 id="transport-server">Transport + Server</h3>
+
+<h4 id="测试命令">测试命令</h4>
+
+<pre><code class="language-bash">$ go run server.go
+$ go run client.go -c 100 -n 100000
+</code></pre>
+
+<p><strong>tcp + rpc</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 7580
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99999
+throughput (TPS)       : 13192
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         7235584ns 5629000ns 101506000ns 177000ns  13338000ns 35880000ns 13192
+100         7.236ms   5.629ms   101.506ms   0.177ms   13.338ms   35.880ms   13192
+
+</code></pre>
+
+<p><strong>tcp + grpc</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 9295
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99994
+throughput (TPS)       : 10758
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         9005583ns 8171000ns 110580000ns 300000ns  13510000ns 24317000ns 10758
+100         9.006ms   8.171ms   110.580ms   0.300ms   13.510ms   24.317ms   10758
+</code></pre>
+
+<p><strong>grpc + rpc</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 8955
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99999
+throughput (TPS)       : 11166
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         8668191ns 7964000ns 101280000ns 251000ns  12744000ns 21672000ns 11166
+100         8.668ms   7.964ms   101.280ms   0.251ms   12.744ms   21.672ms   11166
+</code></pre>
+
+<p><strong>grpc + gRPC</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 9220
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99995
+throughput (TPS)       : 10845
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         8924043ns 8181000ns 134434000ns 286000ns  13211000ns 22973000ns 10845
+100         8.924ms   8.181ms   134.434ms   0.286ms   13.211ms   22.973ms   10845
+</code></pre>
+
+<p><strong>utp + rpc</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 12117
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 100000
+throughput (TPS)       : 8252
+
+concurrency mean       median     max        min       p90        p99        TPS
+100         11823520ns 11600000ns 53183000ns 204000ns  15575000ns 21334000ns 8252
+100         11.824ms   11.600ms   53.183ms   0.204ms   15.575ms   21.334ms   8252
+</code></pre>
+
+<p><strong>utp + grpc</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 9367
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99999
+throughput (TPS)       : 10675
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         9063046ns 8213000ns 102052000ns 289000ns  13553000ns 23920000ns 10675
+100         9.063ms   8.213ms   102.052ms   0.289ms   13.553ms   23.920ms   10675
+</code></pre>
+
+<h3 id="codec">Codec</h3>
+
+<h4 id="测试命令-1">测试命令</h4>
+
+<pre><code class="language-bash">$ cd benchmark/tcp_rpc
+$ go run server.go
+$ go run client.go -c 50 -n 100000 -ct grpc
+$ go run client.go -c 50 -n 100000 -ct grpc+json
+$ go run client.go -c 50 -n 100000 -ct protobuf
+$ go run client.go -c 50 -n 100000 -ct json
+$ go run client.go -c 50 -n 100000 -ct json-rpc
+$ go run client.go -c 50 -n 100000 -ct proto-rpc
+$ go run client.go -c 50 -n 100000 -ct bsonrpc
+</code></pre>
+
+<p><strong>grpc</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 8123
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 100000
+throughput (TPS)       : 12310
+
+concurrency mean      median    max        min       p90       p99        TPS
+50          3936652ns 2979000ns 90004000ns 180000ns  7184000ns 19355000ns 12310
+50          3.937ms   2.979ms   90.004ms   0.180ms   7.184ms   19.355ms   12310
+</code></pre>
+
+<p><strong>grpc+json</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 12500
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99961
+throughput (TPS)       : 8000
+
+concurrency mean      median    max         min       p90        p99        TPS
+50          6084709ns 4694000ns 149861000ns 342000ns  10365000ns 31837000ns 8000
+50          6.085ms   4.694ms   149.861ms   0.342ms   10.365ms   31.837ms   8000
+</code></pre>
+
+<p><strong>protobuf</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 7604
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 100000
+throughput (TPS)       : 13150
+
+concurrency mean      median    max        min       p90       p99        TPS
+50          3660854ns 2707000ns 96636000ns 156000ns  6542000ns 20261000ns 13150
+50          3.661ms   2.707ms   96.636ms   0.156ms   6.542ms   20.261ms   13150
+</code></pre>
+
+<p><strong>json</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 11241
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99922
+throughput (TPS)       : 8896
+
+concurrency mean      median    max         min       p90       p99        TPS
+50          5401532ns 4121500ns 122360000ns 225000ns  9186000ns 30474000ns 8896
+50          5.402ms   4.122ms   122.360ms   0.225ms   9.186ms   30.474ms   8896
+</code></pre>
+
+<p><strong>json-rpc</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 13103
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99971
+throughput (TPS)       : 7631
+
+concurrency mean      median    max         min       p90        p99        TPS
+50          6380308ns 4878000ns 115141000ns 288000ns  11150000ns 33395000ns 7631
+50          6.380ms   4.878ms   115.141ms   0.288ms   11.150ms   33.395ms   7631
+</code></pre>
+
+<p><strong>proto-rpc</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 7668
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99998
+throughput (TPS)       : 13041
+
+concurrency mean      median    max         min       p90       p99        TPS
+50          3692281ns 2729000ns 101010000ns 180000ns  6701000ns 19454000ns 13041
+50          3.692ms   2.729ms   101.010ms   0.180ms   6.701ms   19.454ms   13041
+</code></pre>
+
+<p><strong>bsonrpc</strong></p>
+
+<pre><code class="language-bash">took       (ms)        : 16272
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99933
+throughput (TPS)       : 6145
+
+concurrency mean      median    max         min       p90        p99        TPS
+50          7911887ns 5979000ns 132041000ns 354000ns  14789000ns 40414000ns 6145
+50          7.912ms   5.979ms   132.041ms   0.354ms   14.789ms   40.414ms   6145
+</code></pre>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-04-14</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/go-micro/">go-micro</a>
+          
+          <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/servicemesh/2019-05-11-istio-security-ingress/">
+            <span class="next-text nav-default">【Istio安全】网格边缘-Ingress</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

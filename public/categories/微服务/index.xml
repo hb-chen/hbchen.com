@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Thu, 21 Feb 2019 16:59:37 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 31 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【go-micro】服务间通信插件Benchmark</title>
+      <link>http://hbchen.com/post/microservice/2019-05-31-go-micro-benchmark/</link>
+      <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-05-31-go-micro-benchmark/</guid>
+      <description>&lt;p&gt;测试影响&lt;code&gt;go-micro&lt;/code&gt;服务间通信效率的三个组件：&lt;code&gt;transport&lt;/code&gt;、&lt;code&gt;server&lt;/code&gt;以及&lt;code&gt;codec&lt;/code&gt;，主要做不同插件间的横向对比。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>go-micro加入Istio服务网格</title>

@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Sat, 11 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 31 May 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【go-micro】服务间通信插件Benchmark</title>
+      <link>http://hbchen.com/post/microservice/2019-05-31-go-micro-benchmark/</link>
+      <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-05-31-go-micro-benchmark/</guid>
+      <description>&lt;p&gt;测试影响&lt;code&gt;go-micro&lt;/code&gt;服务间通信效率的三个组件：&lt;code&gt;transport&lt;/code&gt;、&lt;code&gt;server&lt;/code&gt;以及&lt;code&gt;codec&lt;/code&gt;，主要做不同插件间的横向对比。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【Istio安全】网格边缘-Ingress</title>
@@ -234,21 +243,6 @@ vi /usr/local/etc/mongod.conf
 &lt;li&gt;自定义工程路径&lt;/li&gt;
 &lt;li&gt;自定义本地域名访问&lt;/li&gt;
 &lt;/ol&gt;</description>
-    </item>
-    
-    <item>
-      <title>MySql:优化工具</title>
-      <link>http://hbchen.com/post/2013-11-07-mysql-you-hua-gong-ju/</link>
-      <pubDate>Thu, 07 Nov 2013 18:36:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2013-11-07-mysql-you-hua-gong-ju/</guid>
-      <description>&lt;p&gt;脚本优化tuning-primer.sh&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#cd /etc/   (my.conf所在目录)
-#wget http://www.day32.com/MySQL/tuning-primer.sh
-#chmod +x tuning-primer.sh
-#./tuning-primer.sh
-&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

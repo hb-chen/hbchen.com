@@ -39,6 +39,456 @@
     </item>
     
     <item>
+      <title>【go-micro】服务间通信插件Benchmark</title>
+      <link>http://hbchen.com/post/microservice/2019-05-31-go-micro-benchmark/</link>
+      <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-05-31-go-micro-benchmark/</guid>
+      
+        <description>&lt;p&gt;测试影响&lt;code&gt;go-micro&lt;/code&gt;服务间通信效率的三个组件：&lt;code&gt;transport&lt;/code&gt;、&lt;code&gt;server&lt;/code&gt;以及&lt;code&gt;codec&lt;/code&gt;，主要做不同插件间的横向对比。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;源码&lt;a href=&#34;https://github.com/hb-go/micro/tree/master/benchmark&#34;&gt;github.com/hb-go/micro/benchmark&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;strong&gt;测试环境&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;MBP&lt;/li&gt;
+&lt;li&gt;go &lt;strong&gt;1.12.5&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;go-micro &lt;strong&gt;v1.2.0&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;go-plugins &lt;strong&gt;v1.1.0&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;transport-server对比&#34;&gt;Transport + Server对比&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;transport&lt;/code&gt;和&lt;code&gt;server&lt;/code&gt;的对比使用&lt;code&gt;100&lt;/code&gt;并发，完成&lt;code&gt;10W&lt;/code&gt;请求进行测试&lt;/p&gt;
+
+&lt;h3 id=&#34;结果对比&#34;&gt;结果对比&lt;/h3&gt;
+
+&lt;p&gt;从结果看&lt;code&gt;tcp&lt;/code&gt;+&lt;code&gt;rpc&lt;/code&gt;吞吐量最高，分别比较：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;transport&lt;/code&gt;比较结果&lt;code&gt;tcp&lt;/code&gt;&amp;gt;&lt;code&gt;grpc&lt;/code&gt;&amp;gt;&lt;code&gt;utp&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;server&lt;/code&gt;比较结果大致为&lt;code&gt;rpc&lt;/code&gt;&amp;gt;&lt;code&gt;grpc&lt;/code&gt;，但在&lt;code&gt;utp&lt;/code&gt;情况下&lt;code&gt;grpc&lt;/code&gt;&amp;gt;&lt;code&gt;rpc&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;T+S&lt;/th&gt;
+&lt;th&gt;平均&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;中位&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;最大&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;最小&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;P90&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;P99&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;TPS&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;tcp+rpc&lt;/td&gt;
+&lt;td&gt;7.236&lt;/td&gt;
+&lt;td&gt;5.629&lt;/td&gt;
+&lt;td&gt;101.506&lt;/td&gt;
+&lt;td&gt;0.177&lt;/td&gt;
+&lt;td&gt;13.338&lt;/td&gt;
+&lt;td&gt;35.880&lt;/td&gt;
+&lt;td&gt;13192&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;tcp+grpc&lt;/td&gt;
+&lt;td&gt;9.006&lt;/td&gt;
+&lt;td&gt;8.171&lt;/td&gt;
+&lt;td&gt;110.580&lt;/td&gt;
+&lt;td&gt;0.300&lt;/td&gt;
+&lt;td&gt;13.510&lt;/td&gt;
+&lt;td&gt;24.317&lt;/td&gt;
+&lt;td&gt;10758&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;grpc+rpc&lt;/td&gt;
+&lt;td&gt;8.668&lt;/td&gt;
+&lt;td&gt;7.964&lt;/td&gt;
+&lt;td&gt;101.280&lt;/td&gt;
+&lt;td&gt;0.251&lt;/td&gt;
+&lt;td&gt;12.744&lt;/td&gt;
+&lt;td&gt;21.672&lt;/td&gt;
+&lt;td&gt;11166&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;grpc+grpc&lt;/td&gt;
+&lt;td&gt;8.924&lt;/td&gt;
+&lt;td&gt;8.181&lt;/td&gt;
+&lt;td&gt;134.434&lt;/td&gt;
+&lt;td&gt;0.286&lt;/td&gt;
+&lt;td&gt;13.211&lt;/td&gt;
+&lt;td&gt;22.973&lt;/td&gt;
+&lt;td&gt;10845&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;utp+rpc&lt;/td&gt;
+&lt;td&gt;11.824&lt;/td&gt;
+&lt;td&gt;11.600&lt;/td&gt;
+&lt;td&gt;53.183&lt;/td&gt;
+&lt;td&gt;0.204&lt;/td&gt;
+&lt;td&gt;15.575&lt;/td&gt;
+&lt;td&gt;21.334&lt;/td&gt;
+&lt;td&gt;8252&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;utp+grpc&lt;/td&gt;
+&lt;td&gt;9.063&lt;/td&gt;
+&lt;td&gt;8.213&lt;/td&gt;
+&lt;td&gt;102.052&lt;/td&gt;
+&lt;td&gt;0.289&lt;/td&gt;
+&lt;td&gt;13.553&lt;/td&gt;
+&lt;td&gt;23.920&lt;/td&gt;
+&lt;td&gt;10675&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&#34;codec对比&#34;&gt;Codec对比&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;transport&lt;/code&gt;和&lt;code&gt;server&lt;/code&gt;分别使用&lt;code&gt;tcp&lt;/code&gt;和&lt;code&gt;rpc&lt;/code&gt;对比不同&lt;code&gt;codec&lt;/code&gt;性能，因为并发&lt;code&gt;100&lt;/code&gt;时不同&lt;code&gt;codec&lt;/code&gt;的失败率差别比较大，所以使用&lt;code&gt;50&lt;/code&gt;并发，完成&lt;code&gt;10W&lt;/code&gt;请求进行测试&lt;/p&gt;
+
+&lt;h3 id=&#34;结果对比-1&#34;&gt;结果对比&lt;/h3&gt;
+
+&lt;p&gt;对比结果：&lt;code&gt;protobuf&lt;/code&gt;&amp;gt;&lt;code&gt;proto-rpc&lt;/code&gt;&amp;gt;&lt;code&gt;grpc&lt;/code&gt;&amp;gt;&lt;code&gt;json&lt;/code&gt;&amp;gt;&lt;code&gt;grpc+json&lt;/code&gt;&amp;gt;&lt;code&gt;json-rpc&lt;/code&gt;&amp;gt;&lt;code&gt;bsonrpc&lt;/code&gt;&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;CODEC&lt;/th&gt;
+&lt;th&gt;平均&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;中位&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;最大&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;最小&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;P90&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;P99&lt;br/&gt;(ms)&lt;/th&gt;
+&lt;th&gt;TPS&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;grpc&lt;/td&gt;
+&lt;td&gt;3.937&lt;/td&gt;
+&lt;td&gt;2.979&lt;/td&gt;
+&lt;td&gt;90.004&lt;/td&gt;
+&lt;td&gt;0.180&lt;/td&gt;
+&lt;td&gt;7.184&lt;/td&gt;
+&lt;td&gt;19.355&lt;/td&gt;
+&lt;td&gt;12310&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;grpc+json&lt;/td&gt;
+&lt;td&gt;6.085&lt;/td&gt;
+&lt;td&gt;4.694&lt;/td&gt;
+&lt;td&gt;149.861&lt;/td&gt;
+&lt;td&gt;0.342&lt;/td&gt;
+&lt;td&gt;10.365&lt;/td&gt;
+&lt;td&gt;31.837&lt;/td&gt;
+&lt;td&gt;8000&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;protobuf&lt;/td&gt;
+&lt;td&gt;3.661&lt;/td&gt;
+&lt;td&gt;2.707&lt;/td&gt;
+&lt;td&gt;96.636&lt;/td&gt;
+&lt;td&gt;0.156&lt;/td&gt;
+&lt;td&gt;6.542&lt;/td&gt;
+&lt;td&gt;20.261&lt;/td&gt;
+&lt;td&gt;13150&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;json&lt;/td&gt;
+&lt;td&gt;5.402&lt;/td&gt;
+&lt;td&gt;4.122&lt;/td&gt;
+&lt;td&gt;122.360&lt;/td&gt;
+&lt;td&gt;0.225&lt;/td&gt;
+&lt;td&gt;9.186&lt;/td&gt;
+&lt;td&gt;30.474&lt;/td&gt;
+&lt;td&gt;8896&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;json-rpc&lt;/td&gt;
+&lt;td&gt;6.380&lt;/td&gt;
+&lt;td&gt;4.878&lt;/td&gt;
+&lt;td&gt;115.141&lt;/td&gt;
+&lt;td&gt;0.288&lt;/td&gt;
+&lt;td&gt;11.150&lt;/td&gt;
+&lt;td&gt;33.395&lt;/td&gt;
+&lt;td&gt;7631&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;proto-rpc&lt;/td&gt;
+&lt;td&gt;3.692&lt;/td&gt;
+&lt;td&gt;2.729&lt;/td&gt;
+&lt;td&gt;101.010&lt;/td&gt;
+&lt;td&gt;0.180&lt;/td&gt;
+&lt;td&gt;6.701&lt;/td&gt;
+&lt;td&gt;19.454&lt;/td&gt;
+&lt;td&gt;13041&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;bsonrpc&lt;/td&gt;
+&lt;td&gt;7.912&lt;/td&gt;
+&lt;td&gt;5.979&lt;/td&gt;
+&lt;td&gt;132.041&lt;/td&gt;
+&lt;td&gt;0.354&lt;/td&gt;
+&lt;td&gt;14.789&lt;/td&gt;
+&lt;td&gt;40.414&lt;/td&gt;
+&lt;td&gt;6145&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;默认&lt;code&gt;chdec&lt;/code&gt;如下&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;DefaultCodecs = map[string]codec.NewCodec{
+    &amp;quot;application/grpc&amp;quot;:         grpc.NewCodec,
+    &amp;quot;application/grpc+json&amp;quot;:    grpc.NewCodec,
+    &amp;quot;application/grpc+proto&amp;quot;:   grpc.NewCodec,
+    &amp;quot;application/json&amp;quot;:         json.NewCodec,
+    &amp;quot;application/json-rpc&amp;quot;:     jsonrpc.NewCodec,
+    &amp;quot;application/protobuf&amp;quot;:     proto.NewCodec,
+    &amp;quot;application/proto-rpc&amp;quot;:    protorpc.NewCodec,
+    &amp;quot;application/octet-stream&amp;quot;: raw.NewCodec,
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;另外&lt;code&gt;go-plugins&lt;/code&gt;提供三个&lt;code&gt;codec&lt;/code&gt;插件，在&lt;code&gt;server&lt;/code&gt;和&lt;code&gt;client&lt;/code&gt;初始化时自定义添加&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;server.Codec(&amp;quot;application/msgpackrpc&amp;quot;, msgpackrpc.NewCodec),
+server.Codec(&amp;quot;application/bsonrpc&amp;quot;, bsonrpc.NewCodec),
+server.Codec(&amp;quot;application/jsonrpc2&amp;quot;, jsonrpc2.NewCodec),
+
+client.Codec(&amp;quot;application/msgpackrpc&amp;quot;, msgpackrpc.NewCodec),
+client.Codec(&amp;quot;application/bsonrpc&amp;quot;, bsonrpc.NewCodec),
+client.Codec(&amp;quot;application/jsonrpc2&amp;quot;, jsonrpc2.NewCodec),
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;实际测试时由于不同原因&lt;code&gt;raw&lt;/code&gt; 、&lt;code&gt;msgpackrpc&lt;/code&gt;和&lt;code&gt;jsonrpc2&lt;/code&gt;运行失败未测试，&lt;code&gt;grpc+proto&lt;/code&gt;与&lt;code&gt;grpc&lt;/code&gt;实现一致未测试&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;raw.NewCodec&lt;br/&gt;error:{&amp;ldquo;id&amp;rdquo;:&amp;ldquo;go.micro.client.codec&amp;rdquo;,&amp;ldquo;code&amp;rdquo;:500,&amp;ldquo;detail&amp;rdquo;:&amp;ldquo;failed to write: field1:……&lt;br/&gt;
+ msgpackrpc.NewCodec，需要实现EncodeMsg(*Writer)&lt;br/&gt;error:{&amp;ldquo;id&amp;rdquo;:&amp;ldquo;go.micro.client.codec&amp;rdquo;,&amp;ldquo;code&amp;rdquo;:500,&amp;ldquo;detail&amp;rdquo;:&amp;ldquo;Not encodable&amp;rdquo;,&amp;ldquo;status&amp;rdquo;:&amp;ldquo;Internal Server Error&amp;rdquo;}&lt;br/&gt;
+ jsonrpc2.NewCodec&lt;br/&gt;error:{&amp;ldquo;id&amp;rdquo;:&amp;ldquo;go.micro.client.transport&amp;rdquo;,&amp;ldquo;code&amp;rdquo;:500,&amp;ldquo;detail&amp;rdquo;:&amp;ldquo;EOF&amp;rdquo;,&amp;ldquo;status&amp;rdquo;:&amp;ldquo;Internal Server Error&amp;rdquo;}&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;详细数据&#34;&gt;详细数据&lt;/h2&gt;
+
+&lt;h3 id=&#34;transport-server&#34;&gt;Transport + Server&lt;/h3&gt;
+
+&lt;h4 id=&#34;测试命令&#34;&gt;测试命令&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ go run server.go
+$ go run client.go -c 100 -n 100000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;tcp + rpc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 7580
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99999
+throughput (TPS)       : 13192
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         7235584ns 5629000ns 101506000ns 177000ns  13338000ns 35880000ns 13192
+100         7.236ms   5.629ms   101.506ms   0.177ms   13.338ms   35.880ms   13192
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;tcp + grpc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 9295
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99994
+throughput (TPS)       : 10758
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         9005583ns 8171000ns 110580000ns 300000ns  13510000ns 24317000ns 10758
+100         9.006ms   8.171ms   110.580ms   0.300ms   13.510ms   24.317ms   10758
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;grpc + rpc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 8955
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99999
+throughput (TPS)       : 11166
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         8668191ns 7964000ns 101280000ns 251000ns  12744000ns 21672000ns 11166
+100         8.668ms   7.964ms   101.280ms   0.251ms   12.744ms   21.672ms   11166
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;grpc + gRPC&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 9220
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99995
+throughput (TPS)       : 10845
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         8924043ns 8181000ns 134434000ns 286000ns  13211000ns 22973000ns 10845
+100         8.924ms   8.181ms   134.434ms   0.286ms   13.211ms   22.973ms   10845
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;utp + rpc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 12117
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 100000
+throughput (TPS)       : 8252
+
+concurrency mean       median     max        min       p90        p99        TPS
+100         11823520ns 11600000ns 53183000ns 204000ns  15575000ns 21334000ns 8252
+100         11.824ms   11.600ms   53.183ms   0.204ms   15.575ms   21.334ms   8252
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;utp + grpc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 9367
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99999
+throughput (TPS)       : 10675
+
+concurrency mean      median    max         min       p90        p99        TPS
+100         9063046ns 8213000ns 102052000ns 289000ns  13553000ns 23920000ns 10675
+100         9.063ms   8.213ms   102.052ms   0.289ms   13.553ms   23.920ms   10675
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;codec&#34;&gt;Codec&lt;/h3&gt;
+
+&lt;h4 id=&#34;测试命令-1&#34;&gt;测试命令&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ cd benchmark/tcp_rpc
+$ go run server.go
+$ go run client.go -c 50 -n 100000 -ct grpc
+$ go run client.go -c 50 -n 100000 -ct grpc+json
+$ go run client.go -c 50 -n 100000 -ct protobuf
+$ go run client.go -c 50 -n 100000 -ct json
+$ go run client.go -c 50 -n 100000 -ct json-rpc
+$ go run client.go -c 50 -n 100000 -ct proto-rpc
+$ go run client.go -c 50 -n 100000 -ct bsonrpc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;grpc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 8123
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 100000
+throughput (TPS)       : 12310
+
+concurrency mean      median    max        min       p90       p99        TPS
+50          3936652ns 2979000ns 90004000ns 180000ns  7184000ns 19355000ns 12310
+50          3.937ms   2.979ms   90.004ms   0.180ms   7.184ms   19.355ms   12310
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;grpc+json&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 12500
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99961
+throughput (TPS)       : 8000
+
+concurrency mean      median    max         min       p90        p99        TPS
+50          6084709ns 4694000ns 149861000ns 342000ns  10365000ns 31837000ns 8000
+50          6.085ms   4.694ms   149.861ms   0.342ms   10.365ms   31.837ms   8000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;protobuf&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 7604
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 100000
+throughput (TPS)       : 13150
+
+concurrency mean      median    max        min       p90       p99        TPS
+50          3660854ns 2707000ns 96636000ns 156000ns  6542000ns 20261000ns 13150
+50          3.661ms   2.707ms   96.636ms   0.156ms   6.542ms   20.261ms   13150
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;json&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 11241
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99922
+throughput (TPS)       : 8896
+
+concurrency mean      median    max         min       p90       p99        TPS
+50          5401532ns 4121500ns 122360000ns 225000ns  9186000ns 30474000ns 8896
+50          5.402ms   4.122ms   122.360ms   0.225ms   9.186ms   30.474ms   8896
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;json-rpc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 13103
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99971
+throughput (TPS)       : 7631
+
+concurrency mean      median    max         min       p90        p99        TPS
+50          6380308ns 4878000ns 115141000ns 288000ns  11150000ns 33395000ns 7631
+50          6.380ms   4.878ms   115.141ms   0.288ms   11.150ms   33.395ms   7631
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;proto-rpc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 7668
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99998
+throughput (TPS)       : 13041
+
+concurrency mean      median    max         min       p90       p99        TPS
+50          3692281ns 2729000ns 101010000ns 180000ns  6701000ns 19454000ns 13041
+50          3.692ms   2.729ms   101.010ms   0.180ms   6.701ms   19.454ms   13041
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;bsonrpc&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 16272
+sent       requests    : 100000
+received   requests    : 100000
+received   requests_OK : 99933
+throughput (TPS)       : 6145
+
+concurrency mean      median    max         min       p90        p99        TPS
+50          7911887ns 5979000ns 132041000ns 354000ns  14789000ns 40414000ns 6145
+50          7.912ms   5.979ms   132.041ms   0.354ms   14.789ms   40.414ms   6145
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【Istio安全】网格边缘-Ingress</title>
       <link>http://hbchen.com/post/servicemesh/2019-05-11-istio-security-ingress/</link>
       <pubDate>Sat, 11 May 2019 00:00:00 +0000</pubDate>
@@ -3676,96 +4126,6 @@ class CacheBae extends Cache {
 
 }
 
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>WAMP&#43;ThinkPHP配置</title>
-      <link>http://hbchen.com/post/2014-03-05-wamppei-zhi/</link>
-      <pubDate>Wed, 05 Mar 2014 18:30:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2014-03-05-wamppei-zhi/</guid>
-      
-        <description>&lt;p&gt;配置ThinkPHP开发环境&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;开启Rewrite支持.htaccess&lt;/li&gt;
-&lt;li&gt;自定义工程路径&lt;/li&gt;
-&lt;li&gt;自定义本地域名访问&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;WAMP安装
-&lt;a href=&#34;http://www.wampserver.com/en/#download-wrapper&#34;&gt;http://www.wampserver.com/en/#download-wrapper&lt;/a&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#编辑wamp/bin/apache/Apache2.x.x/conf/httpd.conf
-#开启rewrite，支持.htaccess
-#LoadModule rewrite_module modules/mod_rewrite.so去掉注释
-LoadModule rewrite_module modules/mod_rewrite.so
-
-#开启httpd-vhosts，自定义域名和工程路径
-#Include conf/extra/httpd-vhosts.conf去掉注释
-Include conf/extra/httpd-vhosts.conf
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;自定义本地域名和工程路径&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#编辑wamp/bin/apache/Apache2.x.x/conf/extra/httpd-vhosts.conf
-#自定义工程路径
-#d:projectpath工程路径
-#mylocalhost.com自定义域名
-#注意AllowOverride 是All，与wamp主界面不同
-#可以定义其他端口
-&amp;lt;VirtualHost *:80&amp;gt;  
-  DocumentRoot d:projectpath 
-  ServerName myhost.com 
-  &amp;lt;Directory &amp;quot;d:projectpath&amp;quot;&amp;gt; 
-      Options Indexes FollowSymLinks 
-      AllowOverride All 
-      Order allow,deny 
-      Allow from all 
-  &amp;lt;/Directory&amp;gt; 
-&amp;lt;/VirtualHost&amp;gt;
-
-#添加wamp主界面，假设wamp安装在D盘
-&amp;lt;VirtualHost *:80&amp;gt;  
-  DocumentRoot d:wamp/www 
-  ServerName wamp.com 
-  &amp;lt;Directory &amp;quot;d:wamp/www&amp;quot;&amp;gt; 
-      Options Indexes FollowSymLinks 
-      AllowOverride None 
-      Order allow,deny 
-      Allow from all 
-  &amp;lt;/Directory&amp;gt; 
-&amp;lt;/VirtualHost&amp;gt;
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;去掉URL中的index.php&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#.htaccess
-&amp;lt;IfModule mod_rewrite.c&amp;gt;
-RewriteEngine on
-RewriteCond %{SCRIPT_FILENAME} !-f
-RewriteCond %{SCRIPT_FILENAME} !-d
-RewriteRule ^(.*)$ index.php/$1 [QAS,PT,L]
-&amp;lt;/IfModule&amp;gt;
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code&gt;#修改系统hosts
-127.0.0.1 	myhost.com
-127.0.0.1 	wamp.com
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;重启Apache&lt;/p&gt;
-
-&lt;p&gt;查看成果吧&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;myhost.com
-wamp.com
 &lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
