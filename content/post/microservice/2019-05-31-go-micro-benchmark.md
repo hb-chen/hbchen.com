@@ -1,7 +1,7 @@
 ---
 title: "【go-micro】服务间通信插件Benchmark"
 date: 2019-05-31
-lastmod: 2019-04-14
+lastmod: 2019-06-06
 draft: false
 mermaid: false
 categories: [
@@ -34,16 +34,16 @@ tags: [
 从结果看`tcp`+`rpc`吞吐量最高，分别比较：
 
 - `transport`比较结果`tcp`>`grpc`>`utp`
-- `server`比较结果大致为`rpc`>`grpc`，但在`utp`情况下`grpc`>`rpc`
+- `server`比较结果大致为`rpc`>`grpc`
 
 T+S|平均<br/>(ms)|中位<br/>(ms)|最大<br/>(ms)|最小<br/>(ms)|P90<br/>(ms)|P99<br/>(ms)|TPS
 ---|---|---|---|---|---|---|---
 tcp+rpc|7.236|5.629|101.506|0.177|13.338|35.880|13192
-tcp+grpc|9.006|8.171|110.580|0.300|13.510|24.317|10758
 grpc+rpc|8.668|7.964|101.280|0.251|12.744|21.672|11166
-grpc+grpc|8.924|8.181|134.434|0.286|13.211|22.973|10845
 utp+rpc|11.824|11.600|53.183|0.204|15.575|21.334|8252
-utp+grpc|9.063|8.213|102.052|0.289|13.553|23.920|10675
+grpc+grpc|8.924|8.181|134.434|0.286|13.211|22.973|10845
+
+> 在开始的测试中有个误区，`grpc`服务并不使用`transport`，包括`http`服务，`transport`仅在使用`go-micro`的`rpc`服务时有效
 
 ## Codec对比
 `transport`和`server`分别使用`tcp`和`rpc`对比不同`codec`性能，因为并发`100`时不同`codec`的失败率差别比较大，所以使用`50`并发，完成`10W`请求进行测试
@@ -116,19 +116,6 @@ concurrency mean      median    max         min       p90        p99        TPS
 
 ```
 
-**tcp + grpc**
-```bash
-took       (ms)        : 9295
-sent       requests    : 100000
-received   requests    : 100000
-received   requests_OK : 99994
-throughput (TPS)       : 10758
-
-concurrency mean      median    max         min       p90        p99        TPS
-100         9005583ns 8171000ns 110580000ns 300000ns  13510000ns 24317000ns 10758
-100         9.006ms   8.171ms   110.580ms   0.300ms   13.510ms   24.317ms   10758
-```
-
 **grpc + rpc**
 ```bash
 took       (ms)        : 8955
@@ -141,21 +128,6 @@ concurrency mean      median    max         min       p90        p99        TPS
 100         8668191ns 7964000ns 101280000ns 251000ns  12744000ns 21672000ns 11166
 100         8.668ms   7.964ms   101.280ms   0.251ms   12.744ms   21.672ms   11166
 ```
-
-
-**grpc + gRPC**
-```bash
-took       (ms)        : 9220
-sent       requests    : 100000
-received   requests    : 100000
-received   requests_OK : 99995
-throughput (TPS)       : 10845
-
-concurrency mean      median    max         min       p90        p99        TPS
-100         8924043ns 8181000ns 134434000ns 286000ns  13211000ns 22973000ns 10845
-100         8.924ms   8.181ms   134.434ms   0.286ms   13.211ms   22.973ms   10845
-```
-
 
 **utp + rpc**
 ```bash
@@ -170,17 +142,17 @@ concurrency mean       median     max        min       p90        p99        TPS
 100         11.824ms   11.600ms   53.183ms   0.204ms   15.575ms   21.334ms   8252
 ```
 
-**utp + grpc**
+**grpc + gRPC**
 ```bash
-took       (ms)        : 9367
+took       (ms)        : 9220
 sent       requests    : 100000
 received   requests    : 100000
-received   requests_OK : 99999
-throughput (TPS)       : 10675
+received   requests_OK : 99995
+throughput (TPS)       : 10845
 
 concurrency mean      median    max         min       p90        p99        TPS
-100         9063046ns 8213000ns 102052000ns 289000ns  13553000ns 23920000ns 10675
-100         9.063ms   8.213ms   102.052ms   0.289ms   13.553ms   23.920ms   10675
+100         8924043ns 8181000ns 134434000ns 286000ns  13211000ns 22973000ns 10845
+100         8.924ms   8.181ms   134.434ms   0.286ms   13.211ms   22.973ms   10845
 ```
 
 ### Codec

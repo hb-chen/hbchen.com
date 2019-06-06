@@ -70,7 +70,7 @@
 
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;transport&lt;/code&gt;比较结果&lt;code&gt;tcp&lt;/code&gt;&amp;gt;&lt;code&gt;grpc&lt;/code&gt;&amp;gt;&lt;code&gt;utp&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;server&lt;/code&gt;比较结果大致为&lt;code&gt;rpc&lt;/code&gt;&amp;gt;&lt;code&gt;grpc&lt;/code&gt;，但在&lt;code&gt;utp&lt;/code&gt;情况下&lt;code&gt;grpc&lt;/code&gt;&amp;gt;&lt;code&gt;rpc&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;server&lt;/code&gt;比较结果大致为&lt;code&gt;rpc&lt;/code&gt;&amp;gt;&lt;code&gt;grpc&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;table&gt;
@@ -100,17 +100,6 @@
 &lt;/tr&gt;
 
 &lt;tr&gt;
-&lt;td&gt;tcp+grpc&lt;/td&gt;
-&lt;td&gt;9.006&lt;/td&gt;
-&lt;td&gt;8.171&lt;/td&gt;
-&lt;td&gt;110.580&lt;/td&gt;
-&lt;td&gt;0.300&lt;/td&gt;
-&lt;td&gt;13.510&lt;/td&gt;
-&lt;td&gt;24.317&lt;/td&gt;
-&lt;td&gt;10758&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;tr&gt;
 &lt;td&gt;grpc+rpc&lt;/td&gt;
 &lt;td&gt;8.668&lt;/td&gt;
 &lt;td&gt;7.964&lt;/td&gt;
@@ -119,17 +108,6 @@
 &lt;td&gt;12.744&lt;/td&gt;
 &lt;td&gt;21.672&lt;/td&gt;
 &lt;td&gt;11166&lt;/td&gt;
-&lt;/tr&gt;
-
-&lt;tr&gt;
-&lt;td&gt;grpc+grpc&lt;/td&gt;
-&lt;td&gt;8.924&lt;/td&gt;
-&lt;td&gt;8.181&lt;/td&gt;
-&lt;td&gt;134.434&lt;/td&gt;
-&lt;td&gt;0.286&lt;/td&gt;
-&lt;td&gt;13.211&lt;/td&gt;
-&lt;td&gt;22.973&lt;/td&gt;
-&lt;td&gt;10845&lt;/td&gt;
 &lt;/tr&gt;
 
 &lt;tr&gt;
@@ -144,17 +122,21 @@
 &lt;/tr&gt;
 
 &lt;tr&gt;
-&lt;td&gt;utp+grpc&lt;/td&gt;
-&lt;td&gt;9.063&lt;/td&gt;
-&lt;td&gt;8.213&lt;/td&gt;
-&lt;td&gt;102.052&lt;/td&gt;
-&lt;td&gt;0.289&lt;/td&gt;
-&lt;td&gt;13.553&lt;/td&gt;
-&lt;td&gt;23.920&lt;/td&gt;
-&lt;td&gt;10675&lt;/td&gt;
+&lt;td&gt;grpc+grpc&lt;/td&gt;
+&lt;td&gt;8.924&lt;/td&gt;
+&lt;td&gt;8.181&lt;/td&gt;
+&lt;td&gt;134.434&lt;/td&gt;
+&lt;td&gt;0.286&lt;/td&gt;
+&lt;td&gt;13.211&lt;/td&gt;
+&lt;td&gt;22.973&lt;/td&gt;
+&lt;td&gt;10845&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;在开始的测试中有个误区，&lt;code&gt;grpc&lt;/code&gt;服务并不使用&lt;code&gt;transport&lt;/code&gt;，包括&lt;code&gt;http&lt;/code&gt;服务，&lt;code&gt;transport&lt;/code&gt;仅在使用&lt;code&gt;go-micro&lt;/code&gt;的&lt;code&gt;rpc&lt;/code&gt;服务时有效&lt;/p&gt;
+&lt;/blockquote&gt;
 
 &lt;h2 id=&#34;codec对比&#34;&gt;Codec对比&lt;/h2&gt;
 
@@ -315,19 +297,6 @@ concurrency mean      median    max         min       p90        p99        TPS
 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;&lt;strong&gt;tcp + grpc&lt;/strong&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 9295
-sent       requests    : 100000
-received   requests    : 100000
-received   requests_OK : 99994
-throughput (TPS)       : 10758
-
-concurrency mean      median    max         min       p90        p99        TPS
-100         9005583ns 8171000ns 110580000ns 300000ns  13510000ns 24317000ns 10758
-100         9.006ms   8.171ms   110.580ms   0.300ms   13.510ms   24.317ms   10758
-&lt;/code&gt;&lt;/pre&gt;
-
 &lt;p&gt;&lt;strong&gt;grpc + rpc&lt;/strong&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 8955
@@ -339,19 +308,6 @@ throughput (TPS)       : 11166
 concurrency mean      median    max         min       p90        p99        TPS
 100         8668191ns 7964000ns 101280000ns 251000ns  12744000ns 21672000ns 11166
 100         8.668ms   7.964ms   101.280ms   0.251ms   12.744ms   21.672ms   11166
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;strong&gt;grpc + gRPC&lt;/strong&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 9220
-sent       requests    : 100000
-received   requests    : 100000
-received   requests_OK : 99995
-throughput (TPS)       : 10845
-
-concurrency mean      median    max         min       p90        p99        TPS
-100         8924043ns 8181000ns 134434000ns 286000ns  13211000ns 22973000ns 10845
-100         8.924ms   8.181ms   134.434ms   0.286ms   13.211ms   22.973ms   10845
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;strong&gt;utp + rpc&lt;/strong&gt;&lt;/p&gt;
@@ -367,17 +323,17 @@ concurrency mean       median     max        min       p90        p99        TPS
 100         11.824ms   11.600ms   53.183ms   0.204ms   15.575ms   21.334ms   8252
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;&lt;strong&gt;utp + grpc&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;grpc + gRPC&lt;/strong&gt;&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 9367
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;took       (ms)        : 9220
 sent       requests    : 100000
 received   requests    : 100000
-received   requests_OK : 99999
-throughput (TPS)       : 10675
+received   requests_OK : 99995
+throughput (TPS)       : 10845
 
 concurrency mean      median    max         min       p90        p99        TPS
-100         9063046ns 8213000ns 102052000ns 289000ns  13553000ns 23920000ns 10675
-100         9.063ms   8.213ms   102.052ms   0.289ms   13.553ms   23.920ms   10675
+100         8924043ns 8181000ns 134434000ns 286000ns  13211000ns 22973000ns 10845
+100         8.924ms   8.181ms   134.434ms   0.286ms   13.211ms   22.973ms   10845
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;h3 id=&#34;codec&#34;&gt;Codec&lt;/h3&gt;
