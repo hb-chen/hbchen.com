@@ -1,5 +1,5 @@
 ---
-title: "go-micro使用kubernetes注册中心"
+title: "【go-micro】使用kubernetes注册中心"
 date: 2019-06-27
 lastmod: 2019-06-27
 draft: false
