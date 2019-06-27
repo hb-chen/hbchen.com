@@ -18,7 +18,7 @@ tags: [
 
 <!--more-->
 
-![go-micro](/img/go-micro-istio.jpg)
+![go-micro](https://raw.githubusercontent.com/hb-go/micro/master/doc/img/micro-istio.png)
 
 [hb-go/micro-plugins](https://github.com/hb-go/micro-plugins)实现了gRPC、http的Istio版本Plugin，下面介绍如何使用。
 

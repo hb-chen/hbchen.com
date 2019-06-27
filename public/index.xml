@@ -39,6 +39,121 @@
     </item>
     
     <item>
+      <title>go-micro使用kubernetes注册中心</title>
+      <link>http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/</link>
+      <pubDate>Thu, 27 Jun 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/</guid>
+      
+        <description>&lt;p&gt;&lt;code&gt;go-micro&lt;/code&gt;部署到&lt;code&gt;kubernetes&lt;/code&gt;环境，可以选择&lt;code&gt;kubernetes&lt;/code&gt;注册中心插件，减少组件依赖简化运维。&lt;/p&gt;
+
+&lt;h1 id=&#34;主要工作&#34;&gt;主要工作&lt;/h1&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;部署示例&lt;a href=&#34;https://github.com/hb-go/micro/tree/master/k8s&#34;&gt;hb-go/micro&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;micro&lt;/code&gt;选择自己编译，而不是直接&lt;code&gt;go get -u github.com/micro/micro&lt;/code&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;自定义选择插件的支持&lt;/li&gt;
+&lt;li&gt;自己发布镜像，官方&lt;code&gt;microhq/micro&lt;/code&gt;上的镜像没有版本，容易出现兼容问题&lt;/li&gt;
+&lt;li&gt;另外非常重要的一点&lt;strong&gt;保证本地与线上&lt;code&gt;micro&lt;/code&gt;的一致&lt;/strong&gt;，只需要替换注册中心&lt;code&gt;--registry=kubernetes&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;go build&lt;/code&gt;打包服务时增加&lt;code&gt;kubernetes&lt;/code&gt;插件&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;import (
+	_ &amp;quot;github.com/micro/go-plugins/registry/kubernetes&amp;quot;
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&#34;rbac问题&#34;&gt;RBAC问题&lt;/h1&gt;
+
+&lt;p&gt;如果&lt;code&gt;kubernetes&lt;/code&gt;开启了&lt;code&gt;RBAC&lt;/code&gt;，在部署服务时需要配置&lt;code&gt;RBAC&lt;/code&gt;，包括&lt;code&gt;micro web&lt;/code&gt;、&lt;code&gt;micro api&lt;/code&gt;服务，否则服务注册/发现将失败&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;2019/06/27 12:54:13 K8s: request failed with code 403
+2019/06/27 12:54:13 K8s: request failed with body:
+2019/06/27 12:54:13 {&amp;quot;kind&amp;quot;:&amp;quot;Status&amp;quot;,&amp;quot;apiVersion&amp;quot;:&amp;quot;v1&amp;quot;,&amp;quot;metadata&amp;quot;:{},&amp;quot;status&amp;quot;:&amp;quot;Failure&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;pods \&amp;quot;micro-web-79545546b4-p5vbt\&amp;quot; is forbidden: User \&amp;quot;system:serviceaccount:default:default\&amp;quot; cannot patch resource \&amp;quot;pods\&amp;quot; in API group \&amp;quot;\&amp;quot; in the namespace \&amp;quot;default\&amp;quot;&amp;quot;,&amp;quot;reason&amp;quot;:&amp;quot;Forbidden&amp;quot;,&amp;quot;details&amp;quot;:{&amp;quot;name&amp;quot;:&amp;quot;micro-web-79545546b4-p5vbt&amp;quot;,&amp;quot;kind&amp;quot;:&amp;quot;pods&amp;quot;},&amp;quot;code&amp;quot;:403}
+2019/06/27 12:54:13 Server register error: K8s: error
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;rbac-yaml&#34;&gt;RBAC yaml&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: micro-services
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: micro-registry
+rules:
+- apiGroups:
+  - &amp;quot;&amp;quot;
+  resources:
+  - pods
+  verbs:
+  - list
+  - patch
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: micro-registry
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: micro-registry
+subjects:
+- kind: ServiceAccount
+  name: micro-services
+  namespace: default
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;服务指定service-account&#34;&gt;服务指定Service Account&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: micro-api
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: micro-api
+    spec:
++     serviceAccountName: micro-services
+      containers:
+      - name: api
+        command: [
+          &amp;quot;/micro&amp;quot;,
+          &amp;quot;--registry=kubernetes&amp;quot;,
+          &amp;quot;--server=rpc&amp;quot;,
+          &amp;quot;--broker=http&amp;quot;,
+          &amp;quot;--transport=http&amp;quot;,
+          &amp;quot;--register_ttl=60&amp;quot;,
+          &amp;quot;--register_interval=30&amp;quot;,
+          &amp;quot;--selector=cache&amp;quot;,
+          &amp;quot;--enable_stats&amp;quot;,
+          &amp;quot;api&amp;quot;
+        ]
+        image: hbchen/micro:k8s
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: api-port
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【go-micro】服务间通信插件Benchmark</title>
       <link>http://hbchen.com/post/microservice/2019-05-31-go-micro-benchmark/</link>
       <pubDate>Fri, 31 May 2019 00:00:00 +0000</pubDate>
@@ -3030,7 +3145,7 @@ curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-t
       
         <description>&lt;p&gt;将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp;amp; client插件，去掉在istio中不需要的组件依赖。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro-istio.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-go/micro/master/doc/img/micro-istio.png&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&#34;https://github.com/hb-go/micro-plugins&#34;&gt;hb-go/micro-plugins&lt;/a&gt;实现了gRPC、http的Istio版本Plugin，下面介绍如何使用。&lt;/p&gt;
 
@@ -3728,360 +3843,6 @@ brew php54-mongo
 extension=&amp;quot;/usr/local/Cellar/php54-mongo/1.4.5/mongo.so&amp;quot;
 
 #启动/重启Php环境
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>BAE Cache&amp;Redis实现ThinkPHP的Cache驱动</title>
-      <link>http://hbchen.com/post/2014-03-06-bae-redisshi-xian-thinkphpcache/</link>
-      <pubDate>Thu, 06 Mar 2014 19:00:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2014-03-06-bae-redisshi-xian-thinkphpcache/</guid>
-      
-        <description>&lt;p&gt;在BAE环境下有单独的Cache，同时也有Redis，可以同时用来做不同的Cache服务，先从Redis开始&lt;/p&gt;
-
-&lt;p&gt;1、Redis相关配置&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;//conf.php
-#BAE API Key与Secret Key
-&#39;BAE_AK&#39; 	=&amp;gt; &#39;XXX&#39;,
-&#39;BAE_SK&#39;	=&amp;gt; &#39;XXX&#39;,
-
-#BAE Redis扩展配置
-&#39;BAE_REDIS_HOST&#39;   =&amp;gt;	&#39;redis.duapp.com&#39;,
-&#39;BAE_REDIS_PORT&#39;   =&amp;gt;	80,
-&#39;BAE_REDIS_DBNAME&#39; =&amp;gt;	&#39;XXX&#39;,
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以选择将Redis是否设为默认缓存，如果不是，使用时注意切换&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$cache = Cache::getInstance(&#39;Baeredis&#39;,array());
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;2、Redis Cache 驱动&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;//CacheBaeredis.class.php
-#根据CacheRedis.class.php修改
-
-&amp;lt;?php
-
-defined(&#39;THINK_PATH&#39;) or exit();
-
-
-class CacheBaeredis extends Cache {
-	 /**
-	 * 架构函数
-     * @param array $options 缓存参数
-     * @access public
-     */
-    public function __construct($options=array()) {
-        if ( !extension_loaded(&#39;redis&#39;) ) {
-            throw_exception(L(&#39;_NOT_SUPPERT_&#39;).&#39;:redis&#39;);
-        }
-        if(empty($options)) {
-            $options = array (
-                &#39;host&#39;          =&amp;gt; C(&#39;BAE_REDIS_HOST&#39;) ? C(&#39;BAE_REDIS_HOST&#39;) : &#39;127.0.0.1&#39;,
-                &#39;port&#39;          =&amp;gt; C(&#39;BAE_REDIS_PORT&#39;) ? C(&#39;BAE_REDIS_PORT&#39;) : 80,
-                &#39;timeout&#39;       =&amp;gt; C(&#39;DATA_CACHE_TIMEOUT&#39;) ? C(&#39;DATA_CACHE_TIMEOUT&#39;) : false,
-                &#39;persistent&#39;    =&amp;gt; false,
-            );
-        }
-        $this-&amp;gt;options =  $options;
-        $this-&amp;gt;options[&#39;expire&#39;] =  isset($options[&#39;expire&#39;])?  $options[&#39;expire&#39;]  :   C(&#39;DATA_CACHE_TIME&#39;);
-        $this-&amp;gt;options[&#39;prefix&#39;] =  isset($options[&#39;prefix&#39;])?  $options[&#39;prefix&#39;]  :   C(&#39;DATA_CACHE_PREFIX&#39;);        
-        $this-&amp;gt;options[&#39;length&#39;] =  isset($options[&#39;length&#39;])?  $options[&#39;length&#39;]  :   0;        
-            
-        try {
-            /*建立连接后，在进行集合操作前，需要先进行auth验证*/
-            $this-&amp;gt;handler = new Redis();
-            $ret;
-            if ($options[&#39;timeout&#39;] === false) {
-                $ret = $this-&amp;gt;handler-&amp;gt;connect($options[&#39;host&#39;], $options[&#39;port&#39;]);
-            }
-            else {
-                $ret = $this-&amp;gt;handler-&amp;gt;connect($options[&#39;host&#39;], $options[&#39;port&#39;], $options[&#39;timeout&#39;]);
-            }
-
-            if ($ret === false) {
-                throw new RedisException($this-&amp;gt;handler-&amp;gt;getLastError());
-            }
-
-            $user = C(&#39;BAE_AK&#39;);
-            $pwd = C(&#39;BAE_SK&#39;);
-            $dbname = C(&#39;BAE_REDIS_DBNAME&#39;);
-
-            $ret = $this-&amp;gt;handler-&amp;gt;auth($user . &amp;quot;-&amp;quot; . $pwd . &amp;quot;-&amp;quot; . $dbname);
-            if ($ret === false) {
-                throw new RedisException($this-&amp;gt;handler-&amp;gt;getLastError());
-            }
-         
-        } catch (RedisException $e) {
-            throw_exception(&#39;BAE Redis:&#39;.$e-&amp;gt;getMessage());
-        }
-
-
-    }
-
-    /**
-     * 读取缓存
-     * @access public
-     * @param string $name 缓存变量名
-     * @return mixed
-     */
-    public function get($name) {
-        N(&#39;cache_read&#39;,1);
-        $value = $this-&amp;gt;handler-&amp;gt;get($this-&amp;gt;options[&#39;prefix&#39;].$name);
-        $jsonData  = json_decode( $value, true );
-        return ($jsonData === NULL) ? $value : $jsonData;	//检测是否为JSON数据 true 返回JSON解析数组, false返回源数据
-    }
-
-    /**
-     * 写入缓存
-     * @access public
-     * @param string $name 缓存变量名
-     * @param mixed $value  存储数据
-     * @param integer $expire  有效时间（秒）
-     * @return boolen
-     */
-    public function set($name, $value, $expire = null) {
-        N(&#39;cache_write&#39;,1);
-        if(is_null($expire)) {
-            $expire  =  $this-&amp;gt;options[&#39;expire&#39;];
-        }
-        $name   =   $this-&amp;gt;options[&#39;prefix&#39;].$name;
-        //对数组/对象数据进行缓存处理，保证数据完整性
-        $value  =  (is_object($value) || is_array($value)) ? json_encode($value) : $value;
-
-        //相对CacheRedis的驱动增加了expire&amp;gt;0的判断
-        if(is_int($expire) &amp;amp; $expire &amp;gt; 0) {
-            $result = $this-&amp;gt;handler-&amp;gt;setex($name, $expire, $value);
-        }else{
-            $result = $this-&amp;gt;handler-&amp;gt;set($name, $value);
-        }
-        if($result &amp;amp;&amp;amp; $this-&amp;gt;options[&#39;length&#39;]&amp;gt;0) {
-            // 记录缓存队列
-            $this-&amp;gt;queue($name);
-        }
-        return $result;
-    }
-
-    /**
-     * 删除缓存
-     * @access public
-     * @param string $name 缓存变量名
-     * @return boolen
-     */
-    public function rm($name) {
-        return $this-&amp;gt;handler-&amp;gt;delete($this-&amp;gt;options[&#39;prefix&#39;].$name);
-    }
-
-    /**
-     * 清除缓存
-     * @access public
-     * @return boolen
-     */
-    public function clear() {
-        return $this-&amp;gt;handler-&amp;gt;flushDB();
-    }
-
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;3、BAE Cache驱动及配置&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;#配置
-#BAE API Key与Secret Key，前面已经有配置
-&#39;BAE_AK&#39; 	=&amp;gt; &#39;XXX&#39;,
-&#39;BAE_SK&#39;	=&amp;gt; &#39;XXX&#39;,
-
-#设置自己的CacheID（资源名称）、Host和Port
-&#39;DATA_CACHE_TYPE&#39; 	=&amp;gt; &#39;Bae&#39;,		//设为默认
-&#39;DATA_CACHE_ID&#39;		=&amp;gt;	&#39;XXX&#39;,
-&#39;MEMCACHE_HOST&#39;		=&amp;gt;	&#39;cache.duapp.com&#39;,
-&#39;MEMCACHE_PORT&#39;		=&amp;gt;	000,
-
-
-#require_once(BAE_API_ROOT_PATH . &#39;BaeMemcache.class.php&#39;);
-#需要BAE相关的驱动文件，可以在index.php入口中添加Root Path方便使用，也可以自己修改定义
-define(&#39;BAE_API_ROOT_PATH&#39;, &#39;你的BAE驱动文件路径&#39;);
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;//CacheBae.class.php
-&amp;lt;?php
-class CacheBae extends Cache {
-
-    static $_cache;
-    private $_handler;
-   
-    /**
-     +----------------------------------------------------------
-     * 架构函数
-     +----------------------------------------------------------
-     * @access public
-     +----------------------------------------------------------
-     */
-    public function __construct($options=&#39;&#39;) {
-        if(!empty($options)) {
-            $this-&amp;gt;options =  $options;
-        }
-        $this-&amp;gt;options[&#39;expire&#39;] = isset($options[&#39;expire&#39;])?$options[&#39;expire&#39;]:C(&#39;DATA_CACHE_TIME&#39;);
-        $this-&amp;gt;options[&#39;length&#39;]  =  isset($options[&#39;length&#39;])?$options[&#39;length&#39;]:0;
-        $this-&amp;gt;options[&#39;queque&#39;]  =  &#39;bae&#39;;
-        $this-&amp;gt;init();
-    }
-
-    /**
-     +----------------------------------------------------------
-     * 初始化检查
-     +----------------------------------------------------------
-     * @access private
-     +----------------------------------------------------------
-     * @return boolen
-     +----------------------------------------------------------
-     */
-    private function init() {
-    	require_once(BAE_API_ROOT_PATH . &#39;BaeMemcache.class.php&#39;);
-    	/*Cache配置信息，可查询Cache详情页*/
-    	$cacheid = C(&#39;DATA_CACHE_ID&#39;);
-    	$host = C(&#39;MEMCACHE_HOST&#39;);
-    	$port = C(&#39;MEMCACHE_PORT&#39;);
-    	$user = C(&#39;BAE_AK&#39;);
-    	$pwd = C(&#39;BAE_SK&#39;);
-
-		$this-&amp;gt;_handler = new BaeMemcache($cacheid,$host. &#39;: &#39;. $port, $user, $pwd);
-		$this-&amp;gt;connected = true;
-    }
-
-    /**
-     +----------------------------------------------------------
-     * 是否连接
-     +----------------------------------------------------------
-     * @access public
-     +----------------------------------------------------------
-     * @return boolen
-     +----------------------------------------------------------
-     */
-    private function isConnected() {
-        return $this-&amp;gt;connected;
-    }
-    /**
-     +----------------------------------------------------------
-     * 读取缓存
-     +----------------------------------------------------------
-     * @access public
-     +----------------------------------------------------------
-     * @param string $name 缓存变量名
-     +----------------------------------------------------------
-     * @return mixed
-     +----------------------------------------------------------
-     */
-    public function get($name) {
-        N(&#39;cache_read&#39;,1);
-	$content = $this-&amp;gt;_handler-&amp;gt;get($name);
-	if(false !== $content ){
-            if(C(&#39;DATA_CACHE_COMPRESS&#39;) &amp;amp;&amp;amp; function_exists(&#39;gzcompress&#39;)) {
-		$content = substr($content,0,-1);  //remvoe \0 in the end
-	    }
-            if(C(&#39;DATA_CACHE_CHECK&#39;)) {//开启数据校验
-                $check  =  substr($content,0, 32);
-                $content   =  substr($content,32);
-                if($check != md5($content)) {//校验错误
-                    return false;
-                }
-            }
-            if(C(&#39;DATA_CACHE_COMPRESS&#39;) &amp;amp;&amp;amp; function_exists(&#39;gzcompress&#39;)) {
-                //启用数据压缩
-                $content   =   gzuncompress($content);
-            }
-            $content    =   unserialize($content);
-	    return $content;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /**
-     +----------------------------------------------------------
-     * 写入缓存
-     +----------------------------------------------------------
-     * @access public
-     +----------------------------------------------------------
-     * @param string $name 缓存变量名
-     * @param mixed $value  存储数据
-     * @param int $expire  有效时间 0为永久
-     +----------------------------------------------------------
-     * @return boolen
-     +----------------------------------------------------------
-     */
-    public function set($name,$value,$expire=null) {
-        N(&#39;cache_write&#39;,1);
-        if(is_null($expire)) {
-            $expire =  $this-&amp;gt;options[&#39;expire&#39;];
-        }
-        $data   =   serialize($value);
-        if( C(&#39;DATA_CACHE_COMPRESS&#39;) &amp;amp;&amp;amp; function_exists(&#39;gzcompress&#39;)) {
-            //数据压缩
-        //    $data   =   gzcompress($data,3);
-	      $data =  gzencode($data) . &amp;quot;\0&amp;quot;;
-        }
-        if(C(&#39;DATA_CACHE_CHECK&#39;)) {//开启数据校验
-            $check  =  md5($data);
-        }else {
-            $check  =  &#39;&#39;;
-        }
-	$data = $check.$data;
-	$result =  $this-&amp;gt;_handler-&amp;gt;set($name,$data,0,intval($expire));
-        if($result) {
-            if($this-&amp;gt;options[&#39;length&#39;]&amp;gt;0) {
-                // 记录缓存队列
-                $this-&amp;gt;queue($name);
-            }
-	    return true;
-        }else {
-            return false;
-        }
-    }
-
-    /**
-     +----------------------------------------------------------
-     * 删除缓存
-     +----------------------------------------------------------
-     * @access public
-     +----------------------------------------------------------
-     * @param string $name 缓存变量名
-     +----------------------------------------------------------
-     * @return boolen
-     +----------------------------------------------------------
-     */
-    public function rm($name) {
-        return $this-&amp;gt;_handler-&amp;gt;delete($name);
-    }
-    static function queueSet($name,$value)
-    {
-	$h = new BaeMemcache();
-	if ( $h-&amp;gt;set($name,$value) ){
-		self::$_cache = array($name =&amp;gt; $value);
-	}
-    }
-    static function queueGet($name)
-    {
-	if(isset(self::$_cache[$name]))
-		return self::$_cache[$name];
-	$h = new BaeMemcache();
-	$r = $h-&amp;gt;get($name);
-	if ( false === $r ){
-		return false;
-	}
-	self::$_cache[$name] = $r;
-	return $r;
-    }
-
-}
-
 &lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>

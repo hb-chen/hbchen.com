@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Fri, 31 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 27 Jun 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/go-micro/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>go-micro使用kubernetes注册中心</title>
+      <link>http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/</link>
+      <pubDate>Thu, 27 Jun 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/</guid>
+      <description>&lt;p&gt;&lt;code&gt;go-micro&lt;/code&gt;部署到&lt;code&gt;kubernetes&lt;/code&gt;环境，可以选择&lt;code&gt;kubernetes&lt;/code&gt;注册中心插件，减少组件依赖简化运维。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【go-micro】服务间通信插件Benchmark</title>

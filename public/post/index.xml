@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Fri, 31 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 27 Jun 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>go-micro使用kubernetes注册中心</title>
+      <link>http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/</link>
+      <pubDate>Thu, 27 Jun 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/</guid>
+      <description>&lt;p&gt;&lt;code&gt;go-micro&lt;/code&gt;部署到&lt;code&gt;kubernetes&lt;/code&gt;环境，可以选择&lt;code&gt;kubernetes&lt;/code&gt;注册中心插件，减少组件依赖简化运维。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【go-micro】服务间通信插件Benchmark</title>
@@ -228,21 +237,6 @@ vi /usr/local/etc/mongod.conf
 &#39;BAE_REDIS_DBNAME&#39; =&amp;gt;	&#39;XXX&#39;,
 
 &lt;/code&gt;&lt;/pre&gt;</description>
-    </item>
-    
-    <item>
-      <title>WAMP&#43;ThinkPHP配置</title>
-      <link>http://hbchen.com/post/2014-03-05-wamppei-zhi/</link>
-      <pubDate>Wed, 05 Mar 2014 18:30:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2014-03-05-wamppei-zhi/</guid>
-      <description>&lt;p&gt;配置ThinkPHP开发环境&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;开启Rewrite支持.htaccess&lt;/li&gt;
-&lt;li&gt;自定义工程路径&lt;/li&gt;
-&lt;li&gt;自定义本地域名访问&lt;/li&gt;
-&lt;/ol&gt;</description>
     </item>
     
   </channel>

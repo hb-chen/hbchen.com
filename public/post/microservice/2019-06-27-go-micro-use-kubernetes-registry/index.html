@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>go-micro加入Istio服务网格 - Hobo&#39;s Blog - 技术实践</title>
+  <title>go-micro使用kubernetes注册中心 - Hobo&#39;s Blog - 技术实践</title>
   <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
 
 <meta name="renderer" content="webkit" />
@@ -19,7 +19,7 @@
 
 
 <meta name="author" content="Hobo Chen" />
-  <meta name="description" content="将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp;amp; client插件，去掉在istio中不需要的组件依赖。
+  <meta name="description" content="go-micro部署到kubernetes环境，可以选择kubernetes注册中心插件，减少组件依赖简化运维。
 " />
 
   <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
@@ -32,7 +32,7 @@
 <meta name="generator" content="Hugo 0.53" />
 
 
-<link rel="canonical" href="http://hbchen.com/post/2019-01-08-go-micro%E5%8A%A0%E5%85%A5istio%E6%9C%8D%E5%8A%A1%E7%BD%91%E6%A0%BC/" />
+<link rel="canonical" href="http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/" />
 
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -50,26 +50,26 @@
 
 
 
-<meta property="og:title" content="go-micro加入Istio服务网格" />
-<meta property="og:description" content="将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp; client插件，去掉在istio中不需要的组件依赖。" />
+<meta property="og:title" content="go-micro使用kubernetes注册中心" />
+<meta property="og:description" content="go-micro部署到kubernetes环境，可以选择kubernetes注册中心插件，减少组件依赖简化运维。" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://hbchen.com/post/2019-01-08-go-micro%E5%8A%A0%E5%85%A5istio%E6%9C%8D%E5%8A%A1%E7%BD%91%E6%A0%BC/" /><meta property="article:published_time" content="2019-02-21T16:59:37&#43;08:00"/>
-<meta property="article:modified_time" content="2019-02-21T16:59:37&#43;08:00"/>
+<meta property="og:url" content="http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/" /><meta property="article:published_time" content="2019-06-27T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-06-27T00:00:00&#43;00:00"/>
 
-<meta itemprop="name" content="go-micro加入Istio服务网格">
-<meta itemprop="description" content="将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp; client插件，去掉在istio中不需要的组件依赖。">
-
-
-<meta itemprop="datePublished" content="2019-02-21T16:59:37&#43;08:00" />
-<meta itemprop="dateModified" content="2019-02-21T16:59:37&#43;08:00" />
-<meta itemprop="wordCount" content="711">
+<meta itemprop="name" content="go-micro使用kubernetes注册中心">
+<meta itemprop="description" content="go-micro部署到kubernetes环境，可以选择kubernetes注册中心插件，减少组件依赖简化运维。">
 
 
+<meta itemprop="datePublished" content="2019-06-27T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-06-27T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="463">
 
-<meta itemprop="keywords" content="微服务,Service Mesh,istio,go-micro," />
+
+
+<meta itemprop="keywords" content="go-micro,微服务," />
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="go-micro加入Istio服务网格"/>
-<meta name="twitter:description" content="将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp; client插件，去掉在istio中不需要的组件依赖。"/>
+<meta name="twitter:title" content="go-micro使用kubernetes注册中心"/>
+<meta name="twitter:description" content="go-micro部署到kubernetes环境，可以选择kubernetes注册中心插件，减少组件依赖简化运维。"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -140,19 +140,17 @@
           <article class="post bg-white">
     
     <header class="post-header">
-      <h1 class="post-title">go-micro加入Istio服务网格</h1>
+      <h1 class="post-title">go-micro使用kubernetes注册中心</h1>
 
       <div class="post-meta">
-        <span class="post-time"> 2019-02-21 </span>
+        <span class="post-time"> 2019-06-27 </span>
         <div class="post-category">
             
               <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
             
-              <a href="/categories/service-mesh/"> Service Mesh </a>
-            
           </div>
-        <span class="more-meta"> 约 711 字 </span>
-        <span class="more-meta"> 预计阅读 2 分钟 </span>
+        <span class="more-meta"> 约 463 字 </span>
+        <span class="more-meta"> 预计阅读 1 分钟 </span>
       </div>
     </header>
 
@@ -164,20 +162,11 @@
   <div class="post-toc-content">
     <nav id="TableOfContents">
 <ul>
-<li>
+<li><a href="#主要工作">主要工作</a></li>
+<li><a href="#rbac问题">RBAC问题</a>
 <ul>
-<li>
-<ul>
-<li>
-<ul>
-<li>
-<ul>
-<li><a href="#命令行参数">命令行参数</a></li>
-<li><a href="#自定义server-client插件-创建服务">自定义server、client插件，创建服务</a></li>
-<li><a href="#服务部署-yaml">服务部署.yaml</a></li>
-</ul></li>
-</ul></li>
-</ul></li>
+<li><a href="#rbac-yaml">RBAC yaml</a></li>
+<li><a href="#服务指定service-account">服务指定Service Account</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -186,136 +175,110 @@
 
     
     <div class="post-content">
-      <p>将go-micro服务加入service mesh，Client、Server不需要Registry、Selector、Transport等，通过自定义micro的server &amp; client插件，去掉在istio中不需要的组件依赖。</p>
+      <p><code>go-micro</code>部署到<code>kubernetes</code>环境，可以选择<code>kubernetes</code>注册中心插件，减少组件依赖简化运维。</p>
 
-<p><img src="https://raw.githubusercontent.com/hb-go/micro/master/doc/img/micro-istio.png" alt="go-micro" /></p>
-
-<p><a href="https://github.com/hb-go/micro-plugins">hb-go/micro-plugins</a>实现了gRPC、http的Istio版本Plugin，下面介绍如何使用。</p>
+<h1 id="主要工作">主要工作</h1>
 
 <blockquote>
-<p>完整示例参考<a href="https://github.com/hb-go/micro/tree/master/istio">hb-go/micro/istio</a>，示例包括http、gRPC</p>
-</blockquote>
-
-<h5 id="命令行参数">命令行参数</h5>
-
-<p>方便服务运行时指定端口，在命令行获取服务server、client端口配置，参数根据具体情况自行设计</p>
-
-<blockquote>
-<p>在服务网格中我倾向统一上下游服务端口，避免不必要的配置以及因此引发的冲突问题</p>
+<p>部署示例<a href="https://github.com/hb-go/micro/tree/master/k8s">hb-go/micro</a></p>
 </blockquote>
 
 <ul>
-<li>Client端服务地址<code>CallOptions.Address</code>解析规则：
+<li><p><code>micro</code>选择自己编译，而不是直接<code>go get -u github.com/micro/micro</code></p>
 
 <ul>
-<li><code>:</code>开头，将<code>service.Name</code>中<code>.</code>替换为<code>-</code>，加<code>CallOptions.Address</code>，如<code>go.micro.api.sample</code> <code>:9080</code> =&gt; <code>go-micro-api-sample:9080</code></li>
-<li>非<code>:</code>开头，固定地址</li>
+<li>自定义选择插件的支持</li>
+<li>自己发布镜像，官方<code>microhq/micro</code>上的镜像没有版本，容易出现兼容问题</li>
+<li>另外非常重要的一点<strong>保证本地与线上<code>micro</code>的一致</strong>，只需要替换注册中心<code>--registry=kubernetes</code></li>
 </ul></li>
-</ul>
 
-<pre><code class="language-go">var (
-	serverAddr string
-	callAddr   string
-	cmdHelp    bool
-)
-
-func init() {
-	flag.StringVar(&amp;serverAddr, &quot;server_address&quot;, &quot;0.0.0.0:9080&quot;, &quot;server address.&quot;)
-	flag.StringVar(&amp;callAddr, &quot;client_call_address&quot;, &quot;:9080&quot;, &quot;client call options address.&quot;)
-	flag.Parse()
-}
-</code></pre>
-
-<h5 id="自定义server-client插件-创建服务">自定义server、client插件，创建服务</h5>
-
-<blockquote>
-<p>由于micro框架对命令行的解析问题，创建服务时需要增加<code>micro.Flags(...)</code>，兼容自定义参数，如:<code>client_call_address</code></p>
-</blockquote>
+<li><p><code>go build</code>打包服务时增加<code>kubernetes</code>插件</p>
 
 <pre><code class="language-go">import (
-	httpClient &quot;github.com/hb-go/micro-plugins/client/istio_http&quot;
-	httpServer &quot;github.com/hb-go/micro-plugins/server/istio_http&quot;
+	_ &quot;github.com/micro/go-plugins/registry/kubernetes&quot;
 )
+</code></pre></li>
+</ul>
 
-func main() {
-	c := httpClient.NewClient(
-		client.ContentType(&quot;application/json&quot;),
-		func(o *client.Options) {
-			o.CallOptions.Address = callAddr
-		},
-	)
-	s := httpServer.NewApiServer(
-		server.Address(serverAddr),
-	)
+<h1 id="rbac问题">RBAC问题</h1>
 
-	// New Service
-	service := micro.NewService(
-		micro.Name(&quot;go.micro.api.sample&quot;),
-		micro.Version(&quot;latest&quot;),
-		micro.Registry(noop.NewRegistry()),
-		micro.Client(c),
-		micro.Server(s),
+<p>如果<code>kubernetes</code>开启了<code>RBAC</code>，在部署服务时需要配置<code>RBAC</code>，包括<code>micro web</code>、<code>micro api</code>服务，否则服务注册/发现将失败</p>
 
-		// 兼容micro cmd parse
-		micro.Flags(cli.StringFlag{
-			Name:   &quot;client_call_address&quot;,
-			EnvVar: &quot;MICRO_CLIENT_CALL_ADDRESS&quot;,
-			Usage:  &quot; Invalid!!!&quot;,
-		}),
-	)
-
-	service.Options().Cmd.Init()
-	
-	// ……
-}
+<pre><code class="language-bash">2019/06/27 12:54:13 K8s: request failed with code 403
+2019/06/27 12:54:13 K8s: request failed with body:
+2019/06/27 12:54:13 {&quot;kind&quot;:&quot;Status&quot;,&quot;apiVersion&quot;:&quot;v1&quot;,&quot;metadata&quot;:{},&quot;status&quot;:&quot;Failure&quot;,&quot;message&quot;:&quot;pods \&quot;micro-web-79545546b4-p5vbt\&quot; is forbidden: User \&quot;system:serviceaccount:default:default\&quot; cannot patch resource \&quot;pods\&quot; in API group \&quot;\&quot; in the namespace \&quot;default\&quot;&quot;,&quot;reason&quot;:&quot;Forbidden&quot;,&quot;details&quot;:{&quot;name&quot;:&quot;micro-web-79545546b4-p5vbt&quot;,&quot;kind&quot;:&quot;pods&quot;},&quot;code&quot;:403}
+2019/06/27 12:54:13 Server register error: K8s: error
 </code></pre>
 
-<h5 id="服务部署-yaml">服务部署.yaml</h5>
+<h2 id="rbac-yaml">RBAC yaml</h2>
 
-<blockquote>
-<p>其它Istio相关.yaml参考完整示例<a href="https://github.com/hb-go/micro/tree/master/istio/k8s">hb-go/micro/istio/k8s</a></p>
-</blockquote>
-
-<pre><code class="language-yaml">######################################################################################
-# API service
-######################################################################################
-apiVersion: v1
-kind: Service
+<pre><code class="language-yaml">apiVersion: v1
+kind: ServiceAccount
 metadata:
-  name: go-micro-api-sample
-  labels:
-    app: go-micro-api-sample
-spec:
-  ports:
-  - port: 9080
-    name: http
-  selector:
-    app: go-micro-api-sample
+  name: micro-services
 ---
-apiVersion: extensions/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: micro-registry
+rules:
+- apiGroups:
+  - &quot;&quot;
+  resources:
+  - pods
+  verbs:
+  - list
+  - patch
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: micro-registry
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: micro-registry
+subjects:
+- kind: ServiceAccount
+  name: micro-services
+  namespace: default
+</code></pre>
+
+<h2 id="服务指定service-account">服务指定Service Account</h2>
+
+<pre><code class="language-yaml">apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: go-micro-api-sample-v1
+  namespace: default
+  name: micro-api
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: go-micro-api-sample
-        version: v1
+        name: micro-api
     spec:
++     serviceAccountName: micro-services
       containers:
-      - name: go-micro-api-sample
+      - name: api
         command: [
-          &quot;/sample&quot;,
-          &quot;-server_address=0.0.0.0:9080&quot;,
-          &quot;-client_call_address=:9080&quot;,
+          &quot;/micro&quot;,
+          &quot;--registry=kubernetes&quot;,
+          &quot;--server=rpc&quot;,
+          &quot;--broker=http&quot;,
+          &quot;--transport=http&quot;,
+          &quot;--register_ttl=60&quot;,
+          &quot;--register_interval=30&quot;,
+          &quot;--selector=cache&quot;,
+          &quot;--enable_stats&quot;,
+          &quot;api&quot;
         ]
-        image: hbchen/go-micro-istio-api-sample:v0.0.5
-        imagePullPolicy: IfNotPresent
+        image: hbchen/micro:k8s
+        imagePullPolicy: Always
         ports:
-        - containerPort: 9080
----
+        - containerPort: 8080
+          name: api-port
 </code></pre>
     </div>
 
@@ -328,7 +291,7 @@ spec:
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2019-02-21</span>
+    <span class="item-content">2019-06-27</span>
   </p>
   
   <p class="copyright-item">
@@ -343,27 +306,18 @@ spec:
     <footer class="post-footer">
       <div class="post-tags">
           
-          <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a>
-          
-          <a href="/tags/service-mesh/">Service Mesh</a>
-          
-          <a href="/tags/istio/">istio</a>
-          
           <a href="/tags/go-micro/">go-micro</a>
+          
+          <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a>
           
         </div>
 
       
       <nav class="post-nav">
         
-          <a class="prev" href="/post/2019-03-05-custom-istio-mixer-adapter/">
-            <i class="iconfont icon-left"></i>
-            <span class="prev-text nav-default">【Istio】自定义 Mixer Adapter示例教程(附源码)</span>
-            <span class="prev-text nav-mobile">上一篇</span>
-          </a>
         
-          <a class="next" href="/post/2018-10-24-spark-elasticsearch-recommender/">
-            <span class="next-text nav-default">Spark &#43; Elasticsearch构建推荐系统</span>
+          <a class="next" href="/post/microservice/2019-05-31-go-micro-benchmark/">
+            <span class="next-text nav-default">【go-micro】服务间通信插件Benchmark</span>
             <span class="prev-text nav-mobile">下一篇</span>
             <i class="iconfont icon-right"></i>
           </a>
