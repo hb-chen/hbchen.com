@@ -10,6 +10,13 @@
   </url>
   
   <url>
+    <loc>http://hbchen.com/post/servicemesh/2019-08-30-mesh-grpc-01/</loc>
+    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/</loc>
     <lastmod>2019-06-27T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -247,6 +254,13 @@
   </url>
   
   <url>
+    <loc>http://hbchen.com/tags/gateway/</loc>
+    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>http://hbchen.com/tags/git/</loc>
     <lastmod>2014-10-17T13:29:00+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -289,6 +303,13 @@
   </url>
   
   <url>
+    <loc>http://hbchen.com/tags/grpc/</loc>
+    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>http://hbchen.com/</loc>
     <lastmod>2017-08-28T21:41:52+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -297,7 +318,7 @@
   
   <url>
     <loc>http://hbchen.com/tags/istio/</loc>
-    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -325,7 +346,7 @@
   
   <url>
     <loc>http://hbchen.com/post/</loc>
-    <lastmod>2019-06-27T00:00:00+00:00</lastmod>
+    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -367,14 +388,14 @@
   
   <url>
     <loc>http://hbchen.com/tags/service-mesh/</loc>
-    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://hbchen.com/categories/service-mesh/</loc>
-    <lastmod>2019-05-11T00:00:00+00:00</lastmod>
+    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>

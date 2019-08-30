@@ -136,6 +136,35 @@
     
       <article class="post bg-white">
   <header class="post-header">
+    <h1 class="post-title"><a class="post-link" href="/post/servicemesh/2019-08-30-mesh-grpc-01/">【服务网格-gRPC】网关grpc-gateway</a></h1>
+    <div class="post-meta">
+      <span class="post-time"> 2019-08-30 </span>
+      <div class="post-category">
+          
+            <a href="/categories/service-mesh/"> Service Mesh </a>
+          
+        </div>
+      <span class="more-meta"> 约 1458 字 </span>
+      <span class="more-meta"> 预计阅读 3 分钟 </span>
+    </div>
+  </header>
+  
+  <div class="post-content">
+    
+    <div class="post-summary">
+      <p>在网格中使用<code>gRPC</code>可以方便的定义服务，而当需要对外提供服务时往往<code>HTTP</code>接口比较普遍，<code>grpc-gateway</code>提供了<code>RESTful JSON API</code>转<code>gRPC</code>的代理服务。
+在<code>mesh</code>中<code>grpc-gateway</code>的角色更像一个<strong>服务聚合层</strong>，将内部<code>gRPC</code>服务聚合并提供<code>HTTP</code>接口服务，在使用的过程中也遇到些问题，如：进程内路由、Header映射等，这里结合使用经验做个总结。</p>
+    </div>
+    <div class="read-more">
+      <a href="/post/servicemesh/2019-08-30-mesh-grpc-01/" class="read-more-link">阅读全文</a>
+    </div>
+    
+  </div>
+</article>
+
+    
+      <article class="post bg-white">
+  <header class="post-header">
     <h1 class="post-title"><a class="post-link" href="/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/">【go-micro】使用kubernetes注册中心</a></h1>
     <div class="post-meta">
       <span class="post-time"> 2019-06-27 </span>
@@ -297,34 +326,6 @@
     </div>
     <div class="read-more">
       <a href="/post/servicemesh/2019-04-11-istio-security-egress/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
-
-    
-      <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title"><a class="post-link" href="/post/servicemesh/2019-03-31-istio-code-pilot-agent/">【Istio源码】Pilot Agent</a></h1>
-    <div class="post-meta">
-      <span class="post-time"> 2019-04-07 </span>
-      <div class="post-category">
-          
-            <a href="/categories/service-mesh/"> Service Mesh </a>
-          
-        </div>
-      <span class="more-meta"> 约 751 字 </span>
-      <span class="more-meta"> 预计阅读 2 分钟 </span>
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      <p>接上一篇<a href="/post/servicemesh/2019-03-17-istio-code-pilot-discovery/">《【Istio源码】Pilot Discovery》</a>，这篇继续分析<strong>Pilot</strong>的<code>pilot-agent</code>模块。</p>
-    </div>
-    <div class="read-more">
-      <a href="/post/servicemesh/2019-03-31-istio-code-pilot-agent/" class="read-more-link">阅读全文</a>
     </div>
     
   </div>

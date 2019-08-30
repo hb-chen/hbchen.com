@@ -19,7 +19,7 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
 
 > 
 - Istio版本 **1.1.0**
-- 在的[github.com/hb-go/micro-mesh](https://github.com/hb-go/micro-mesh)中有结合示例的[RBAC配置实践](https://github.com/hb-go/micro-mesh/tree/master/deploy/k8s/rbac)可以参考
+- 在的[github.com/hb-go/micro-mesh](https://github.com/hb-go/micro-mesh)中有结合示例的[RBAC配置实践](https://github.com/hb-go/micro-mesh/tree/master/deploy/k8s/istio/rbac)可以参考
 
 
 **要实现`RBAC`主要理解以下几个类型的`yaml`配置，以及之间的关系：**

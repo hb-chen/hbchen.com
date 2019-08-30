@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Thu, 27 Jun 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 30 Aug 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【服务网格-gRPC】网关grpc-gateway</title>
+      <link>http://hbchen.com/post/servicemesh/2019-08-30-mesh-grpc-01/</link>
+      <pubDate>Fri, 30 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-08-30-mesh-grpc-01/</guid>
+      <description>&lt;p&gt;在网格中使用&lt;code&gt;gRPC&lt;/code&gt;可以方便的定义服务，而当需要对外提供服务时往往&lt;code&gt;HTTP&lt;/code&gt;接口比较普遍，&lt;code&gt;grpc-gateway&lt;/code&gt;提供了&lt;code&gt;RESTful JSON API&lt;/code&gt;转&lt;code&gt;gRPC&lt;/code&gt;的代理服务。
+在&lt;code&gt;mesh&lt;/code&gt;中&lt;code&gt;grpc-gateway&lt;/code&gt;的角色更像一个&lt;strong&gt;服务聚合层&lt;/strong&gt;，将内部&lt;code&gt;gRPC&lt;/code&gt;服务聚合并提供&lt;code&gt;HTTP&lt;/code&gt;接口服务，在使用的过程中也遇到些问题，如：进程内路由、Header映射等，这里结合使用经验做个总结。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【go-micro】使用kubernetes注册中心</title>
@@ -212,29 +222,6 @@
 &lt;pre&gt;&lt;code&gt;#mongod.conf
 #dbpath,logpath,bind_ip
 vi /usr/local/etc/mongod.conf
-
-&lt;/code&gt;&lt;/pre&gt;</description>
-    </item>
-    
-    <item>
-      <title>BAE Cache&amp;Redis实现ThinkPHP的Cache驱动</title>
-      <link>http://hbchen.com/post/2014-03-06-bae-redisshi-xian-thinkphpcache/</link>
-      <pubDate>Thu, 06 Mar 2014 19:00:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2014-03-06-bae-redisshi-xian-thinkphpcache/</guid>
-      <description>&lt;p&gt;在BAE环境下有单独的Cache，同时也有Redis，可以同时用来做不同的Cache服务，先从Redis开始&lt;/p&gt;
-
-&lt;p&gt;1、Redis相关配置&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;//conf.php
-#BAE API Key与Secret Key
-&#39;BAE_AK&#39; 	=&amp;gt; &#39;XXX&#39;,
-&#39;BAE_SK&#39;	=&amp;gt; &#39;XXX&#39;,
-
-#BAE Redis扩展配置
-&#39;BAE_REDIS_HOST&#39;   =&amp;gt;	&#39;redis.duapp.com&#39;,
-&#39;BAE_REDIS_PORT&#39;   =&amp;gt;	80,
-&#39;BAE_REDIS_DBNAME&#39; =&amp;gt;	&#39;XXX&#39;,
 
 &lt;/code&gt;&lt;/pre&gt;</description>
     </item>

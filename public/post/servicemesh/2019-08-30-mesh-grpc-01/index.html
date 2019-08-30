@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【服务网格-gRPC】网关grpc-gateway - Hobo&#39;s Blog - 技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="在网格中使用gRPC可以方便的定义服务，而当需要对外提供服务时往往HTTP接口比较普遍，grpc-gateway提供了RESTful JSON API转gRPC的代理服务。 在mesh中grpc-gateway的角色更像一个服务聚合层，将内部gRPC服务聚合并提供HTTP接口服务，在使用的过程中也遇到些问题，如：进程内路由、Header映射等，这里结合使用经验做个总结。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/servicemesh/2019-08-30-mesh-grpc-01/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【服务网格-gRPC】网关grpc-gateway" />
+<meta property="og:description" content="在网格中使用gRPC可以方便的定义服务，而当需要对外提供服务时往往HTTP接口比较普遍，grpc-gateway提供了RESTful JSON API转gRPC的代理服务。
+在mesh中grpc-gateway的角色更像一个服务聚合层，将内部gRPC服务聚合并提供HTTP接口服务，在使用的过程中也遇到些问题，如：进程内路由、Header映射等，这里结合使用经验做个总结。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/servicemesh/2019-08-30-mesh-grpc-01/" /><meta property="article:published_time" content="2019-08-30T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-08-30T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="【服务网格-gRPC】网关grpc-gateway">
+<meta itemprop="description" content="在网格中使用gRPC可以方便的定义服务，而当需要对外提供服务时往往HTTP接口比较普遍，grpc-gateway提供了RESTful JSON API转gRPC的代理服务。
+在mesh中grpc-gateway的角色更像一个服务聚合层，将内部gRPC服务聚合并提供HTTP接口服务，在使用的过程中也遇到些问题，如：进程内路由、Header映射等，这里结合使用经验做个总结。">
+
+
+<meta itemprop="datePublished" content="2019-08-30T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-08-30T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="1458">
+
+
+
+<meta itemprop="keywords" content="Service Mesh,Istio,Gateway,gRPC," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【服务网格-gRPC】网关grpc-gateway"/>
+<meta name="twitter:description" content="在网格中使用gRPC可以方便的定义服务，而当需要对外提供服务时往往HTTP接口比较普遍，grpc-gateway提供了RESTful JSON API转gRPC的代理服务。
+在mesh中grpc-gateway的角色更像一个服务聚合层，将内部gRPC服务聚合并提供HTTP接口服务，在使用的过程中也遇到些问题，如：进程内路由、Header映射等，这里结合使用经验做个总结。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【服务网格-gRPC】网关grpc-gateway</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-08-30 </span>
+        <div class="post-category">
+            
+              <a href="/categories/service-mesh/"> Service Mesh </a>
+            
+          </div>
+        <span class="more-meta"> 约 1458 字 </span>
+        <span class="more-meta"> 预计阅读 3 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li><a href="#接口定义">接口定义</a></li>
+<li><a href="#进程内路由">进程内路由</a></li>
+<li><a href="#header传递">Header传递</a></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>在网格中使用<code>gRPC</code>可以方便的定义服务，而当需要对外提供服务时往往<code>HTTP</code>接口比较普遍，<code>grpc-gateway</code>提供了<code>RESTful JSON API</code>转<code>gRPC</code>的代理服务。
+在<code>mesh</code>中<code>grpc-gateway</code>的角色更像一个<strong>服务聚合层</strong>，将内部<code>gRPC</code>服务聚合并提供<code>HTTP</code>接口服务，在使用的过程中也遇到些问题，如：进程内路由、Header映射等，这里结合使用经验做个总结。</p>
+
+<h1 id="接口定义">接口定义</h1>
+
+<p><code>gRPC</code>的服务定义这里不做过多关联介绍，<code>grpc-gateway</code>协议支持两种方式添加，一是在<code>.proto</code>的服务定义中以<code>option</code>的方式直接绑定；
+二是使用单独的<code>.yaml</code>文件定义。接口定义遵循<a href="https://cloud.google.com/service-infrastructure/docs/service-management/reference/rpc/google.api#http">google.api</a>大家可以参考，
+主要内容在<code>HttpRule</code>，具体字段参考协议<a href="https://github.com/googleapis/googleapis/blob/master/google/api/http.proto">http.proto</a>更清晰，
+比如:<code>response_body</code>在文档中并没有提到，用于选择<code>Response</code>结构的某一字段作为响应内容。</p>
+
+<ul>
+<li><code>grpc-gateway</code>文档参考
+
+<ul>
+<li><a href="https://grpc-ecosystem.github.io/grpc-gateway/docs/usage.html">Usage</a></li>
+<li><a href="https://grpc-ecosystem.github.io/grpc-gateway/docs/grpcapiconfiguration.html">Usage without annotations (gRPC API Configuration)</a></li>
+</ul></li>
+</ul>
+
+<pre><code class="language-yaml">syntax = &quot;proto3&quot;;
+package example;
+
+import &quot;google/api/annotations.proto&quot;;
+
+message StringMessage {
+    string value = 1;
+}
+
+service YourService {
+    rpc Echo (StringMessage) returns (StringMessage) {
+       option (google.api.http) = {
+           post: &quot;/v1/example/echo&quot;
+           body: &quot;*&quot;
+       };
+    }
+}
+</code></pre>
+
+<pre><code class="language-yaml">type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+  - selector: example.YourService.Echo
+    post: /v1/example/echo
+    body: &quot;*&quot;
+</code></pre>
+
+<h1 id="进程内路由">进程内路由</h1>
+
+<p><img src="/img/grpc/grpc-gateway.png" alt="grpc-gateway" />
+<code>grpc-gateway</code>的代理方式是<code>gRPC</code>远程调用，在<code>mesh</code>中有已经有<code>ingress</code>网关，如果继续用<code>rpc</code>调用，
+将在链路上又增加一层网络开销<code>ingress -&gt; grpc-gatewap -&gt; grpc server</code>，而我们的主要目的是将<code>gRPC</code>服务映射成<code>HTTP</code>并不需要其他能力，
+所以我们期望<code>grpc-gateway</code>能够进程将<code>HTTP</code>请求转发给<code>gRPC</code>服务。</p>
+
+<p>针对这一需求需要<code>gRPC</code>服务支持进程内调用，社区现有的方案是<a href="https://github.com/grpc/grpc-go/tree/master/test/bufconn">test/bufconn</a>，
+示例参考<a href="https://github.com/grpc-ecosystem/grpc-gateway/pull/947#issuecomment-502578553">grpc-gateway/pull/947</a>中的讨论。
+至于直接<strong>进程内调</strong><code>Contributor</code>的最新回复是8月份启动<a href="https://github.com/grpc/grpc-go/issues/906#issuecomment-513856927">grpc-go/issues/906</a>。</p>
+
+<p>另一个临时的方案是我提交到<code>grpc-gateway</code>的<code>PR</code> <a href="https://github.com/grpc-ecosystem/grpc-gateway/pull/947">pull/947</a>，已经<code>merge</code>到<code>master</code>，
+但此方案仅支持<code>Unary</code>，不支持<code>Streaming</code>，不过对于网关应该能够满足大部分场景的需求。</p>
+
+<pre><code class="language-go">func RegisterXXXHandlerServer(ctx context.Context, mux *runtime.ServeMux, server XXXServer) error
+</code></pre>
+
+<h1 id="header传递">Header传递</h1>
+
+<p>在<code>tracing</code>等场景我们往往需要将<code>Header</code>信息在服务之间传递，包括<code>RESTful API</code>请求。首先<code>grpc-gateway</code>的<code>NewServeMux()</code>需要<code>runtime.WithMetadata()</code>Option，
+筛选<code>HTTP Header</code>映射为<code>metadata</code>；其次如果是使用<a href="https://github.com/grpc/grpc-go/tree/master/test/bufconn">test/bufconn</a>方案，
+在<code>RegisterXXXHandlerFromEndpoint(...,opts []grpc.DialOption)</code> <code>opts</code>的<code>grpc.WithChainUnaryInterceptor()</code>中需要增加<code>metadata</code>的映射。</p>
+
+<blockquote>
+<p><code>grpc-gateway</code>的另一个方式是<code>runtime.WithIncomingHeaderMatcher()</code></p>
+</blockquote>
+
+<p>为了方便使用可以参考我的<code>metadata</code>插件<a href="https://github.com/hb-go/grpc-contrib/tree/master/metadata">github.com/hb-go/grpc-contrib/metadata</a>，
+支持指定<strong>Header</strong>和<strong>前缀匹配</strong>。</p>
+
+<p><code>hb-go/grpc-contrib/metadata</code>示例</p>
+
+<pre><code class="language-go">mux := runtime.NewServeMux(
+    runtime.WithMetadata(metadata.GatewayMetadataAnnotator(
+        metadata.WithHeader(&quot;x-request-id&quot;),
+        metadata.WithPrefix(&quot;x-prefix&quot;),
+    )),
+)
+</code></pre>
+
+<pre><code class="language-go">err := pb.RegisterXXXHandlerFromEndpoint(ctx, mux, &quot;&quot;,
+    []grpc.DialOption{
+        grpc.WithChainUnaryInterceptor(
+            metadata.UnaryClientInterceptor(
+                metadata.WithHeader(&quot;x-request-id&quot;),
+                metadata.WithPrefix(&quot;x-prefix&quot;),
+            ),
+        ),
+    },
+)
+</code></pre>
+
+<p><code>Istio</code>环境要完整<code>tracing</code>链路，<code>ClientConn</code>需要与<code>grpc-gateway</code>一样，在<code>DialOption</code>的<code>grpc.WithChainUnaryInterceptor()</code>中加入<code>metadata.UnaryClientInterceptor(...)</code>，
+<code>Header</code>说明参考<code>Istio</code>文档<a href="https://istio.io/faq/distributed-tracing/#how-to-support-tracing">WHAT IS REQUIRED FOR DISTRIBUTED TRACING WITH ISTIO?</a></p>
+
+<pre><code class="language-go">metadata.WithHeader(&quot;x-request-id&quot;),
+metadata.WithHeader(&quot;x-b3-traceid&quot;),
+metadata.WithHeader(&quot;x-b3-spanid&quot;),
+metadata.WithHeader(&quot;x-b3-parentspanid&quot;),
+metadata.WithHeader(&quot;x-b3-sampled&quot;),
+metadata.WithHeader(&quot;x-b3-flags&quot;),
+metadata.WithHeader(&quot;b3&quot;),
+metadata.WithHeader(&quot;x-ot-span-context&quot;),
+</code></pre>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-08-30</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/service-mesh/">Service Mesh</a>
+          
+          <a href="/tags/istio/">Istio</a>
+          
+          <a href="/tags/gateway/">Gateway</a>
+          
+          <a href="/tags/grpc/">gRPC</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/">
+            <span class="next-text nav-default">【go-micro】使用kubernetes注册中心</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

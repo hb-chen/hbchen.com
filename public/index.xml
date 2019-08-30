@@ -39,6 +39,128 @@
     </item>
     
     <item>
+      <title>【服务网格-gRPC】网关grpc-gateway</title>
+      <link>http://hbchen.com/post/servicemesh/2019-08-30-mesh-grpc-01/</link>
+      <pubDate>Fri, 30 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2019-08-30-mesh-grpc-01/</guid>
+      
+        <description>&lt;p&gt;在网格中使用&lt;code&gt;gRPC&lt;/code&gt;可以方便的定义服务，而当需要对外提供服务时往往&lt;code&gt;HTTP&lt;/code&gt;接口比较普遍，&lt;code&gt;grpc-gateway&lt;/code&gt;提供了&lt;code&gt;RESTful JSON API&lt;/code&gt;转&lt;code&gt;gRPC&lt;/code&gt;的代理服务。
+在&lt;code&gt;mesh&lt;/code&gt;中&lt;code&gt;grpc-gateway&lt;/code&gt;的角色更像一个&lt;strong&gt;服务聚合层&lt;/strong&gt;，将内部&lt;code&gt;gRPC&lt;/code&gt;服务聚合并提供&lt;code&gt;HTTP&lt;/code&gt;接口服务，在使用的过程中也遇到些问题，如：进程内路由、Header映射等，这里结合使用经验做个总结。&lt;/p&gt;
+
+&lt;h1 id=&#34;接口定义&#34;&gt;接口定义&lt;/h1&gt;
+
+&lt;p&gt;&lt;code&gt;gRPC&lt;/code&gt;的服务定义这里不做过多关联介绍，&lt;code&gt;grpc-gateway&lt;/code&gt;协议支持两种方式添加，一是在&lt;code&gt;.proto&lt;/code&gt;的服务定义中以&lt;code&gt;option&lt;/code&gt;的方式直接绑定；
+二是使用单独的&lt;code&gt;.yaml&lt;/code&gt;文件定义。接口定义遵循&lt;a href=&#34;https://cloud.google.com/service-infrastructure/docs/service-management/reference/rpc/google.api#http&#34;&gt;google.api&lt;/a&gt;大家可以参考，
+主要内容在&lt;code&gt;HttpRule&lt;/code&gt;，具体字段参考协议&lt;a href=&#34;https://github.com/googleapis/googleapis/blob/master/google/api/http.proto&#34;&gt;http.proto&lt;/a&gt;更清晰，
+比如:&lt;code&gt;response_body&lt;/code&gt;在文档中并没有提到，用于选择&lt;code&gt;Response&lt;/code&gt;结构的某一字段作为响应内容。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;grpc-gateway&lt;/code&gt;文档参考
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://grpc-ecosystem.github.io/grpc-gateway/docs/usage.html&#34;&gt;Usage&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://grpc-ecosystem.github.io/grpc-gateway/docs/grpcapiconfiguration.html&#34;&gt;Usage without annotations (gRPC API Configuration)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;syntax = &amp;quot;proto3&amp;quot;;
+package example;
+
+import &amp;quot;google/api/annotations.proto&amp;quot;;
+
+message StringMessage {
+    string value = 1;
+}
+
+service YourService {
+    rpc Echo (StringMessage) returns (StringMessage) {
+       option (google.api.http) = {
+           post: &amp;quot;/v1/example/echo&amp;quot;
+           body: &amp;quot;*&amp;quot;
+       };
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;type: google.api.Service
+config_version: 3
+
+http:
+  rules:
+  - selector: example.YourService.Echo
+    post: /v1/example/echo
+    body: &amp;quot;*&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;进程内路由&#34;&gt;进程内路由&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/grpc/grpc-gateway.png&#34; alt=&#34;grpc-gateway&#34; /&gt;
+&lt;code&gt;grpc-gateway&lt;/code&gt;的代理方式是&lt;code&gt;gRPC&lt;/code&gt;远程调用，在&lt;code&gt;mesh&lt;/code&gt;中有已经有&lt;code&gt;ingress&lt;/code&gt;网关，如果继续用&lt;code&gt;rpc&lt;/code&gt;调用，
+将在链路上又增加一层网络开销&lt;code&gt;ingress -&amp;gt; grpc-gatewap -&amp;gt; grpc server&lt;/code&gt;，而我们的主要目的是将&lt;code&gt;gRPC&lt;/code&gt;服务映射成&lt;code&gt;HTTP&lt;/code&gt;并不需要其他能力，
+所以我们期望&lt;code&gt;grpc-gateway&lt;/code&gt;能够进程将&lt;code&gt;HTTP&lt;/code&gt;请求转发给&lt;code&gt;gRPC&lt;/code&gt;服务。&lt;/p&gt;
+
+&lt;p&gt;针对这一需求需要&lt;code&gt;gRPC&lt;/code&gt;服务支持进程内调用，社区现有的方案是&lt;a href=&#34;https://github.com/grpc/grpc-go/tree/master/test/bufconn&#34;&gt;test/bufconn&lt;/a&gt;，
+示例参考&lt;a href=&#34;https://github.com/grpc-ecosystem/grpc-gateway/pull/947#issuecomment-502578553&#34;&gt;grpc-gateway/pull/947&lt;/a&gt;中的讨论。
+至于直接&lt;strong&gt;进程内调&lt;/strong&gt;&lt;code&gt;Contributor&lt;/code&gt;的最新回复是8月份启动&lt;a href=&#34;https://github.com/grpc/grpc-go/issues/906#issuecomment-513856927&#34;&gt;grpc-go/issues/906&lt;/a&gt;。&lt;/p&gt;
+
+&lt;p&gt;另一个临时的方案是我提交到&lt;code&gt;grpc-gateway&lt;/code&gt;的&lt;code&gt;PR&lt;/code&gt; &lt;a href=&#34;https://github.com/grpc-ecosystem/grpc-gateway/pull/947&#34;&gt;pull/947&lt;/a&gt;，已经&lt;code&gt;merge&lt;/code&gt;到&lt;code&gt;master&lt;/code&gt;，
+但此方案仅支持&lt;code&gt;Unary&lt;/code&gt;，不支持&lt;code&gt;Streaming&lt;/code&gt;，不过对于网关应该能够满足大部分场景的需求。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func RegisterXXXHandlerServer(ctx context.Context, mux *runtime.ServeMux, server XXXServer) error
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;header传递&#34;&gt;Header传递&lt;/h1&gt;
+
+&lt;p&gt;在&lt;code&gt;tracing&lt;/code&gt;等场景我们往往需要将&lt;code&gt;Header&lt;/code&gt;信息在服务之间传递，包括&lt;code&gt;RESTful API&lt;/code&gt;请求。首先&lt;code&gt;grpc-gateway&lt;/code&gt;的&lt;code&gt;NewServeMux()&lt;/code&gt;需要&lt;code&gt;runtime.WithMetadata()&lt;/code&gt;Option，
+筛选&lt;code&gt;HTTP Header&lt;/code&gt;映射为&lt;code&gt;metadata&lt;/code&gt;；其次如果是使用&lt;a href=&#34;https://github.com/grpc/grpc-go/tree/master/test/bufconn&#34;&gt;test/bufconn&lt;/a&gt;方案，
+在&lt;code&gt;RegisterXXXHandlerFromEndpoint(...,opts []grpc.DialOption)&lt;/code&gt; &lt;code&gt;opts&lt;/code&gt;的&lt;code&gt;grpc.WithChainUnaryInterceptor()&lt;/code&gt;中需要增加&lt;code&gt;metadata&lt;/code&gt;的映射。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;grpc-gateway&lt;/code&gt;的另一个方式是&lt;code&gt;runtime.WithIncomingHeaderMatcher()&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;为了方便使用可以参考我的&lt;code&gt;metadata&lt;/code&gt;插件&lt;a href=&#34;https://github.com/hb-go/grpc-contrib/tree/master/metadata&#34;&gt;github.com/hb-go/grpc-contrib/metadata&lt;/a&gt;，
+支持指定&lt;strong&gt;Header&lt;/strong&gt;和&lt;strong&gt;前缀匹配&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;hb-go/grpc-contrib/metadata&lt;/code&gt;示例&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;mux := runtime.NewServeMux(
+    runtime.WithMetadata(metadata.GatewayMetadataAnnotator(
+        metadata.WithHeader(&amp;quot;x-request-id&amp;quot;),
+        metadata.WithPrefix(&amp;quot;x-prefix&amp;quot;),
+    )),
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;err := pb.RegisterXXXHandlerFromEndpoint(ctx, mux, &amp;quot;&amp;quot;,
+    []grpc.DialOption{
+        grpc.WithChainUnaryInterceptor(
+            metadata.UnaryClientInterceptor(
+                metadata.WithHeader(&amp;quot;x-request-id&amp;quot;),
+                metadata.WithPrefix(&amp;quot;x-prefix&amp;quot;),
+            ),
+        ),
+    },
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;Istio&lt;/code&gt;环境要完整&lt;code&gt;tracing&lt;/code&gt;链路，&lt;code&gt;ClientConn&lt;/code&gt;需要与&lt;code&gt;grpc-gateway&lt;/code&gt;一样，在&lt;code&gt;DialOption&lt;/code&gt;的&lt;code&gt;grpc.WithChainUnaryInterceptor()&lt;/code&gt;中加入&lt;code&gt;metadata.UnaryClientInterceptor(...)&lt;/code&gt;，
+&lt;code&gt;Header&lt;/code&gt;说明参考&lt;code&gt;Istio&lt;/code&gt;文档&lt;a href=&#34;https://istio.io/faq/distributed-tracing/#how-to-support-tracing&#34;&gt;WHAT IS REQUIRED FOR DISTRIBUTED TRACING WITH ISTIO?&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;metadata.WithHeader(&amp;quot;x-request-id&amp;quot;),
+metadata.WithHeader(&amp;quot;x-b3-traceid&amp;quot;),
+metadata.WithHeader(&amp;quot;x-b3-spanid&amp;quot;),
+metadata.WithHeader(&amp;quot;x-b3-parentspanid&amp;quot;),
+metadata.WithHeader(&amp;quot;x-b3-sampled&amp;quot;),
+metadata.WithHeader(&amp;quot;x-b3-flags&amp;quot;),
+metadata.WithHeader(&amp;quot;b3&amp;quot;),
+metadata.WithHeader(&amp;quot;x-ot-span-context&amp;quot;),
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【go-micro】使用kubernetes注册中心</title>
       <link>http://hbchen.com/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/</link>
       <pubDate>Thu, 27 Jun 2019 00:00:00 +0000</pubDate>
@@ -2352,7 +2474,7 @@ HTTP/1.1 200 OK
 &lt;blockquote&gt;
 &lt;ul&gt;
 &lt;li&gt;Istio版本 &lt;strong&gt;1.1.0&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;在的&lt;a href=&#34;https://github.com/hb-go/micro-mesh&#34;&gt;github.com/hb-go/micro-mesh&lt;/a&gt;中有结合示例的&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/deploy/k8s/rbac&#34;&gt;RBAC配置实践&lt;/a&gt;可以参考&lt;/li&gt;
+&lt;li&gt;在的&lt;a href=&#34;https://github.com/hb-go/micro-mesh&#34;&gt;github.com/hb-go/micro-mesh&lt;/a&gt;中有结合示例的&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/deploy/k8s/istio/rbac&#34;&gt;RBAC配置实践&lt;/a&gt;可以参考&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/blockquote&gt;
 
@@ -3782,68 +3904,6 @@ env -i git pull
 
 &lt;p&gt;知识积累工具-&lt;a href=&#34;https://github.com/alexbevi/redmine_knowledgebase/&#34;&gt;Knowledgebase&lt;/a&gt;&lt;/p&gt;
 </description>
-      
-    </item>
-    
-    <item>
-      <title>Mac安装配置MongoDB&#43;RockMongo</title>
-      <link>http://hbchen.com/post/2014-03-11-mac-mongodb-rockmongo/</link>
-      <pubDate>Tue, 11 Mar 2014 18:00:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2014-03-11-mac-mongodb-rockmongo/</guid>
-      
-        <description>&lt;p&gt;MongoDB安装
-&lt;/br&gt;使用brew安装很方便
-&lt;/br&gt;&lt;a href=&#34;http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/&#34;&gt;http://docs.mongodb.org/manual/tutorial/install-mongodb-on-os-x/&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;安装完成后可以选择修改配置文件&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#mongod.conf
-#dbpath,logpath,bind_ip
-vi /usr/local/etc/mongod.conf
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;启动配置&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#为了方便使用配置.bash_profile
-vi ~/.bash_profile
-
-#添加以下内容
-export PATH=$PATH:/usr/local/opt/mongodb/bin
-alias mongodb_start=&#39;sudo launchctl load -w /usr/local/Cellar/mongodb/2.4.9/homebrew.mxcl.mongodb.plist&#39;
-alias mongodb_stop=&#39;sudo launchctl unload -w /usr/local/Cellar/mongodb/2.4.9/homebrew.mxcl.mongodb.plist&#39;
-alias mongodb_restart=&#39;mongodb_stop; mongodb_start;&#39;
-
-#这样直接使用mongodb_start,mongodb_stop,mongodb_restart很方便
-
-#启动
-mongodb_start
-
-#配置用户名密码
-mongo
-db show
-use test
-db.addUser(&amp;quot;root&amp;quot;, &amp;quot;123456&amp;quot;)
-
-#重启
-mongodb_restart
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;管理工具RockMongo，下载后根据自己的PHP环境配置
-&lt;/br&gt;&lt;a href=&#34;http://rockmongo.com/downloads&#34;&gt;http://rockmongo.com/downloads&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;安装php-mongo&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;#我用的php54，记下安装后的路径
-brew php54-mongo
-
-#配置php.ini
-#添加或者修改extension=&amp;quot;mongo.so&amp;quot;
-extension=&amp;quot;/usr/local/Cellar/php54-mongo/1.4.5/mongo.so&amp;quot;
-
-#启动/重启Php环境
-&lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
     
