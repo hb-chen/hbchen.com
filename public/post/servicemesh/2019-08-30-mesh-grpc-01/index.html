@@ -64,7 +64,7 @@
 
 <meta itemprop="datePublished" content="2019-08-30T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-08-30T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="1458">
+<meta itemprop="wordCount" content="1466">
 
 
 
@@ -152,7 +152,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 约 1458 字 </span>
+        <span class="more-meta"> 约 1466 字 </span>
         <span class="more-meta"> 预计阅读 3 分钟 </span>
       </div>
     </header>
@@ -168,6 +168,7 @@
 <li><a href="#接口定义">接口定义</a></li>
 <li><a href="#进程内路由">进程内路由</a></li>
 <li><a href="#header传递">Header传递</a></li>
+<li><a href="#参数映射">参数映射</a></li>
 </ul>
 </nav>
   </div>
@@ -227,7 +228,7 @@ http:
 
 <p><img src="/img/grpc/grpc-gateway.png" alt="grpc-gateway" />
 <code>grpc-gateway</code>的代理方式是<code>gRPC</code>远程调用，在<code>mesh</code>中有已经有<code>ingress</code>网关，如果继续用<code>rpc</code>调用，
-将在链路上又增加一层网络开销<code>ingress -&gt; grpc-gatewap -&gt; grpc server</code>，而我们的主要目的是将<code>gRPC</code>服务映射成<code>HTTP</code>并不需要其他能力，
+将在链路上又增加一层网络开销<code>ingress -&gt; grpc-gatewap -&gt; grpc server</code>，而我们的主要目的是将<code>gRPC</code>服务映射成<code>HTTP</code>并不需要其它能力，
 所以我们期望<code>grpc-gateway</code>能够进程将<code>HTTP</code>请求转发给<code>gRPC</code>服务。</p>
 
 <p>针对这一需求需要<code>gRPC</code>服务支持进程内调用，社区现有的方案是<a href="https://github.com/grpc/grpc-go/tree/master/test/bufconn">test/bufconn</a>，
@@ -287,6 +288,18 @@ metadata.WithHeader(&quot;x-b3-flags&quot;),
 metadata.WithHeader(&quot;b3&quot;),
 metadata.WithHeader(&quot;x-ot-span-context&quot;),
 </code></pre>
+
+<blockquote>
+<p>TODO</p>
+
+<h1 id="参数映射">参数映射</h1>
+
+<ul>
+<li>body</li>
+<li>path</li>
+<li>queue</li>
+</ul>
+</blockquote>
     </div>
 
     
@@ -326,6 +339,11 @@ metadata.WithHeader(&quot;x-ot-span-context&quot;),
       
       <nav class="post-nav">
         
+          <a class="prev" href="/post/microservice/2019-10-13-go-micro-quick-start/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">【go-micro】微服务快速开始</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
         
           <a class="next" href="/post/microservice/2019-06-27-go-micro-use-kubernetes-registry/">
             <span class="next-text nav-default">【go-micro】使用kubernetes注册中心</span>

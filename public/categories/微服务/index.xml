@@ -7,10 +7,23 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio</copyright>
-    <lastBuildDate>Thu, 27 Jun 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 13 Oct 2019 15:27:12 +0800</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【go-micro】微服务快速开始</title>
+      <link>http://hbchen.com/post/microservice/2019-10-13-go-micro-quick-start/</link>
+      <pubDate>Sun, 13 Oct 2019 15:27:12 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-10-13-go-micro-quick-start/</guid>
+      <description>&lt;p&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start&#34;&gt;github.com/hb-go/micro-quick-start&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;这只是一个简易教程，是结合演示文稿&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/blob/master/micro-quick-start.pdf&#34;&gt;micro-quick-start.pdf&lt;/a&gt;的代码示例，
+结合演示文稿可以快速了解微服务与&lt;code&gt;go-micro&lt;/code&gt;框架，并可以结合代码示例进行验证测试，文稿中有关于&lt;a href=&#34;#micro自定义&#34;&gt;&lt;code&gt;micro&lt;/code&gt;自定义&lt;/a&gt;以及&lt;code&gt;go-micro&lt;/code&gt;现成组件的使用这里并没有全部示范，
+详细参考文稿，本教程每个示例均对应一个&lt;code&gt;commit&lt;/code&gt;，可以快速查看/比较示例相关代码，包含以下几个阶段：&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【go-micro】使用kubernetes注册中心</title>

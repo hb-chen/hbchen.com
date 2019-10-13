@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【go-micro】微服务快速开始 - Hobo&#39;s Blog - 技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="github.com/hb-go/micro-quick-start
+这只是一个简易教程，是结合演示文稿micro-quick-start.pdf的代码示例， 结合演示文稿可以快速了解微服务与go-micro框架，并可以结合代码示例进行验证测试，文稿中有关于micro自定义以及go-micro现成组件的使用这里并没有全部示范， 详细参考文稿，本教程每个示例均对应一个commit，可以快速查看/比较示例相关代码，包含以下几个阶段：
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/microservice/2019-10-13-go-micro-quick-start/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【go-micro】微服务快速开始" />
+<meta property="og:description" content="github.com/hb-go/micro-quick-start
+
+这只是一个简易教程，是结合演示文稿micro-quick-start.pdf的代码示例，
+结合演示文稿可以快速了解微服务与go-micro框架，并可以结合代码示例进行验证测试，文稿中有关于micro自定义以及go-micro现成组件的使用这里并没有全部示范，
+详细参考文稿，本教程每个示例均对应一个commit，可以快速查看/比较示例相关代码，包含以下几个阶段：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/microservice/2019-10-13-go-micro-quick-start/" /><meta property="article:published_time" content="2019-10-13T15:27:12&#43;08:00"/>
+<meta property="article:modified_time" content="2019-10-13T15:27:12&#43;08:00"/>
+
+<meta itemprop="name" content="【go-micro】微服务快速开始">
+<meta itemprop="description" content="github.com/hb-go/micro-quick-start
+
+这只是一个简易教程，是结合演示文稿micro-quick-start.pdf的代码示例，
+结合演示文稿可以快速了解微服务与go-micro框架，并可以结合代码示例进行验证测试，文稿中有关于micro自定义以及go-micro现成组件的使用这里并没有全部示范，
+详细参考文稿，本教程每个示例均对应一个commit，可以快速查看/比较示例相关代码，包含以下几个阶段：">
+
+
+<meta itemprop="datePublished" content="2019-10-13T15:27:12&#43;08:00" />
+<meta itemprop="dateModified" content="2019-10-13T15:27:12&#43;08:00" />
+<meta itemprop="wordCount" content="683">
+
+
+
+<meta itemprop="keywords" content="go-micro,微服务," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【go-micro】微服务快速开始"/>
+<meta name="twitter:description" content="github.com/hb-go/micro-quick-start
+
+这只是一个简易教程，是结合演示文稿micro-quick-start.pdf的代码示例，
+结合演示文稿可以快速了解微服务与go-micro框架，并可以结合代码示例进行验证测试，文稿中有关于micro自定义以及go-micro现成组件的使用这里并没有全部示范，
+详细参考文稿，本教程每个示例均对应一个commit，可以快速查看/比较示例相关代码，包含以下几个阶段："/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【go-micro】微服务快速开始</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-10-13 </span>
+        <div class="post-category">
+            
+              <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
+            
+          </div>
+        <span class="more-meta"> 约 683 字 </span>
+        <span class="more-meta"> 预计阅读 2 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#micro自定义">micro自定义</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p><a href="https://github.com/hb-go/micro-quick-start">github.com/hb-go/micro-quick-start</a></p>
+
+<p>这只是一个简易教程，是结合演示文稿<a href="https://github.com/hb-go/micro-quick-start/blob/master/micro-quick-start.pdf">micro-quick-start.pdf</a>的代码示例，
+结合演示文稿可以快速了解微服务与<code>go-micro</code>框架，并可以结合代码示例进行验证测试，文稿中有关于<a href="#micro自定义"><code>micro</code>自定义</a>以及<code>go-micro</code>现成组件的使用这里并没有全部示范，
+详细参考文稿，本教程每个示例均对应一个<code>commit</code>，可以快速查看/比较示例相关代码，包含以下几个阶段：</p>
+
+<ul>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/e76368bbee7dec646d13f1d9644b9d529e88074f">服务创建</a>
+
+<ul>
+<li>通过<code>micro new</code>创建服务后进行完善，使模板创建的服务可以运行</li>
+</ul></li>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/5f7de50b10c19e19ef546144d6a11adf69ad1cfd">自定义Server</a></li>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/ff70f21ba9d6a9bbf889598c0837e058706bf2fd">自定义Transport</a></li>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/615d4604e251bf1188fe12a0be22e05ca9c4ebf9">服务筛选</a></li>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/703851f4364c541c436896f85badb836859c3b7e">自定义Wrapper-监控</a></li>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/2f0baa1f5117d44809be07d6435fe36aeb1b9990">超时&amp;重试</a></li>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/11453df1566721c1b8aa50d253e3454986aa2c4f">限流&amp;熔断</a></li>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/8573ae85a7bd70038c0e0a18900bfa76d4cddb6c">配置-consul</a></li>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/d3f79f6c427822c1646ee7ccb2a4ba68c81681fd">链路追踪</a></li>
+<li><a href="https://github.com/hb-go/micro-quick-start/commit/8979073c7f473635e84d0300b61a749b66bc3bd1">k8s部署</a></li>
+</ul>
+
+<h2 id="micro自定义">micro自定义</h2>
+
+<p><code>micro</code>做为网关往往需要自定义，<code>micro</code>提供了<code>plugin</code>的自定义，以下是部分参考，如增加组件<code>tcp</code>、<code>kubernetes</code>，使用<code>go-plugins</code>中已有的<code>micro/metrics</code>插件，
+以及完全自定义一个<code>metrics</code>插件。</p>
+
+<pre><code class="language-go">package main
+
+import (
+	&quot;github.com/micro/go-micro/util/log&quot;
+	&quot;github.com/micro/go-plugins/micro/metrics&quot;
+	&quot;github.com/micro/micro/api&quot;
+	&quot;github.com/micro/micro/plugin&quot;
+	&quot;github.com/micro/micro/web&quot;
+	&quot;github.com/prometheus/client_golang/prometheus&quot;
+	&quot;github.com/prometheus/client_golang/prometheus/promhttp&quot;
+	&quot;net/http&quot;
+	&quot;strconv&quot;
+
+	// tcp transport
+	_ &quot;github.com/micro/go-plugins/transport/tcp&quot;
+
+	// k8s registry
+	_ &quot;github.com/micro/go-plugins/registry/kubernetes&quot;
+)
+
+// Metrics
+func init() {
+	api.Register(metrics.NewPlugin())
+	web.Register(metrics.NewPlugin())
+}
+
+// 自定义Metrics
+func init() {
+	api.Register(plugin.NewPlugin(
+		plugin.WithHandler(
+			func(h http.Handler) http.Handler {
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					r.Header.Get(&quot;&quot;)
+				})
+			}),
+	))
+
+	api.Register(plugin.NewPlugin(
+		plugin.WithHandler(
+			func(h http.Handler) http.Handler {
+				md := make(map[string]string)
+
+				opsCounter := prometheus.NewCounterVec(
+					prometheus.CounterOpts{
+						Namespace: &quot;micro&quot;,
+						Name:      &quot;request_total&quot;,
+						Help:      &quot;How many go-micro requests processed, partitioned by method and status&quot;,
+					},
+					[]string{&quot;path&quot;, &quot;method&quot;, &quot;code&quot;},
+				)
+
+				timeCounterSummary := prometheus.NewSummaryVec(
+					prometheus.SummaryOpts{
+						Namespace: &quot;micro&quot;,
+						Name:      &quot;upstream_latency_microseconds&quot;,
+						Help:      &quot;Service backend method request latencies in microseconds&quot;,
+					},
+					[]string{&quot;path&quot;, &quot;method&quot;},
+				)
+
+				timeCounterHistogram := prometheus.NewHistogramVec(
+					prometheus.HistogramOpts{
+						Namespace: &quot;micro&quot;,
+						Name:      &quot;request_duration_seconds&quot;,
+						Help:      &quot;Service method request time in seconds&quot;,
+					},
+					[]string{&quot;path&quot;, &quot;method&quot;},
+				)
+
+				reg := prometheus.NewRegistry()
+				wrapreg := prometheus.WrapRegistererWith(md, reg)
+				wrapreg.MustRegister(
+					opsCounter,
+					timeCounterSummary,
+					timeCounterHistogram,
+				)
+
+				prometheus.DefaultGatherer = reg
+				prometheus.DefaultRegisterer = wrapreg
+
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// 拦截metrics path，默认&quot;/metrics&quot;
+					if r.URL.Path == &quot;/metrics&quot; {
+						promhttp.Handler().ServeHTTP(w, r)
+						return
+					}
+
+					path := r.URL.Path
+					method := r.Method
+					timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+						us := v * 1000000 // make microseconds
+						timeCounterSummary.WithLabelValues(path, method).Observe(us)
+						timeCounterHistogram.WithLabelValues(path, method).Observe(v)
+					}))
+					defer timer.ObserveDuration()
+
+					ww := wrapWriter{ResponseWriter: w}
+					h.ServeHTTP(&amp;ww, r)
+					log.Logf(&quot;statusCode: %d, %s&quot;, ww.StatusCode, strconv.Itoa(ww.StatusCode))
+					opsCounter.WithLabelValues(path, method, strconv.Itoa(ww.StatusCode)).Inc()
+				})
+			}),
+	))
+
+}
+
+type wrapWriter struct {
+	StatusCode int
+	http.ResponseWriter
+}
+
+func (ww *wrapWriter) WriteHeader(statusCode int) {
+	log.Logf(&quot;statusCode: %d&quot;, statusCode)
+	ww.StatusCode = statusCode
+	ww.ResponseWriter.WriteHeader(statusCode)
+}
+</code></pre>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-10-13</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/go-micro/">go-micro</a>
+          
+          <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/servicemesh/2019-08-30-mesh-grpc-01/">
+            <span class="next-text nav-default">【服务网格-gRPC】网关grpc-gateway</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

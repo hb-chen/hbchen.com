@@ -39,6 +39,161 @@
     </item>
     
     <item>
+      <title>【go-micro】微服务快速开始</title>
+      <link>http://hbchen.com/post/microservice/2019-10-13-go-micro-quick-start/</link>
+      <pubDate>Sun, 13 Oct 2019 15:27:12 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-10-13-go-micro-quick-start/</guid>
+      
+        <description>&lt;p&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start&#34;&gt;github.com/hb-go/micro-quick-start&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;这只是一个简易教程，是结合演示文稿&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/blob/master/micro-quick-start.pdf&#34;&gt;micro-quick-start.pdf&lt;/a&gt;的代码示例，
+结合演示文稿可以快速了解微服务与&lt;code&gt;go-micro&lt;/code&gt;框架，并可以结合代码示例进行验证测试，文稿中有关于&lt;a href=&#34;#micro自定义&#34;&gt;&lt;code&gt;micro&lt;/code&gt;自定义&lt;/a&gt;以及&lt;code&gt;go-micro&lt;/code&gt;现成组件的使用这里并没有全部示范，
+详细参考文稿，本教程每个示例均对应一个&lt;code&gt;commit&lt;/code&gt;，可以快速查看/比较示例相关代码，包含以下几个阶段：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/e76368bbee7dec646d13f1d9644b9d529e88074f&#34;&gt;服务创建&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;通过&lt;code&gt;micro new&lt;/code&gt;创建服务后进行完善，使模板创建的服务可以运行&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/5f7de50b10c19e19ef546144d6a11adf69ad1cfd&#34;&gt;自定义Server&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/ff70f21ba9d6a9bbf889598c0837e058706bf2fd&#34;&gt;自定义Transport&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/615d4604e251bf1188fe12a0be22e05ca9c4ebf9&#34;&gt;服务筛选&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/703851f4364c541c436896f85badb836859c3b7e&#34;&gt;自定义Wrapper-监控&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/2f0baa1f5117d44809be07d6435fe36aeb1b9990&#34;&gt;超时&amp;amp;重试&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/11453df1566721c1b8aa50d253e3454986aa2c4f&#34;&gt;限流&amp;amp;熔断&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/8573ae85a7bd70038c0e0a18900bfa76d4cddb6c&#34;&gt;配置-consul&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/d3f79f6c427822c1646ee7ccb2a4ba68c81681fd&#34;&gt;链路追踪&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-quick-start/commit/8979073c7f473635e84d0300b61a749b66bc3bd1&#34;&gt;k8s部署&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;micro自定义&#34;&gt;micro自定义&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;micro&lt;/code&gt;做为网关往往需要自定义，&lt;code&gt;micro&lt;/code&gt;提供了&lt;code&gt;plugin&lt;/code&gt;的自定义，以下是部分参考，如增加组件&lt;code&gt;tcp&lt;/code&gt;、&lt;code&gt;kubernetes&lt;/code&gt;，使用&lt;code&gt;go-plugins&lt;/code&gt;中已有的&lt;code&gt;micro/metrics&lt;/code&gt;插件，
+以及完全自定义一个&lt;code&gt;metrics&lt;/code&gt;插件。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package main
+
+import (
+	&amp;quot;github.com/micro/go-micro/util/log&amp;quot;
+	&amp;quot;github.com/micro/go-plugins/micro/metrics&amp;quot;
+	&amp;quot;github.com/micro/micro/api&amp;quot;
+	&amp;quot;github.com/micro/micro/plugin&amp;quot;
+	&amp;quot;github.com/micro/micro/web&amp;quot;
+	&amp;quot;github.com/prometheus/client_golang/prometheus&amp;quot;
+	&amp;quot;github.com/prometheus/client_golang/prometheus/promhttp&amp;quot;
+	&amp;quot;net/http&amp;quot;
+	&amp;quot;strconv&amp;quot;
+
+	// tcp transport
+	_ &amp;quot;github.com/micro/go-plugins/transport/tcp&amp;quot;
+
+	// k8s registry
+	_ &amp;quot;github.com/micro/go-plugins/registry/kubernetes&amp;quot;
+)
+
+// Metrics
+func init() {
+	api.Register(metrics.NewPlugin())
+	web.Register(metrics.NewPlugin())
+}
+
+// 自定义Metrics
+func init() {
+	api.Register(plugin.NewPlugin(
+		plugin.WithHandler(
+			func(h http.Handler) http.Handler {
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					r.Header.Get(&amp;quot;&amp;quot;)
+				})
+			}),
+	))
+
+	api.Register(plugin.NewPlugin(
+		plugin.WithHandler(
+			func(h http.Handler) http.Handler {
+				md := make(map[string]string)
+
+				opsCounter := prometheus.NewCounterVec(
+					prometheus.CounterOpts{
+						Namespace: &amp;quot;micro&amp;quot;,
+						Name:      &amp;quot;request_total&amp;quot;,
+						Help:      &amp;quot;How many go-micro requests processed, partitioned by method and status&amp;quot;,
+					},
+					[]string{&amp;quot;path&amp;quot;, &amp;quot;method&amp;quot;, &amp;quot;code&amp;quot;},
+				)
+
+				timeCounterSummary := prometheus.NewSummaryVec(
+					prometheus.SummaryOpts{
+						Namespace: &amp;quot;micro&amp;quot;,
+						Name:      &amp;quot;upstream_latency_microseconds&amp;quot;,
+						Help:      &amp;quot;Service backend method request latencies in microseconds&amp;quot;,
+					},
+					[]string{&amp;quot;path&amp;quot;, &amp;quot;method&amp;quot;},
+				)
+
+				timeCounterHistogram := prometheus.NewHistogramVec(
+					prometheus.HistogramOpts{
+						Namespace: &amp;quot;micro&amp;quot;,
+						Name:      &amp;quot;request_duration_seconds&amp;quot;,
+						Help:      &amp;quot;Service method request time in seconds&amp;quot;,
+					},
+					[]string{&amp;quot;path&amp;quot;, &amp;quot;method&amp;quot;},
+				)
+
+				reg := prometheus.NewRegistry()
+				wrapreg := prometheus.WrapRegistererWith(md, reg)
+				wrapreg.MustRegister(
+					opsCounter,
+					timeCounterSummary,
+					timeCounterHistogram,
+				)
+
+				prometheus.DefaultGatherer = reg
+				prometheus.DefaultRegisterer = wrapreg
+
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					// 拦截metrics path，默认&amp;quot;/metrics&amp;quot;
+					if r.URL.Path == &amp;quot;/metrics&amp;quot; {
+						promhttp.Handler().ServeHTTP(w, r)
+						return
+					}
+
+					path := r.URL.Path
+					method := r.Method
+					timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+						us := v * 1000000 // make microseconds
+						timeCounterSummary.WithLabelValues(path, method).Observe(us)
+						timeCounterHistogram.WithLabelValues(path, method).Observe(v)
+					}))
+					defer timer.ObserveDuration()
+
+					ww := wrapWriter{ResponseWriter: w}
+					h.ServeHTTP(&amp;amp;ww, r)
+					log.Logf(&amp;quot;statusCode: %d, %s&amp;quot;, ww.StatusCode, strconv.Itoa(ww.StatusCode))
+					opsCounter.WithLabelValues(path, method, strconv.Itoa(ww.StatusCode)).Inc()
+				})
+			}),
+	))
+
+}
+
+type wrapWriter struct {
+	StatusCode int
+	http.ResponseWriter
+}
+
+func (ww *wrapWriter) WriteHeader(statusCode int) {
+	log.Logf(&amp;quot;statusCode: %d&amp;quot;, statusCode)
+	ww.StatusCode = statusCode
+	ww.ResponseWriter.WriteHeader(statusCode)
+}
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【服务网格-gRPC】网关grpc-gateway</title>
       <link>http://hbchen.com/post/servicemesh/2019-08-30-mesh-grpc-01/</link>
       <pubDate>Fri, 30 Aug 2019 00:00:00 +0000</pubDate>
@@ -97,7 +252,7 @@ http:
 
 &lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/grpc/grpc-gateway.png&#34; alt=&#34;grpc-gateway&#34; /&gt;
 &lt;code&gt;grpc-gateway&lt;/code&gt;的代理方式是&lt;code&gt;gRPC&lt;/code&gt;远程调用，在&lt;code&gt;mesh&lt;/code&gt;中有已经有&lt;code&gt;ingress&lt;/code&gt;网关，如果继续用&lt;code&gt;rpc&lt;/code&gt;调用，
-将在链路上又增加一层网络开销&lt;code&gt;ingress -&amp;gt; grpc-gatewap -&amp;gt; grpc server&lt;/code&gt;，而我们的主要目的是将&lt;code&gt;gRPC&lt;/code&gt;服务映射成&lt;code&gt;HTTP&lt;/code&gt;并不需要其他能力，
+将在链路上又增加一层网络开销&lt;code&gt;ingress -&amp;gt; grpc-gatewap -&amp;gt; grpc server&lt;/code&gt;，而我们的主要目的是将&lt;code&gt;gRPC&lt;/code&gt;服务映射成&lt;code&gt;HTTP&lt;/code&gt;并不需要其它能力，
 所以我们期望&lt;code&gt;grpc-gateway&lt;/code&gt;能够进程将&lt;code&gt;HTTP&lt;/code&gt;请求转发给&lt;code&gt;gRPC&lt;/code&gt;服务。&lt;/p&gt;
 
 &lt;p&gt;针对这一需求需要&lt;code&gt;gRPC&lt;/code&gt;服务支持进程内调用，社区现有的方案是&lt;a href=&#34;https://github.com/grpc/grpc-go/tree/master/test/bufconn&#34;&gt;test/bufconn&lt;/a&gt;，
@@ -156,7 +311,19 @@ metadata.WithHeader(&amp;quot;x-b3-sampled&amp;quot;),
 metadata.WithHeader(&amp;quot;x-b3-flags&amp;quot;),
 metadata.WithHeader(&amp;quot;b3&amp;quot;),
 metadata.WithHeader(&amp;quot;x-ot-span-context&amp;quot;),
-&lt;/code&gt;&lt;/pre&gt;</description>
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;TODO&lt;/p&gt;
+
+&lt;h1 id=&#34;参数映射&#34;&gt;参数映射&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;body&lt;/li&gt;
+&lt;li&gt;path&lt;/li&gt;
+&lt;li&gt;queue&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;</description>
       
     </item>
     
@@ -3890,20 +4057,6 @@ cd $DEPLOY_DIR
 env -i git reset --hard
 env -i git pull
 &lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>Redmine Plugins</title>
-      <link>http://hbchen.com/post/2014-04-15-redmine-plugins/</link>
-      <pubDate>Tue, 15 Apr 2014 12:09:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2014-04-15-redmine-plugins/</guid>
-      
-        <description>&lt;p&gt;Git版本库工具-&lt;a href=&#34;https://github.com/CtrlC-Root/redmine-gitolite/&#34;&gt;Gitolite&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;知识积累工具-&lt;a href=&#34;https://github.com/alexbevi/redmine_knowledgebase/&#34;&gt;Knowledgebase&lt;/a&gt;&lt;/p&gt;
-</description>
       
     </item>
     
