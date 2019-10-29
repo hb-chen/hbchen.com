@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Revel on Hobo&#39;s Blog - 技术实践</title>
+    <title>Revel on HB-技术实践</title>
     <link>http://hbchen.com/tags/revel/</link>
-    <description>Recent content in Revel on Hobo&#39;s Blog - 技术实践</description>
+    <description>Recent content in Revel on HB-技术实践</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <copyright>HB Studio</copyright>
+    <copyright>HB Studio 蜀ICP备18021614号-1</copyright>
     <lastBuildDate>Sat, 24 Aug 2013 09:22:00 +0800</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/revel/index.xml" rel="self" type="application/rss+xml" />
