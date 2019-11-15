@@ -39,6 +39,98 @@
     </item>
     
     <item>
+      <title>【go-micro】Network初探</title>
+      <link>http://hbchen.com/post/microservice/2019-11-14-go-micro-network/</link>
+      <pubDate>Thu, 14 Nov 2019 10:41:17 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-11-14-go-micro-network/</guid>
+      
+        <description>&lt;p&gt;Network是micro社区正在主力打造的解决多&amp;rdquo;云&amp;rdquo;环境的解决方案，下面结合最近的研究做个总结，主要包括&lt;code&gt;network&lt;/code&gt;适用的几种场景分析，
+以及在这些场景需求下&lt;code&gt;network&lt;/code&gt;还有哪些不足。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://micro.mu/docs/network.html&#34;&gt;Network Overview&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://micro.mu/docs/service-network.html&#34;&gt;Service Network&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;proxy&#34;&gt;Proxy&lt;/h2&gt;
+
+&lt;p&gt;在分析&lt;code&gt;network&lt;/code&gt;之前先了解&lt;code&gt;micro&lt;/code&gt;的&lt;code&gt;proxy&lt;/code&gt;模式，服务之间调用不需要服务发现，而是通过&lt;code&gt;proxy&lt;/code&gt;做转发，由&lt;code&gt;proxy&lt;/code&gt;完成服务的发现和调用。
+&lt;code&gt;network&lt;/code&gt;实现了一个特殊的代理，它的服务发现并不只是通过注册中心，同时有&lt;code&gt;network&lt;/code&gt;之间共享的服务。
+&lt;img src=&#34;http://hbchen.com/img/micro/proxy.png&#34; alt=&#34;micro-proxy&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;服务可见性&#34;&gt;服务可见性&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;network&lt;/code&gt;通过共享服务信息，实现跨&lt;code&gt;network&lt;/code&gt;的服务可见，从而实现代理的服务发现，并且共享是有可见性的，当前&lt;code&gt;advertise_strategy&lt;/code&gt;有&lt;code&gt;3+1&lt;/code&gt;种方案:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;none&lt;/code&gt;不共享服务
+
+&lt;ul&gt;
+&lt;li&gt;即只接受外部服务，适合边缘节点，依赖中心服务场景&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;all&lt;/code&gt;共享全部服务&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;best&lt;/code&gt;共享最优路由
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;local&lt;/code&gt;仅共享集群内部服务，而不共享从其他&lt;code&gt;network&lt;/code&gt;共享得到的服务，实际是&lt;code&gt;best&lt;/code&gt;的一个筛选项，这也是为什么说它是&lt;code&gt;3+1&lt;/code&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;截止&lt;code&gt;v1.6.0&lt;/code&gt;版本还没有此功能，需要使用&lt;code&gt;master&lt;/code&gt;分支，&lt;a href=&#34;https://github.com/micro/go-micro/pull/932&#34;&gt;PR#932&lt;/a&gt;增加了此策略的支持，
+以micro的发版速度应该要不了多久就会有Release版🤣&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;应用场景&#34;&gt;应用场景&lt;/h2&gt;
+
+&lt;h3 id=&#34;多集群&#34;&gt;多集群&lt;/h3&gt;
+
+&lt;p&gt;多集群场景分两种一是&lt;strong&gt;集群服务共享&lt;/strong&gt;，二是&lt;strong&gt;多中心/主备集群&lt;/strong&gt;，在&lt;code&gt;advertise_strategy&lt;/code&gt;策略选择有区别。&lt;/p&gt;
+
+&lt;h4 id=&#34;集群服务共享&#34;&gt;集群服务共享&lt;/h4&gt;
+
+&lt;p&gt;集群服务共享是指不同集群拥有不同的服务，实现集群间的服务发现，选择的策略是&lt;code&gt;advertise_strategy=local&lt;/code&gt;，&lt;code&gt;network&lt;/code&gt;仅共享自身服务，
+如果&lt;code&gt;DC B&lt;/code&gt;与&lt;code&gt;DC C&lt;/code&gt;需要共享服务，那么需要直接建立连接，而不是通过&lt;code&gt;DC A&lt;/code&gt;
+&lt;img src=&#34;http://hbchen.com/img/micro/network_multi_cluster_1.png&#34; alt=&#34;network_multi_cluster&#34; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&#34;多中心-主备集群&#34;&gt;多中心/主备集群&lt;/h4&gt;
+
+&lt;p&gt;多中心/主备集群是将同一套服务部署在多个中心，可能是多活，也可能是分主备，选择的策略是&lt;code&gt;advertise_strategy=best&lt;/code&gt;，但现在&lt;code&gt;network&lt;/code&gt;在负载策略上还没有&lt;strong&gt;就近原则&lt;/strong&gt;
+&lt;img src=&#34;http://hbchen.com/img/micro/network_multi_cluster_2.png&#34; alt=&#34;network_multi_cluster&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;中心服务-边缘&#34;&gt;中心服务+边缘&lt;/h3&gt;
+
+&lt;p&gt;对于边缘计算场景，边缘节点可能是不提供服务的，比如只上报数据，可以选择&lt;code&gt;advertise_strategy=none&lt;/code&gt;，当然有的可能又是提供服务的，可以选择&lt;code&gt;advertise_strategy=local&lt;/code&gt;，
+但&lt;code&gt;DC A&lt;/code&gt;并不会将&lt;code&gt;DC C&lt;/code&gt;的服务共享给&lt;code&gt;DC B&lt;/code&gt;。因为&lt;code&gt;network&lt;/code&gt;间通过&lt;code&gt;tunnel&lt;/code&gt;通信，边缘节点可以是任意网络，只要连接到中心服务的&lt;code&gt;network&lt;/code&gt;即可。
+&lt;img src=&#34;http://hbchen.com/img/micro/network_edge.png&#34; alt=&#34;network_edge&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;不足&#34;&gt;不足&lt;/h2&gt;
+
+&lt;h3 id=&#34;network高可用及性能&#34;&gt;Network高可用及性能&lt;/h3&gt;
+
+&lt;p&gt;要考虑&lt;code&gt;network&lt;/code&gt;的高可用，必须支持多富本水平扩展，现在同一集群内&lt;code&gt;network&lt;/code&gt;会共享服务，但当前&lt;code&gt;network&lt;/code&gt;的服务可见性并没有将集群内&lt;code&gt;node&lt;/code&gt;与直连的&lt;code&gt;node&lt;/code&gt;节点做区分，
+如果集群内出现n个副本，那么最差的情况下可能要在&lt;code&gt;network&lt;/code&gt;的&lt;code&gt;pod&lt;/code&gt;间跳转n次。理想状态应该是对于集群内仅共享与&lt;code&gt;node&lt;/code&gt;直连的&lt;strong&gt;集群外服务&lt;/strong&gt;（这是当前&lt;code&gt;network&lt;/code&gt;不具备），
+而对集群外共享本集群服务，这样可以确保集群内&lt;code&gt;network&lt;/code&gt;代理最多经过&lt;strong&gt;两跳&lt;/strong&gt;即可调用集群外服务。
+&lt;img src=&#34;http://hbchen.com/img/micro/network_problem_ha.png&#34; alt=&#34;network_edge&#34; /&gt;
+总的来说是&lt;code&gt;advertise_strategy&lt;/code&gt;需要更完善的策略支持，做必要的隔离、筛选，一是服务的可见性问题，二是服务规模增加后&lt;code&gt;network&lt;/code&gt;间的数据通信也会成为瓶颈。&lt;/p&gt;
+
+&lt;h3 id=&#34;路由负载策略&#34;&gt;路由负载策略&lt;/h3&gt;
+
+&lt;p&gt;路由负载选择需要优先级、筛选等策略，如local优先，这样我们可以实现主备集群，以及集群间流量切换等场景的应用&lt;/p&gt;
+
+&lt;h3 id=&#34;安全&#34;&gt;安全&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;network&lt;/code&gt;间的连接是通过&lt;code&gt;tunnel&lt;/code&gt;完成，而&lt;code&gt;tunnel&lt;/code&gt;在安全方面只是在&lt;code&gt;message&lt;/code&gt;的&lt;code&gt;header&lt;/code&gt;中放了一个&lt;code&gt;token&lt;/code&gt;用于相互验证，这也是需要加强的部分。&lt;/p&gt;
+
+&lt;h2 id=&#34;network模拟测试&#34;&gt;Network模拟测试&lt;/h2&gt;
+
+&lt;p&gt;可以本地使用不同的注册中心模拟多个集群，简单的&lt;code&gt;mdns&lt;/code&gt;、&lt;code&gt;consul&lt;/code&gt;和&lt;code&gt;etcd&lt;/code&gt;就可以模拟出三个集群，如果有公网服务器当然更好。&lt;/p&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【go-micro】微服务快速开始</title>
       <link>http://hbchen.com/post/microservice/2019-10-13-go-micro-quick-start/</link>
       <pubDate>Sun, 13 Oct 2019 15:27:12 +0800</pubDate>
@@ -3989,73 +4081,6 @@ if [ -f $NewFile ]
 		esac
 fi
 echo &amp;quot;-------------------------------------------&amp;quot;&amp;gt;&amp;gt;$LogFile
-&lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>[转]Git-项目自动部署</title>
-      <link>http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</link>
-      <pubDate>Fri, 17 Oct 2014 13:29:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2014-10-17-xiang-mu-zi-dong-bu-shu-git/</guid>
-      
-        <description>&lt;p&gt;Git push后自动更新项目部署，&amp;rdquo;[deploy]&amp;ldquo;部署的分支为master。&lt;/p&gt;
-
-&lt;p&gt;Gist
-&lt;/br&gt;&lt;a href=&#34;https://gist.github.com/icyleaf/566767&#34;&gt;https://gist.github.com/icyleaf/566767&lt;/a&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ vi post-receive
-
-#!/bin/sh
-#
-# git autodeploy script when it matches the string &amp;quot;[deploy]&amp;quot;
-#
-# @author    icyleaf &amp;lt;icyleaf.cn@gmail.com&amp;gt;
-# @link      http://icyleaf.com
-# @version   0.1
-#
-# Usage:
-#       1. put this into the post-receive hook file itself below
-#       2. `chmod +x post-recive` 
-#       3. Done!
- 
-# Check the remote git repository whether it is bare
-IS_BARE=$(git rev-parse --is-bare-repository)
-if [ -z &amp;quot;$IS_BARE&amp;quot; ]; then
-	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: IS_NOT_BARE&amp;quot;
-	exit 1
-fi
- 
-# Get the latest commit subject
-SUBJECT=$(git log -1 --pretty=format:&amp;quot;%s&amp;quot;)
- 
-# Deploy the HEAD sources to publish
-IS_PULL=$(echo &amp;quot;$SUBJECT&amp;quot; | grep &amp;quot;\[deploy\]&amp;quot;)
-if [ -z &amp;quot;$IS_PULL&amp;quot; ]; then
-	echo &amp;gt;&amp;amp;2 &amp;quot;tips: post-receive: IS_NOT_PULL&amp;quot;
-	exit 1
-fi
- 
-# Check the deploy dir whether it exists
-DEPLOY_DIR=/home/icyleaf/php/icyleaf/
-if [ ! -d $DEPLOY_DIR ] ; then
-	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: DEPLOY_DIR_NOT_EXIST: \&amp;quot;$DEPLOY_DIR\&amp;quot;&amp;quot;
-	exit 1
-fi
- 
-# Check the deploy dir whether it is git repository
-#
-#IS_GIT=$(git rev-parse --git-dir 2&amp;gt;/dev/null)
-#if [ -z &amp;quot;$IS_GIT&amp;quot; ]; then
-#	echo &amp;gt;&amp;amp;2 &amp;quot;fatal: post-receive: IS_NOT_GIT&amp;quot;
-#	exit 1
-#fi
- 
-# Goto the deploy dir and pull the latest sources
-cd $DEPLOY_DIR
-env -i git reset --hard
-env -i git pull
 &lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
