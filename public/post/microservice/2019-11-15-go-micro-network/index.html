@@ -32,7 +32,7 @@
 <meta name="generator" content="Hugo 0.53" />
 
 
-<link rel="canonical" href="http://hbchen.com/post/microservice/2019-11-14-go-micro-network/" />
+<link rel="canonical" href="http://hbchen.com/post/microservice/2019-11-15-go-micro-network/" />
 
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -54,17 +54,17 @@
 <meta property="og:description" content="Network是micro社区正在主力打造的解决多&rdquo;云&rdquo;环境的解决方案，下面结合最近的研究做个总结，主要包括network适用的几种场景分析，
 以及在这些场景需求下network还有哪些不足。" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://hbchen.com/post/microservice/2019-11-14-go-micro-network/" /><meta property="article:published_time" content="2019-11-14T10:41:17&#43;08:00"/>
-<meta property="article:modified_time" content="2019-11-14T10:41:17&#43;08:00"/>
+<meta property="og:url" content="http://hbchen.com/post/microservice/2019-11-15-go-micro-network/" /><meta property="article:published_time" content="2019-11-15T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-11-16T07:03:09&#43;00:00"/>
 
 <meta itemprop="name" content="【go-micro】Network初探">
 <meta itemprop="description" content="Network是micro社区正在主力打造的解决多&rdquo;云&rdquo;环境的解决方案，下面结合最近的研究做个总结，主要包括network适用的几种场景分析，
 以及在这些场景需求下network还有哪些不足。">
 
 
-<meta itemprop="datePublished" content="2019-11-14T10:41:17&#43;08:00" />
-<meta itemprop="dateModified" content="2019-11-14T10:41:17&#43;08:00" />
-<meta itemprop="wordCount" content="1515">
+<meta itemprop="datePublished" content="2019-11-15T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-11-16T07:03:09&#43;00:00" />
+<meta itemprop="wordCount" content="1636">
 
 
 
@@ -146,13 +146,13 @@
       <h1 class="post-title">【go-micro】Network初探</h1>
 
       <div class="post-meta">
-        <span class="post-time"> 2019-11-14 </span>
+        <span class="post-time"> 2019-11-15 </span>
         <div class="post-category">
             
               <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
             
           </div>
-        <span class="more-meta"> 约 1515 字 </span>
+        <span class="more-meta"> 约 1636 字 </span>
         <span class="more-meta"> 预计阅读 4 分钟 </span>
       </div>
     </header>
@@ -229,6 +229,13 @@
 <blockquote>
 <p>截止<code>v1.6.0</code>版本还没有此功能，需要使用<code>master</code>分支，<a href="https://github.com/micro/go-micro/pull/932">PR#932</a>增加了此策略的支持，
 以micro的发版速度应该要不了多久就会有Release版🤣</p>
+
+<p>Network在不断完善，本文参考版本为：</p>
+
+<ul>
+<li><a href="https://github.com/micro/micro/tree/98d9b1f332a2">micro/tree/98d9b1f332a2</a></li>
+<li><a href="https://github.com/micro/go-micro/tree/9f481542f38d">go-micro/tree/9f481542f38d</a></li>
+</ul>
 </blockquote>
 
 <h2 id="应用场景">应用场景</h2>
@@ -262,7 +269,9 @@
 如果集群内出现n个副本，那么最差的情况下可能要在<code>network</code>的<code>pod</code>间跳转n次。理想状态应该是对于集群内仅共享与<code>node</code>直连的<strong>集群外服务</strong>（这是当前<code>network</code>不具备），
 而对集群外共享本集群服务，这样可以确保集群内<code>network</code>代理最多经过<strong>两跳</strong>即可调用集群外服务。
 <img src="/img/micro/network_problem_ha.png" alt="network_edge" />
-总的来说是<code>advertise_strategy</code>需要更完善的策略支持，做必要的隔离、筛选，一是服务的可见性问题，二是服务规模增加后<code>network</code>间的数据通信也会成为瓶颈。</p>
+图中红色标记的<code>go.micro.srv.s-2 gateway-a-2</code>、<code>go.micro.srv.s-2 gateway-a-3</code>不应该出现在<code>network</code>的<code>routes</code>中，避免同一集群内没必要的路由。</p>
+
+<p>总的来说是<code>advertise_strategy</code>需要更完善的策略支持，做必要的隔离、筛选，一是服务的可见性问题，二是服务规模增加后<code>network</code>间的数据通信也会成为瓶颈。</p>
 
 <h3 id="路由负载策略">路由负载策略</h3>
 
@@ -286,7 +295,7 @@
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2019-11-14</span>
+    <span class="item-content">2019-11-16</span>
   </p>
   
   <p class="copyright-item">

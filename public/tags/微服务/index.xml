@@ -7,17 +7,17 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio 蜀ICP备18021614号-1</copyright>
-    <lastBuildDate>Thu, 14 Nov 2019 10:41:17 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 15 Nov 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>【go-micro】Network初探</title>
-      <link>http://hbchen.com/post/microservice/2019-11-14-go-micro-network/</link>
-      <pubDate>Thu, 14 Nov 2019 10:41:17 +0800</pubDate>
+      <link>http://hbchen.com/post/microservice/2019-11-15-go-micro-network/</link>
+      <pubDate>Fri, 15 Nov 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://hbchen.com/post/microservice/2019-11-14-go-micro-network/</guid>
+      <guid>http://hbchen.com/post/microservice/2019-11-15-go-micro-network/</guid>
       <description>&lt;p&gt;Network是micro社区正在主力打造的解决多&amp;rdquo;云&amp;rdquo;环境的解决方案，下面结合最近的研究做个总结，主要包括&lt;code&gt;network&lt;/code&gt;适用的几种场景分析，
 以及在这些场景需求下&lt;code&gt;network&lt;/code&gt;还有哪些不足。&lt;/p&gt;</description>
     </item>

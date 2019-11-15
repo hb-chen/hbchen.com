@@ -40,10 +40,10 @@
     
     <item>
       <title>【go-micro】Network初探</title>
-      <link>http://hbchen.com/post/microservice/2019-11-14-go-micro-network/</link>
-      <pubDate>Thu, 14 Nov 2019 10:41:17 +0800</pubDate>
+      <link>http://hbchen.com/post/microservice/2019-11-15-go-micro-network/</link>
+      <pubDate>Fri, 15 Nov 2019 00:00:00 +0000</pubDate>
       
-      <guid>http://hbchen.com/post/microservice/2019-11-14-go-micro-network/</guid>
+      <guid>http://hbchen.com/post/microservice/2019-11-15-go-micro-network/</guid>
       
         <description>&lt;p&gt;Network是micro社区正在主力打造的解决多&amp;rdquo;云&amp;rdquo;环境的解决方案，下面结合最近的研究做个总结，主要包括&lt;code&gt;network&lt;/code&gt;适用的几种场景分析，
 以及在这些场景需求下&lt;code&gt;network&lt;/code&gt;还有哪些不足。&lt;/p&gt;
@@ -81,6 +81,13 @@
 &lt;blockquote&gt;
 &lt;p&gt;截止&lt;code&gt;v1.6.0&lt;/code&gt;版本还没有此功能，需要使用&lt;code&gt;master&lt;/code&gt;分支，&lt;a href=&#34;https://github.com/micro/go-micro/pull/932&#34;&gt;PR#932&lt;/a&gt;增加了此策略的支持，
 以micro的发版速度应该要不了多久就会有Release版🤣&lt;/p&gt;
+
+&lt;p&gt;Network在不断完善，本文参考版本为：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/micro/micro/tree/98d9b1f332a2&#34;&gt;micro/tree/98d9b1f332a2&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/micro/go-micro/tree/9f481542f38d&#34;&gt;go-micro/tree/9f481542f38d&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
 &lt;/blockquote&gt;
 
 &lt;h2 id=&#34;应用场景&#34;&gt;应用场景&lt;/h2&gt;
@@ -114,7 +121,9 @@
 如果集群内出现n个副本，那么最差的情况下可能要在&lt;code&gt;network&lt;/code&gt;的&lt;code&gt;pod&lt;/code&gt;间跳转n次。理想状态应该是对于集群内仅共享与&lt;code&gt;node&lt;/code&gt;直连的&lt;strong&gt;集群外服务&lt;/strong&gt;（这是当前&lt;code&gt;network&lt;/code&gt;不具备），
 而对集群外共享本集群服务，这样可以确保集群内&lt;code&gt;network&lt;/code&gt;代理最多经过&lt;strong&gt;两跳&lt;/strong&gt;即可调用集群外服务。
 &lt;img src=&#34;http://hbchen.com/img/micro/network_problem_ha.png&#34; alt=&#34;network_edge&#34; /&gt;
-总的来说是&lt;code&gt;advertise_strategy&lt;/code&gt;需要更完善的策略支持，做必要的隔离、筛选，一是服务的可见性问题，二是服务规模增加后&lt;code&gt;network&lt;/code&gt;间的数据通信也会成为瓶颈。&lt;/p&gt;
+图中红色标记的&lt;code&gt;go.micro.srv.s-2 gateway-a-2&lt;/code&gt;、&lt;code&gt;go.micro.srv.s-2 gateway-a-3&lt;/code&gt;不应该出现在&lt;code&gt;network&lt;/code&gt;的&lt;code&gt;routes&lt;/code&gt;中，避免同一集群内没必要的路由。&lt;/p&gt;
+
+&lt;p&gt;总的来说是&lt;code&gt;advertise_strategy&lt;/code&gt;需要更完善的策略支持，做必要的隔离、筛选，一是服务的可见性问题，二是服务规模增加后&lt;code&gt;network&lt;/code&gt;间的数据通信也会成为瓶颈。&lt;/p&gt;
 
 &lt;h3 id=&#34;路由负载策略&#34;&gt;路由负载策略&lt;/h3&gt;
 

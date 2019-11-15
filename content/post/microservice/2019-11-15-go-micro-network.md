@@ -1,6 +1,7 @@
 ---
 title: "【go-micro】Network初探"
-date: 2019-11-14T10:41:17+08:00
+date: 2019-11-15
+lastmod: 2019-11-16 07:03:09
 draft: false
 mermaid: false
 comments: true
@@ -37,6 +38,11 @@ Network是micro社区正在主力打造的解决多"云"环境的解决方案，
 	
 > 截止`v1.6.0`版本还没有此功能，需要使用`master`分支，[PR#932](https://github.com/micro/go-micro/pull/932)增加了此策略的支持，
 以micro的发版速度应该要不了多久就会有Release版🤣
+
+> Network在不断完善，本文参考版本为：
+>
+ - [micro/tree/98d9b1f332a2](https://github.com/micro/micro/tree/98d9b1f332a2)
+ - [go-micro/tree/9f481542f38d](https://github.com/micro/go-micro/tree/9f481542f38d)
 	
 ## 应用场景
 ### 多集群
@@ -62,6 +68,8 @@ Network是micro社区正在主力打造的解决多"云"环境的解决方案，
 如果集群内出现n个副本，那么最差的情况下可能要在`network`的`pod`间跳转n次。理想状态应该是对于集群内仅共享与`node`直连的**集群外服务**（这是当前`network`不具备），
 而对集群外共享本集群服务，这样可以确保集群内`network`代理最多经过**两跳**即可调用集群外服务。
 ![network_edge](/img/micro/network_problem_ha.png)
+图中红色标记的`go.micro.srv.s-2 gateway-a-2`、`go.micro.srv.s-2 gateway-a-3`不应该出现在`network`的`routes`中，避免同一集群内没必要的路由。
+
 总的来说是`advertise_strategy`需要更完善的策略支持，做必要的隔离、筛选，一是服务的可见性问题，二是服务规模增加后`network`间的数据通信也会成为瓶颈。
 
 ### 路由负载策略
