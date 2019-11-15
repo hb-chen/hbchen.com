@@ -10,15 +10,19 @@ comment: false
 mathjax: false
 ---
 
-Hobo's Blog!
+About
 ---
-**微信**
+- [Micro中国站](https://github.com/micro-in-cn)成员
+- Golang、PHP、Objective-C... 一线码农，全栈架构
+- 专注于微服务架构与服务网格的应用
 
+GitHub
+---
+- go-micro实践 [micro-in-cn/starter-kit](https://github.com/micro-in-cn/starter-kit)
+- Echo实践 [hb-go/echo-web](https://github.com/hb-go/echo-web)
+- Istio微服务架构实践 [hb-go/micro-mesh](https://github.com/hb-go/micro-mesh)
+- More [GitHub](https://github.com/hb-chen)
+
+微信
+---
 ![微信](/img/wechat.jpg)
-
-[GitHub](https://github.com/hb-chen)
-------
-* [Echo 实践](https://github.com/hb-go/echo-web)
-* [go-micro实践](https://github.com/hb-go/micro)
-* [Istio微服务架构实践](https://github.com/hb-go/micro-mesh)
-

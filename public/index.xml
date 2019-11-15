@@ -21,19 +21,26 @@
       
         <description>
 
-&lt;h2 id=&#34;hobo-s-blog&#34;&gt;Hobo&amp;rsquo;s Blog!&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;微信&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/wechat.jpg&#34; alt=&#34;微信&#34; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&#34;github-https-github-com-hb-chen&#34;&gt;&lt;a href=&#34;https://github.com/hb-chen&#34;&gt;GitHub&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&#34;about&#34;&gt;About&lt;/h2&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/echo-web&#34;&gt;Echo 实践&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro&#34;&gt;go-micro实践&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-mesh&#34;&gt;Istio微服务架构实践&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/micro-in-cn&#34;&gt;Micro中国站&lt;/a&gt;成员&lt;/li&gt;
+&lt;li&gt;Golang、PHP、Objective-C&amp;hellip; 一线码农，全栈架构&lt;/li&gt;
+&lt;li&gt;专注于微服务架构与服务网格的应用&lt;/li&gt;
 &lt;/ul&gt;
+
+&lt;h2 id=&#34;github&#34;&gt;GitHub&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;go-micro实践 &lt;a href=&#34;https://github.com/micro-in-cn/starter-kit&#34;&gt;micro-in-cn/starter-kit&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Echo实践 &lt;a href=&#34;https://github.com/hb-go/echo-web&#34;&gt;hb-go/echo-web&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Istio微服务架构实践 &lt;a href=&#34;https://github.com/hb-go/micro-mesh&#34;&gt;hb-go/micro-mesh&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;More &lt;a href=&#34;https://github.com/hb-chen&#34;&gt;GitHub&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;微信&#34;&gt;微信&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/wechat.jpg&#34; alt=&#34;微信&#34; /&gt;&lt;/p&gt;
 </description>
       
     </item>
