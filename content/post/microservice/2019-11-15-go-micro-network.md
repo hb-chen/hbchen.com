@@ -64,7 +64,7 @@ Network是micro社区正在主力打造的解决多"云"环境的解决方案，
 
 ## 不足
 ### Network高可用及性能
-要考虑`network`的高可用，必须支持多富本水平扩展，现在同一集群内`network`会共享服务，但当前`network`的服务可见性并没有将集群内`node`与直连的`node`节点做区分，
+要考虑`network`的高可用，必须支持多副本水平扩展，现在同一集群内`network`会共享服务，但当前`network`的服务可见性并没有将集群内`node`与直连的`node`节点做区分，
 如果集群内出现n个副本，那么最差的情况下可能要在`network`的`pod`间跳转n次。理想状态应该是对于集群内仅共享与`node`直连的**集群外服务**（这是当前`network`不具备），
 而对集群外共享本集群服务，这样可以确保集群内`network`代理最多经过**两跳**即可调用集群外服务。
 ![network_edge](/img/micro/network_problem_ha.png)
