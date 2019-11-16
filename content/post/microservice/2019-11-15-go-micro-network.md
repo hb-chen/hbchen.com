@@ -70,6 +70,8 @@ Network是micro社区正在主力打造的解决多"云"环境的解决方案，
 ![network_edge](/img/micro/network_problem_ha.png)
 图中红色标记的`go.micro.srv.s-2 gateway-a-2`、`go.micro.srv.s-2 gateway-a-3`不应该出现在`network`的`routes`中，避免同一集群内没必要的路由。
 
+> 有关`network`的多副本还需要进一步研究，比如4个后会不会出现链路循环，以及具体路由负载策略等
+
 总的来说是`advertise_strategy`需要更完善的策略支持，做必要的隔离、筛选，一是服务的可见性问题，二是服务规模增加后`network`间的数据通信也会成为瓶颈。
 
 ### 路由负载策略

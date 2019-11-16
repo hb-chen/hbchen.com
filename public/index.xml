@@ -124,11 +124,15 @@
 
 &lt;h3 id=&#34;network高可用及性能&#34;&gt;Network高可用及性能&lt;/h3&gt;
 
-&lt;p&gt;要考虑&lt;code&gt;network&lt;/code&gt;的高可用，必须支持多富本水平扩展，现在同一集群内&lt;code&gt;network&lt;/code&gt;会共享服务，但当前&lt;code&gt;network&lt;/code&gt;的服务可见性并没有将集群内&lt;code&gt;node&lt;/code&gt;与直连的&lt;code&gt;node&lt;/code&gt;节点做区分，
+&lt;p&gt;要考虑&lt;code&gt;network&lt;/code&gt;的高可用，必须支持多副本水平扩展，现在同一集群内&lt;code&gt;network&lt;/code&gt;会共享服务，但当前&lt;code&gt;network&lt;/code&gt;的服务可见性并没有将集群内&lt;code&gt;node&lt;/code&gt;与直连的&lt;code&gt;node&lt;/code&gt;节点做区分，
 如果集群内出现n个副本，那么最差的情况下可能要在&lt;code&gt;network&lt;/code&gt;的&lt;code&gt;pod&lt;/code&gt;间跳转n次。理想状态应该是对于集群内仅共享与&lt;code&gt;node&lt;/code&gt;直连的&lt;strong&gt;集群外服务&lt;/strong&gt;（这是当前&lt;code&gt;network&lt;/code&gt;不具备），
 而对集群外共享本集群服务，这样可以确保集群内&lt;code&gt;network&lt;/code&gt;代理最多经过&lt;strong&gt;两跳&lt;/strong&gt;即可调用集群外服务。
 &lt;img src=&#34;http://hbchen.com/img/micro/network_problem_ha.png&#34; alt=&#34;network_edge&#34; /&gt;
 图中红色标记的&lt;code&gt;go.micro.srv.s-2 gateway-a-2&lt;/code&gt;、&lt;code&gt;go.micro.srv.s-2 gateway-a-3&lt;/code&gt;不应该出现在&lt;code&gt;network&lt;/code&gt;的&lt;code&gt;routes&lt;/code&gt;中，避免同一集群内没必要的路由。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;有关&lt;code&gt;network&lt;/code&gt;的多副本还需要进一步研究，比如4个后会不会出现链路循环，以及具体路由负载策略等&lt;/p&gt;
+&lt;/blockquote&gt;
 
 &lt;p&gt;总的来说是&lt;code&gt;advertise_strategy&lt;/code&gt;需要更完善的策略支持，做必要的隔离、筛选，一是服务的可见性问题，二是服务规模增加后&lt;code&gt;network&lt;/code&gt;间的数据通信也会成为瓶颈。&lt;/p&gt;
 

@@ -64,7 +64,7 @@
 
 <meta itemprop="datePublished" content="2019-11-15T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-11-16T07:03:09&#43;00:00" />
-<meta itemprop="wordCount" content="1636">
+<meta itemprop="wordCount" content="1684">
 
 
 
@@ -152,7 +152,7 @@
               <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
             
           </div>
-        <span class="more-meta"> 约 1636 字 </span>
+        <span class="more-meta"> 约 1684 字 </span>
         <span class="more-meta"> 预计阅读 4 分钟 </span>
       </div>
     </header>
@@ -265,11 +265,15 @@
 
 <h3 id="network高可用及性能">Network高可用及性能</h3>
 
-<p>要考虑<code>network</code>的高可用，必须支持多富本水平扩展，现在同一集群内<code>network</code>会共享服务，但当前<code>network</code>的服务可见性并没有将集群内<code>node</code>与直连的<code>node</code>节点做区分，
+<p>要考虑<code>network</code>的高可用，必须支持多副本水平扩展，现在同一集群内<code>network</code>会共享服务，但当前<code>network</code>的服务可见性并没有将集群内<code>node</code>与直连的<code>node</code>节点做区分，
 如果集群内出现n个副本，那么最差的情况下可能要在<code>network</code>的<code>pod</code>间跳转n次。理想状态应该是对于集群内仅共享与<code>node</code>直连的<strong>集群外服务</strong>（这是当前<code>network</code>不具备），
 而对集群外共享本集群服务，这样可以确保集群内<code>network</code>代理最多经过<strong>两跳</strong>即可调用集群外服务。
 <img src="/img/micro/network_problem_ha.png" alt="network_edge" />
 图中红色标记的<code>go.micro.srv.s-2 gateway-a-2</code>、<code>go.micro.srv.s-2 gateway-a-3</code>不应该出现在<code>network</code>的<code>routes</code>中，避免同一集群内没必要的路由。</p>
+
+<blockquote>
+<p>有关<code>network</code>的多副本还需要进一步研究，比如4个后会不会出现链路循环，以及具体路由负载策略等</p>
+</blockquote>
 
 <p>总的来说是<code>advertise_strategy</code>需要更完善的策略支持，做必要的隔离、筛选，一是服务的可见性问题，二是服务规模增加后<code>network</code>间的数据通信也会成为瓶颈。</p>
 
