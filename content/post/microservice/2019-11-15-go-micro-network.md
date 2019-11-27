@@ -78,7 +78,9 @@ Network是micro社区正在主力打造的解决多"云"环境的解决方案，
 路由负载选择需要优先级、筛选等策略，如local优先，这样我们可以实现主备集群，以及集群间流量切换等场景的应用
 
 ### 安全
-`network`间的连接是通过`tunnel`完成，而`tunnel`在安全方面只是在`message`的`header`中放了一个`token`用于相互验证，这也是需要加强的部分。
+> 更正：这里我们忽略了`tunnel`的`transport`，在`transport`层是有`mTLS`支持的，具体参考[【go-micro】自签名证书&Tunnel mTLS](/post/microservice/2019-11-27-go-micro-tunnel-mtls/)
+
+~~`network`间的连接是通过`tunnel`完成，而`tunnel`在安全方面只是在`message`的`header`中放了一个`token`用于相互验证，这也是需要加强的部分。~~
 
 ## Network模拟测试
 可以本地使用不同的注册中心模拟多个集群，简单的`mdns`、`consul`和`etcd`就可以模拟出三个集群，如果有公网服务器当然更好。

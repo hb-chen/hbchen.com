@@ -136,6 +136,36 @@
     
       <article class="post bg-white">
   <header class="post-header">
+    <h1 class="post-title"><a class="post-link" href="/post/microservice/2019-11-27-go-micro-tunnel-mtls/">【go-micro】自签名证书&amp;Tunnel mTLS</a></h1>
+    <div class="post-meta">
+      <span class="post-time"> 2019-11-27 </span>
+      <div class="post-category">
+          
+            <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
+          
+        </div>
+      <span class="more-meta"> 约 1062 字 </span>
+      <span class="more-meta"> 预计阅读 3 分钟 </span>
+    </div>
+  </header>
+  
+  <div class="post-content">
+    
+    <div class="post-summary">
+      <p>在<a href="/post/microservice/2019-11-15-go-micro-network/">【go-micro】Network初探</a>我们分析了<code>network</code>的应用场景以及存在的不足之处，
+其中对于安全不足研究的不够深入，<code>tunnel</code>是在<code>transport</code>基础上建立的，而<code>transport</code>层有<code>mTLS</code>的支持，所以当时所说的在安全方面只有<code>header</code>中的<code>token</code>是错误的。
+只是<code>micro</code>当前在<code>network</code>还没有做<code>mTLS</code>环境变量的支持，本文将做一个简单的分享为<code>network</code>增加<code>mTLS</code>支持。</p>
+    </div>
+    <div class="read-more">
+      <a href="/post/microservice/2019-11-27-go-micro-tunnel-mtls/" class="read-more-link">阅读全文</a>
+    </div>
+    
+  </div>
+</article>
+
+    
+      <article class="post bg-white">
+  <header class="post-header">
     <h1 class="post-title"><a class="post-link" href="/post/microservice/2019-11-15-go-micro-network/">【go-micro】Network初探</a></h1>
     <div class="post-meta">
       <span class="post-time"> 2019-11-15 </span>
@@ -144,7 +174,7 @@
             <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
           
         </div>
-      <span class="more-meta"> 约 1684 字 </span>
+      <span class="more-meta"> 约 1790 字 </span>
       <span class="more-meta"> 预计阅读 4 分钟 </span>
     </div>
   </header>
@@ -303,34 +333,6 @@
     </div>
     <div class="read-more">
       <a href="/post/servicemesh/2019-05-11-istio-security-ingress/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
-
-    
-      <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title"><a class="post-link" href="/post/distributed/2019-05-05-rate-limit/">分布式系统限流服务-Golang&amp;Redis</a></h1>
-    <div class="post-meta">
-      <span class="post-time"> 2019-05-05 </span>
-      <div class="post-category">
-          
-            <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/"> 分布式 </a>
-          
-        </div>
-      <span class="more-meta"> 约 2090 字 </span>
-      <span class="more-meta"> 预计阅读 5 分钟 </span>
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      <p>本文参考两个使用Redis做限流的项目，分析分布式系统限流服务的实现，包括固定窗口以及滚动窗口的限流。</p>
-    </div>
-    <div class="read-more">
-      <a href="/post/distributed/2019-05-05-rate-limit/" class="read-more-link">阅读全文</a>
     </div>
     
   </div>

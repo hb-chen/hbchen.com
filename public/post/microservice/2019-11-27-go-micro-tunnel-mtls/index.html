@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【go-micro】自签名证书&amp;Tunnel mTLS - HB-技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="在【go-micro】Network初探我们分析了network的应用场景以及存在的不足之处， 其中对于安全不足研究的不够深入，tunnel是在transport基础上建立的，而transport层有mTLS的支持，所以当时所说的在安全方面只有header中的token是错误的。 只是micro当前在network还没有做mTLS环境变量的支持，本文将做一个简单的分享为network增加mTLS支持。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/microservice/2019-11-27-go-micro-tunnel-mtls/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【go-micro】自签名证书&amp;Tunnel mTLS" />
+<meta property="og:description" content="在【go-micro】Network初探我们分析了network的应用场景以及存在的不足之处，
+其中对于安全不足研究的不够深入，tunnel是在transport基础上建立的，而transport层有mTLS的支持，所以当时所说的在安全方面只有header中的token是错误的。
+只是micro当前在network还没有做mTLS环境变量的支持，本文将做一个简单的分享为network增加mTLS支持。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/microservice/2019-11-27-go-micro-tunnel-mtls/" /><meta property="article:published_time" content="2019-11-27T20:39:14&#43;08:00"/>
+<meta property="article:modified_time" content="2019-11-27T20:52:00&#43;00:00"/>
+
+<meta itemprop="name" content="【go-micro】自签名证书&amp;Tunnel mTLS">
+<meta itemprop="description" content="在【go-micro】Network初探我们分析了network的应用场景以及存在的不足之处，
+其中对于安全不足研究的不够深入，tunnel是在transport基础上建立的，而transport层有mTLS的支持，所以当时所说的在安全方面只有header中的token是错误的。
+只是micro当前在network还没有做mTLS环境变量的支持，本文将做一个简单的分享为network增加mTLS支持。">
+
+
+<meta itemprop="datePublished" content="2019-11-27T20:39:14&#43;08:00" />
+<meta itemprop="dateModified" content="2019-11-27T20:52:00&#43;00:00" />
+<meta itemprop="wordCount" content="1062">
+
+
+
+<meta itemprop="keywords" content="go-micro,微服务," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【go-micro】自签名证书&amp;Tunnel mTLS"/>
+<meta name="twitter:description" content="在【go-micro】Network初探我们分析了network的应用场景以及存在的不足之处，
+其中对于安全不足研究的不够深入，tunnel是在transport基础上建立的，而transport层有mTLS的支持，所以当时所说的在安全方面只有header中的token是错误的。
+只是micro当前在network还没有做mTLS环境变量的支持，本文将做一个简单的分享为network增加mTLS支持。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【go-micro】自签名证书&amp;Tunnel mTLS</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2019-11-27 </span>
+        <div class="post-category">
+            
+              <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
+            
+          </div>
+        <span class="more-meta"> 约 1062 字 </span>
+        <span class="more-meta"> 预计阅读 3 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#network修改">Network修改</a></li>
+<li><a href="#mtls">mTLS</a>
+<ul>
+<li><a href="#ca证书">CA证书</a></li>
+<li><a href="#csr证书">CSR证书</a></li>
+<li><a href="#csr证书签名">CSR证书签名</a></li>
+</ul></li>
+<li><a href="#运行network-mtls">运行Network + mTLS</a></li>
+<li><a href="#ref">Ref</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>在<a href="/post/microservice/2019-11-15-go-micro-network/">【go-micro】Network初探</a>我们分析了<code>network</code>的应用场景以及存在的不足之处，
+其中对于安全不足研究的不够深入，<code>tunnel</code>是在<code>transport</code>基础上建立的，而<code>transport</code>层有<code>mTLS</code>的支持，所以当时所说的在安全方面只有<code>header</code>中的<code>token</code>是错误的。
+只是<code>micro</code>当前在<code>network</code>还没有做<code>mTLS</code>环境变量的支持，本文将做一个简单的分享为<code>network</code>增加<code>mTLS</code>支持。</p>
+
+<blockquote>
+<p>刚刚(2019-11-27)<code>micro</code>又发布了新版本<code>1.17.0</code>，继续采坑🤣</p>
+</blockquote>
+
+<h2 id="network修改">Network修改</h2>
+
+<p>在<a href="https://github.com/micro/micro">micro/micro</a>的<code>internal/helper</code>有<code>TLSConfig()</code>方法可以从<code>GLOBAL OPTIONS</code>中生成<code>*tls.Config</code>，
+参考当前<code>micro</code>实现<code>mTLS</code>两个<code>command</code>(<code>api</code>和<code>web</code>)，对<code>network</code>的<code>tunnel</code>做如下修改:</p>
+
+<pre><code class="language-go">// create a tunnel
+tunOpts := []tunnel.Option{
+	tunnel.Address(Address),
+	tunnel.Nodes(nodes...),
+	tunnel.Token(Token),
+}
+if ctx.GlobalBool(&quot;enable_tls&quot;) {
+	config, err := helper.TLSConfig(ctx)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	config.InsecureSkipVerify = true
+
+	tunOpts = append(tunOpts, tunnel.Transport(
+		quic.NewTransport(transport.TLSConfig(config)),
+	))
+}
+tun := tunnel.NewTunnel(tunOpts...)
+</code></pre>
+
+<blockquote>
+<p>注意这里我们设置了<code>InsecureSkipVerify</code>为<code>true</code>，由于是双向认证，如果<code>InsecureSkipVerify</code>为<code>false</code>，<code>network</code>将无法正常连接</p>
+</blockquote>
+
+<h2 id="mtls">mTLS</h2>
+
+<p>首先参考下图对<code>mTLS</code>有个了解，<code>server</code>和<code>client</code>都需要通过<code>CA</code>对彼此的证书进行验证</p>
+
+<p><img src="/img/micro/mtls.png" alt="network_multi_cluster" /></p>
+
+<p>我们只生成一个<code>CA</code>和<code>CSR</code>证书，对于生产环境根据自己的场景需要更为完善和复杂的证书管理，这里没有涉及，后面会结合<code>micro</code>生态与安全相关的<code>mTLS</code>做更多的研究分享。</p>
+
+<h3 id="ca证书">CA证书</h3>
+
+<p>使用<a href="https://github.com/square/certstrap">certstrap</a>工具生成<code>CA</code>证书</p>
+
+<pre><code class="language-bash"># MacOS
+$ brew install certstrap
+
+# 未输入密码
+$ certstrap init --common-name &quot;MicroCA&quot; --expires &quot;20 years&quot;
+    Enter passphrase (empty for no passphrase): 
+    Enter same passphrase again: 
+    Created out/MicroCA.key
+    Created out/MicroCA.crt
+    Created out/MicroCA.crl
+</code></pre>
+
+<h3 id="csr证书">CSR证书</h3>
+
+<pre><code class="language-bash">$ certstrap request-cert -cn network  
+	Enter passphrase (empty for no passphrase): 
+    Enter same passphrase again: 
+    Created out/network.key
+    Created out/network.csr
+</code></pre>
+
+<h3 id="csr证书签名">CSR证书签名</h3>
+
+<pre><code class="language-bash">$ certstrap sign network --CA MicroCA
+	Created out/network.crt from out/network.csr signed by out/MicroCA.key
+</code></pre>
+
+<h2 id="运行network-mtls">运行Network + mTLS</h2>
+
+<pre><code class="language-bash">$ ./micro \
+--registry=etcd \
+--transport=tcp \
+--enable_tls=true \
+--tls_cert_file=conf/tls/network.crt  \
+--tls_key_file=conf/tls/network.key  \
+--tls_client_ca_file=conf/tls/MicroCA.crt \
+network
+
+$ ./micro \
+--registry=consul \
+--transport=tcp \
+--enable_tls=true \
+--tls_cert_file=conf/tls/network.crt  \
+--tls_key_file=conf/tls/network.key  \
+--tls_client_ca_file=conf/tls/MicroCA.crt \
+network \
+--nodes=localhost:8085 \
+--address=:8086
+</code></pre>
+
+<p><strong>Network routes</strong></p>
+
+<blockquote>
+<p>如果<code>routes</code>中看不到<code>link=network</code>应该是<code>network</code>间未能建立连接</p>
+</blockquote>
+
+<pre><code class="language-bash">./micro --registry=etcd --transport=tcp network routes  
++------------------+----------------------+----------------------+--------------------------------------+----------+--------+---------+
+|     SERVICE      |       ADDRESS        |       GATEWAY        |                ROUTER                | NETWORK  | METRIC |  LINK   |
++------------------+----------------------+----------------------+--------------------------------------+----------+--------+---------+
+| consul           | 1919625842587659968  | 17017708900476934200 | f5dc3933-3ccc-4dc0-bafe-cbfd7abebf60 | go.micro | 1      | network |
+| go.micro.network | 15624894091238291400 | 17017708900476934200 | f5dc3933-3ccc-4dc0-bafe-cbfd7abebf60 | go.micro | 1      | network |
+| go.micro.network | 192.168.1.4:58527    |                      | df521f3c-a39e-455b-abbf-ada184a900c9 | go.micro | 1      | local   |
+| go.micro.network | 192.168.1.4:58528    |                      | df521f3c-a39e-455b-abbf-ada184a900c9 | go.micro | 1      | local   |
+| go.micro         | 192.168.1.4:8085     |                      | df521f3c-a39e-455b-abbf-ada184a900c9 | go.micro | 1      | local   |
+| go.micro         | 9876822083478954444  | 17017708900476934200 | f5dc3933-3ccc-4dc0-bafe-cbfd7abebf60 | go.micro | 1      | network |
++------------------+----------------------+----------------------+--------------------------------------+----------+--------+---------+
+
+./micro --registry=consul --transport=tcp network routes
++------------------+----------------------+---------------------+--------------------------------------+----------+--------+---------+
+|     SERVICE      |       ADDRESS        |       GATEWAY       |                ROUTER                | NETWORK  | METRIC |  LINK   |
++------------------+----------------------+---------------------+--------------------------------------+----------+--------+---------+
+| consul           | 127.0.0.1:8300       |                     | f5dc3933-3ccc-4dc0-bafe-cbfd7abebf60 | go.micro | 1      | local   |
+| go.micro         | 192.168.1.4:8086     |                     | f5dc3933-3ccc-4dc0-bafe-cbfd7abebf60 | go.micro | 1      | local   |
+| go.micro         | 9480410441638176179  | 3307701226171868606 | df521f3c-a39e-455b-abbf-ada184a900c9 | go.micro | 2      | network |
+| go.micro.network | 11801771601773192119 | 3307701226171868606 | df521f3c-a39e-455b-abbf-ada184a900c9 | go.micro | 2      | network |
+| go.micro.network | 192.168.1.4:58843    |                     | f5dc3933-3ccc-4dc0-bafe-cbfd7abebf60 | go.micro | 1      | local   |
+| go.micro.network | 192.168.1.4:58844    |                     | f5dc3933-3ccc-4dc0-bafe-cbfd7abebf60 | go.micro | 1      | local   |
++------------------+----------------------+---------------------+--------------------------------------+----------+--------+---------+
+</code></pre>
+
+<h2 id="ref">Ref</h2>
+
+<p><a href="https://www.gitdig.com/about/">Go 编程: 快速生成自签名证书与双向认证(mTLS)</a></p>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2019-11-27</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/go-micro/">go-micro</a>
+          
+          <a href="/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/microservice/2019-11-15-go-micro-network/">
+            <span class="next-text nav-default">【go-micro】Network初探</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2019
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio 蜀ICP备18021614号-1</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>
