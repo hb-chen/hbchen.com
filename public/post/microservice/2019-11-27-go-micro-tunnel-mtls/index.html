@@ -66,7 +66,7 @@
 
 <meta itemprop="datePublished" content="2019-11-27T20:39:14&#43;08:00" />
 <meta itemprop="dateModified" content="2019-11-27T20:52:00&#43;00:00" />
-<meta itemprop="wordCount" content="1062">
+<meta itemprop="wordCount" content="1106">
 
 
 
@@ -155,7 +155,7 @@
               <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
             
           </div>
-        <span class="more-meta"> 约 1062 字 </span>
+        <span class="more-meta"> 约 1106 字 </span>
         <span class="more-meta"> 预计阅读 3 分钟 </span>
       </div>
     </header>
@@ -197,7 +197,7 @@
 
 <h2 id="network修改">Network修改</h2>
 
-<p>在<a href="https://github.com/micro/micro">micro/micro</a>的<code>internal/helper</code>有<code>TLSConfig()</code>方法可以从<code>GLOBAL OPTIONS</code>中生成<code>*tls.Config</code>，
+<p>当前<code>micro</code>的<code>network</code>模块并没有提供<code>TLS</code>环境变量配置的支持，需要自己修改源码，在<a href="https://github.com/micro/micro">micro/micro</a>的<code>internal/helper</code>有<code>TLSConfig()</code>方法可以从<code>GLOBAL OPTIONS</code>中生成<code>*tls.Config</code>，
 参考当前<code>micro</code>实现<code>mTLS</code>两个<code>command</code>(<code>api</code>和<code>web</code>)，对<code>network</code>的<code>tunnel</code>做如下修改:</p>
 
 <pre><code class="language-go">// create a tunnel

@@ -64,7 +64,7 @@
 
 <meta itemprop="datePublished" content="2019-11-15T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-11-16T07:03:09&#43;00:00" />
-<meta itemprop="wordCount" content="1790">
+<meta itemprop="wordCount" content="1763">
 
 
 
@@ -152,7 +152,7 @@
               <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
             
           </div>
-        <span class="more-meta"> 约 1790 字 </span>
+        <span class="more-meta"> 约 1763 字 </span>
         <span class="more-meta"> 预计阅读 4 分钟 </span>
       </div>
     </header>
@@ -284,9 +284,10 @@
 <h3 id="安全">安全</h3>
 
 <blockquote>
-<p>更正：这里我们忽略了<code>tunnel</code>的<code>transport</code>，在<code>transport</code>层是有<code>TLS</code>支持的，具体参考[](/post/microservice/2019-11-27-go-micro-tunnel-mtls/)
-<code>network</code>间的连接是通过<code>tunnel</code>完成，而<code>tunnel</code>在安全方面只是在<code>message</code>的<code>header</code>中放了一个<code>token</code>用于相互验证，这也是需要加强的部分。</p>
+<p>更正：这里我们忽略了<code>tunnel</code>的<code>transport</code>，在<code>transport</code>层是有<code>mTLS</code>支持的，具体参考<a href="/post/microservice/2019-11-27-go-micro-tunnel-mtls/">【go-micro】自签名证书&amp;Tunnel mTLS</a></p>
 </blockquote>
+
+<p><del><code>network</code>间的连接是通过<code>tunnel</code>完成，而<code>tunnel</code>在安全方面只是在<code>message</code>的<code>header</code>中放了一个<code>token</code>用于相互验证，这也是需要加强的部分。</del></p>
 
 <h2 id="network模拟测试">Network模拟测试</h2>
 

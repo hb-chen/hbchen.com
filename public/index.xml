@@ -62,7 +62,7 @@
 
 &lt;h2 id=&#34;network修改&#34;&gt;Network修改&lt;/h2&gt;
 
-&lt;p&gt;在&lt;a href=&#34;https://github.com/micro/micro&#34;&gt;micro/micro&lt;/a&gt;的&lt;code&gt;internal/helper&lt;/code&gt;有&lt;code&gt;TLSConfig()&lt;/code&gt;方法可以从&lt;code&gt;GLOBAL OPTIONS&lt;/code&gt;中生成&lt;code&gt;*tls.Config&lt;/code&gt;，
+&lt;p&gt;当前&lt;code&gt;micro&lt;/code&gt;的&lt;code&gt;network&lt;/code&gt;模块并没有提供&lt;code&gt;TLS&lt;/code&gt;环境变量配置的支持，需要自己修改源码，在&lt;a href=&#34;https://github.com/micro/micro&#34;&gt;micro/micro&lt;/a&gt;的&lt;code&gt;internal/helper&lt;/code&gt;有&lt;code&gt;TLSConfig()&lt;/code&gt;方法可以从&lt;code&gt;GLOBAL OPTIONS&lt;/code&gt;中生成&lt;code&gt;*tls.Config&lt;/code&gt;，
 参考当前&lt;code&gt;micro&lt;/code&gt;实现&lt;code&gt;mTLS&lt;/code&gt;两个&lt;code&gt;command&lt;/code&gt;(&lt;code&gt;api&lt;/code&gt;和&lt;code&gt;web&lt;/code&gt;)，对&lt;code&gt;network&lt;/code&gt;的&lt;code&gt;tunnel&lt;/code&gt;做如下修改:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// create a tunnel
@@ -287,9 +287,10 @@ network \
 &lt;h3 id=&#34;安全&#34;&gt;安全&lt;/h3&gt;
 
 &lt;blockquote&gt;
-&lt;p&gt;更正：这里我们忽略了&lt;code&gt;tunnel&lt;/code&gt;的&lt;code&gt;transport&lt;/code&gt;，在&lt;code&gt;transport&lt;/code&gt;层是有&lt;code&gt;TLS&lt;/code&gt;支持的，具体参考[](/post/microservice/2019-11-27-go-micro-tunnel-mtls/)
-&lt;code&gt;network&lt;/code&gt;间的连接是通过&lt;code&gt;tunnel&lt;/code&gt;完成，而&lt;code&gt;tunnel&lt;/code&gt;在安全方面只是在&lt;code&gt;message&lt;/code&gt;的&lt;code&gt;header&lt;/code&gt;中放了一个&lt;code&gt;token&lt;/code&gt;用于相互验证，这也是需要加强的部分。&lt;/p&gt;
+&lt;p&gt;更正：这里我们忽略了&lt;code&gt;tunnel&lt;/code&gt;的&lt;code&gt;transport&lt;/code&gt;，在&lt;code&gt;transport&lt;/code&gt;层是有&lt;code&gt;mTLS&lt;/code&gt;支持的，具体参考&lt;a href=&#34;http://hbchen.com/post/microservice/2019-11-27-go-micro-tunnel-mtls/&#34;&gt;【go-micro】自签名证书&amp;amp;Tunnel mTLS&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
+
+&lt;p&gt;&lt;del&gt;&lt;code&gt;network&lt;/code&gt;间的连接是通过&lt;code&gt;tunnel&lt;/code&gt;完成，而&lt;code&gt;tunnel&lt;/code&gt;在安全方面只是在&lt;code&gt;message&lt;/code&gt;的&lt;code&gt;header&lt;/code&gt;中放了一个&lt;code&gt;token&lt;/code&gt;用于相互验证，这也是需要加强的部分。&lt;/del&gt;&lt;/p&gt;
 
 &lt;h2 id=&#34;network模拟测试&#34;&gt;Network模拟测试&lt;/h2&gt;
 
