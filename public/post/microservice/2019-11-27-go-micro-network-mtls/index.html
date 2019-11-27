@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>【go-micro】Tunnel mTLS &amp; 自签名证书 - HB-技术实践</title>
+  <title>【go-micro】Network mTLS &amp; 自签名证书 - HB-技术实践</title>
   <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
 
 <meta name="renderer" content="webkit" />
@@ -32,7 +32,7 @@
 <meta name="generator" content="Hugo 0.53" />
 
 
-<link rel="canonical" href="http://hbchen.com/post/microservice/2019-11-27-go-micro-tunnel-mtls/" />
+<link rel="canonical" href="http://hbchen.com/post/microservice/2019-11-27-go-micro-network-mtls/" />
 
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -50,15 +50,15 @@
 
 
 
-<meta property="og:title" content="【go-micro】Tunnel mTLS &amp; 自签名证书" />
+<meta property="og:title" content="【go-micro】Network mTLS &amp; 自签名证书" />
 <meta property="og:description" content="在【go-micro】Network初探我们分析了network的应用场景以及存在的不足之处，
 其中对于安全不足研究的不够深入，tunnel是在transport基础上建立的，而transport层有mTLS的支持，所以当时所说的在安全方面只有header中的token是错误的。
 只是micro当前在network还没有做mTLS环境变量的支持，本文将做一个简单的分享为network增加mTLS支持。" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://hbchen.com/post/microservice/2019-11-27-go-micro-tunnel-mtls/" /><meta property="article:published_time" content="2019-11-27T20:39:14&#43;08:00"/>
+<meta property="og:url" content="http://hbchen.com/post/microservice/2019-11-27-go-micro-network-mtls/" /><meta property="article:published_time" content="2019-11-27T20:39:14&#43;08:00"/>
 <meta property="article:modified_time" content="2019-11-27T20:52:00&#43;00:00"/>
 
-<meta itemprop="name" content="【go-micro】Tunnel mTLS &amp; 自签名证书">
+<meta itemprop="name" content="【go-micro】Network mTLS &amp; 自签名证书">
 <meta itemprop="description" content="在【go-micro】Network初探我们分析了network的应用场景以及存在的不足之处，
 其中对于安全不足研究的不够深入，tunnel是在transport基础上建立的，而transport层有mTLS的支持，所以当时所说的在安全方面只有header中的token是错误的。
 只是micro当前在network还没有做mTLS环境变量的支持，本文将做一个简单的分享为network增加mTLS支持。">
@@ -72,7 +72,7 @@
 
 <meta itemprop="keywords" content="go-micro,微服务," />
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="【go-micro】Tunnel mTLS &amp; 自签名证书"/>
+<meta name="twitter:title" content="【go-micro】Network mTLS &amp; 自签名证书"/>
 <meta name="twitter:description" content="在【go-micro】Network初探我们分析了network的应用场景以及存在的不足之处，
 其中对于安全不足研究的不够深入，tunnel是在transport基础上建立的，而transport层有mTLS的支持，所以当时所说的在安全方面只有header中的token是错误的。
 只是micro当前在network还没有做mTLS环境变量的支持，本文将做一个简单的分享为network增加mTLS支持。"/>
@@ -146,7 +146,7 @@
           <article class="post bg-white">
     
     <header class="post-header">
-      <h1 class="post-title">【go-micro】Tunnel mTLS &amp; 自签名证书</h1>
+      <h1 class="post-title">【go-micro】Network mTLS &amp; 自签名证书</h1>
 
       <div class="post-meta">
         <span class="post-time"> 2019-11-27 </span>

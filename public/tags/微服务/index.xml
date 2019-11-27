@@ -13,11 +13,11 @@
     
     
     <item>
-      <title>【go-micro】Tunnel mTLS &amp; 自签名证书</title>
-      <link>http://hbchen.com/post/microservice/2019-11-27-go-micro-tunnel-mtls/</link>
+      <title>【go-micro】Network mTLS &amp; 自签名证书</title>
+      <link>http://hbchen.com/post/microservice/2019-11-27-go-micro-network-mtls/</link>
       <pubDate>Wed, 27 Nov 2019 20:39:14 +0800</pubDate>
       
-      <guid>http://hbchen.com/post/microservice/2019-11-27-go-micro-tunnel-mtls/</guid>
+      <guid>http://hbchen.com/post/microservice/2019-11-27-go-micro-network-mtls/</guid>
       <description>&lt;p&gt;在&lt;a href=&#34;http://hbchen.com/post/microservice/2019-11-15-go-micro-network/&#34;&gt;【go-micro】Network初探&lt;/a&gt;我们分析了&lt;code&gt;network&lt;/code&gt;的应用场景以及存在的不足之处，
 其中对于安全不足研究的不够深入，&lt;code&gt;tunnel&lt;/code&gt;是在&lt;code&gt;transport&lt;/code&gt;基础上建立的，而&lt;code&gt;transport&lt;/code&gt;层有&lt;code&gt;mTLS&lt;/code&gt;的支持，所以当时所说的在安全方面只有&lt;code&gt;header&lt;/code&gt;中的&lt;code&gt;token&lt;/code&gt;是错误的。
 只是&lt;code&gt;micro&lt;/code&gt;当前在&lt;code&gt;network&lt;/code&gt;还没有做&lt;code&gt;mTLS&lt;/code&gt;环境变量的支持，本文将做一个简单的分享为&lt;code&gt;network&lt;/code&gt;增加&lt;code&gt;mTLS&lt;/code&gt;支持。&lt;/p&gt;</description>
