@@ -1727,7 +1727,7 @@ https://hbchen.com:$SECURE_INGRESS_PORT
 
 &lt;h2 id=&#34;固定窗口&#34;&gt;固定窗口&lt;/h2&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/distributed/rate-window-fixed.png&#34; alt=&#34;fixed-window&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/distributed/rate-window-fixed.png&#34; alt=&#34;fixed-window&#34; /&gt;&lt;/p&gt;
 
 &lt;h3 id=&#34;go-redis-redis-rate&#34;&gt;go-redis/redis_rate&lt;/h3&gt;
 
@@ -1867,7 +1867,7 @@ timestamp = (tonumber(now[1]) * 1e6 + tonumber(now[2])) * 1e3
 
 &lt;h2 id=&#34;滚动窗口&#34;&gt;滚动窗口&lt;/h2&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/distributed/rate-window-rolling.png&#34; alt=&#34;rolling-window&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/distributed/rate-window-rolling.png&#34; alt=&#34;rolling-window&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;滚动窗口在固定窗口基础上，将一个&lt;code&gt;window&lt;/code&gt;拆成多个&lt;code&gt;bucket&lt;/code&gt;，这样窗口根据&lt;code&gt;bucket&lt;/code&gt;的大小向前移动。Redis的结构为哈希表：&lt;code&gt;token&lt;/code&gt;、&lt;code&gt;bucket.token&lt;/code&gt;、&lt;code&gt;bucket.timestamp&lt;/code&gt;和&lt;code&gt;key&lt;/code&gt;，
 以及一个存储&lt;code&gt;bucket&lt;/code&gt;历史数据的有序集合(&lt;em&gt;以&lt;code&gt;bucket&lt;/code&gt;的时间戳排序&lt;/em&gt;)&lt;/p&gt;
@@ -2319,11 +2319,11 @@ $ ./gradlew clean sls:shadowJar
 --path /analysis/path
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/flink/sls+es-dashboard.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/flink/sls+es-dashboard.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
 
 &lt;h3 id=&#34;到kibana看下结果&#34;&gt;到Kibana看下结果&lt;/h3&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/flink/sls+es-kibana.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/flink/sls+es-kibana.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;GET /sls_analysis/_search
 {
@@ -2461,7 +2461,7 @@ $ export SOURCE_POD=$(kubectl get pod -l app=sleep -o jsonpath={.items..metadata
 
 &lt;h2 id=&#34;sidecar方式&#34;&gt;Sidecar方式&lt;/h2&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio/egress-sidecar.png&#34; alt=&#34;ServiceEntry&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/istio/egress-sidecar.png&#34; alt=&#34;ServiceEntry&#34; /&gt;&lt;/p&gt;
 
 &lt;h3 id=&#34;http&#34;&gt;HTTP&lt;/h3&gt;
 
@@ -2623,7 +2623,7 @@ HTTP/2 200
 
 &lt;h2 id=&#34;gateway方式&#34;&gt;Gateway方式&lt;/h2&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio/egress-gateway.png&#34; alt=&#34;ServiceEntry&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/istio/egress-gateway.png&#34; alt=&#34;ServiceEntry&#34; /&gt;&lt;/p&gt;
 
 &lt;blockquote&gt;
 &lt;p&gt;官方示例&lt;a href=&#34;https://istio.io/zh/docs/examples/advanced-gateways/egress-gateway/&#34;&gt;配置 Egress gateway&lt;/a&gt;&lt;/p&gt;
@@ -2836,7 +2836,7 @@ HTTP/1.1 200 OK
 
 &lt;h2 id=&#34;直接调用外部服务&#34;&gt;直接调用外部服务&lt;/h2&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio/egress-sidecar-ip.png&#34; alt=&#34;ServiceEntry&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/istio/egress-sidecar-ip.png&#34; alt=&#34;ServiceEntry&#34; /&gt;&lt;/p&gt;
 
 &lt;blockquote&gt;
 &lt;p&gt;Istio文档&lt;a href=&#34;https://istio.io/zh/docs/tasks/traffic-management/egress/#%E7%9B%B4%E6%8E%A5%E8%B0%83%E7%94%A8%E5%A4%96%E9%83%A8%E6%9C%8D%E5%8A%A1&#34;&gt;直接调用外部服务&lt;/a&gt;&lt;/p&gt;
@@ -3244,7 +3244,7 @@ HTTP/1.1 200 OK
 &lt;li&gt;仅&lt;code&gt;service-1&lt;/code&gt;授权给&lt;code&gt;ingressgateway&lt;/code&gt;访问，&lt;code&gt;service-2&lt;/code&gt;则不能被&lt;code&gt;ingressgateway&lt;/code&gt;访问&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/istio-tls-rbac.png&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
 
 &lt;h2 id=&#34;双向tls&#34;&gt;双向TLS&lt;/h2&gt;
 

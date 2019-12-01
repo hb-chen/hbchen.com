@@ -23,7 +23,7 @@ tags: [
 - [go-redis/redis_rate](https://github.com/go-redis/redis_rate)
 
 ## 固定窗口
-![fixed-window](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/distributed/rate-window-fixed.png)
+![fixed-window](/img/distributed/rate-window-fixed.png)
 
 ### go-redis/redis_rate
 `redis_rate`使用**窗口标识**做`key`的字符串，用`INCRBY`统计窗口已使用流量`n`，且`key`在此窗口结束后自动过期。
@@ -158,7 +158,7 @@ timestamp = (tonumber(now[1]) * 1e6 + tonumber(now[2])) * 1e3
 ```
 
 ## 滚动窗口
-![rolling-window](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/distributed/rate-window-rolling.png)
+![rolling-window](/img/distributed/rate-window-rolling.png)
 
 滚动窗口在固定窗口基础上，将一个`window`拆成多个`bucket`，这样窗口根据`bucket`的大小向前移动。Redis的结构为哈希表：`token`、`bucket.token`、`bucket.timestamp`和`key`，
 以及一个存储`bucket`历史数据的有序集合(*以`bucket`的时间戳排序*)

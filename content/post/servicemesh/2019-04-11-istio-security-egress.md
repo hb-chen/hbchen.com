@@ -78,7 +78,7 @@ $ export SOURCE_POD=$(kubectl get pod -l app=sleep -o jsonpath={.items..metadata
 ```
 
 ## Sidecar方式
-![ServiceEntry](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio/egress-sidecar.png)
+![ServiceEntry](/img/istio/egress-sidecar.png)
 
 ### HTTP
 
@@ -240,7 +240,7 @@ HTTP/2 200
 
 
 ## Gateway方式
-![ServiceEntry](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio/egress-gateway.png)
+![ServiceEntry](/img/istio/egress-gateway.png)
 
 > 官方示例[配置 Egress gateway](https://istio.io/zh/docs/examples/advanced-gateways/egress-gateway/)
 
@@ -451,7 +451,7 @@ HTTP/1.1 200 OK
 
 
 ## 直接调用外部服务
-![ServiceEntry](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio/egress-sidecar-ip.png)
+![ServiceEntry](/img/istio/egress-sidecar-ip.png)
 
 > Istio文档[直接调用外部服务](https://istio.io/zh/docs/tasks/traffic-management/egress/#%E7%9B%B4%E6%8E%A5%E8%B0%83%E7%94%A8%E5%A4%96%E9%83%A8%E6%9C%8D%E5%8A%A1)
 

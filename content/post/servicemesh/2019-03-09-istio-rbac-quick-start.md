@@ -39,7 +39,7 @@ Istio提供了非常易用的安全解决方案，包括服务间身份验证`mT
 - 网格内`service-1`、`service-2`开启RBAC访问控制
 - 仅`service-1`授权给`ingressgateway`访问，`service-2`则不能被`ingressgateway`访问
 
-![auth-adapter](https://raw.githubusercontent.com/hb-chen/hbchen.com/master/static/img/istio-tls-rbac.png)
+![auth-adapter](/img/istio-tls-rbac.png)
     
 ## 双向TLS
 
