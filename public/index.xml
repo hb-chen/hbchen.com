@@ -46,6 +46,314 @@
     </item>
     
     <item>
+      <title>【go-micro】微服务协作开发、灰度发布之流量染色</title>
+      <link>http://hbchen.com/post/microservice/2019-11-30-go-micro-service-chain/</link>
+      <pubDate>Sat, 30 Nov 2019 16:40:32 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-11-30-go-micro-service-chain/</guid>
+      
+        <description>&lt;p&gt;协作开发与灰度发布是微服务框架在流量治理能力方面的两个体现，本文结合&lt;strong&gt;go-micro&lt;/strong&gt;实践对流量进行染色，实现开发环境的多分支协作，
+以及生产环境的灰度发布。&lt;/p&gt;
+
+&lt;h1 id=&#34;场景&#34;&gt;场景&lt;/h1&gt;
+
+&lt;h2 id=&#34;开发环境多服务-多分支协作&#34;&gt;开发环境多服务、多分支协作&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/micro/chain-dev.png&#34; alt=&#34;micro-chain-dev&#34; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;QA&lt;/code&gt;组测试&lt;code&gt;v1.2&lt;/code&gt;和&lt;code&gt;v2.0&lt;/code&gt;链路
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;v2.0&lt;/code&gt; + &lt;code&gt;v1.2&lt;/code&gt;链路&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;v1.1&lt;/code&gt;组仅关注&lt;code&gt;v1.1&lt;/code&gt;的版本开发
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;v1.1&lt;/code&gt; + &lt;code&gt;master&lt;/code&gt;链路&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;v1.2&lt;/code&gt;组在&lt;code&gt;v1.1&lt;/code&gt;开发新版&lt;code&gt;srv-2&lt;/code&gt;服务
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;v1.2&lt;/code&gt; + &lt;code&gt;v1.1&lt;/code&gt; + &lt;code&gt;master&lt;/code&gt;链路&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;v2.0&lt;/code&gt;组仅关注&lt;code&gt;v2.0&lt;/code&gt;的版本开发
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;v2.0&lt;/code&gt; + &lt;code&gt;master&lt;/code&gt;链路
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;生产环境灰度发布&#34;&gt;生产环境灰度发布&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/micro/chain-gray.png&#34; alt=&#34;micro-chain-gray&#34; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;普通用户
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Pro&lt;/code&gt;链路&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;灰度测试用户
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Gray&lt;/code&gt; + &lt;code&gt;Pro&lt;/code&gt;链路&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;QA
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Pre&lt;/code&gt; + &lt;code&gt;Pro&lt;/code&gt;链路&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&#34;流量染色&#34;&gt;流量染色&lt;/h1&gt;
+
+&lt;p&gt;&lt;strong&gt;流量染色核心：&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;gateway对请求进行染色
+
+&lt;ul&gt;
+&lt;li&gt;染色规则可以是&lt;code&gt;host&lt;/code&gt;、&lt;code&gt;header&lt;/code&gt;字段、&lt;code&gt;agent&lt;/code&gt;终端信息、用户筛选、流量比例等等&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;染色信息在服务间传递
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;go-micro&lt;/code&gt;中&lt;code&gt;http&lt;/code&gt;请求的&lt;code&gt;header&lt;/code&gt;以及&lt;code&gt;rpc&lt;/code&gt;请求的&lt;code&gt;metadata&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;服务调用时根据染色信息对服务进行筛选，实现调用链路的管控&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;我们基于&lt;code&gt;go-micro&lt;/code&gt;实践的是实现&lt;strong&gt;多链路染色&lt;/strong&gt;，染色链路带有优先级，如&lt;a href=&#34;#开发环境多服务-多分支协作&#34;&gt;开发环境多服务、多分支协作&lt;/a&gt;的&lt;code&gt;v1.2&lt;/code&gt;组，
+虽然&lt;code&gt;v1.1&lt;/code&gt;和&lt;code&gt;v1.2&lt;/code&gt;都有&lt;code&gt;srv-2&lt;/code&gt;服务，但我们在染色信息中&lt;code&gt;v1.2&lt;/code&gt;在前优先选择，所以可以实现多分支同时染色(PS：如果两个分支中两个服务的优先级相反无法实现，需要设计更复杂的染色方案)&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;网关染色及&lt;code&gt;client wrapper&lt;/code&gt;实现参考我实现的两个&lt;code&gt;chain&lt;/code&gt;插件&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-plugins/tree/master/micro/chain&#34;&gt;hb-chen/micro-plugin/micro/chain&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hb-go/micro-plugins/tree/master/wrapper/select/chain&#34;&gt;hb-chen/micro-plugin/wrapper/select/chain&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;染色&#34;&gt;染色&lt;/h2&gt;
+
+&lt;p&gt;在网关对流量进行&lt;strong&gt;染色&lt;/strong&gt;，基于&lt;code&gt;mciro&lt;/code&gt;的插件，可以方便的实现，具体染色规则需要根据自身需求实现。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;// 链路染色
+api.Register(chain.New(chain.WithChainsFunc(func(r *http.Request) []string {
+	return []string{&amp;quot;v2.0&amp;quot;, &amp;quot;v1.2&amp;quot;}
+})))
+
+web.Register(chain.New(chain.WithChainsFunc(func(r *http.Request) []string {
+	return []string{&amp;quot;v2.0&amp;quot;}
+})))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;调用链路管控&#34;&gt;调用链路管控&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;go-micro&lt;/code&gt;实现调用链路管控，最大的障碍就是&lt;strong&gt;网关&lt;/strong&gt;，&lt;code&gt;API&lt;/code&gt;及&lt;code&gt;Web&lt;/code&gt;均不支持服务筛选，需要自己二次开发，相关问题也反馈给社区看后续计划&lt;a href=&#34;https://github.com/micro/go-micro/issues/1003&#34;&gt;#1003&lt;/a&gt;。&lt;/p&gt;
+
+&lt;h3 id=&#34;网关服务筛选-坑&#34;&gt;网关服务筛选-坑&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;API网关&lt;/strong&gt;仅尝试了&lt;code&gt;api handler&lt;/code&gt;，修改相对简单，只需要增加&lt;code&gt;ClientWrapper&lt;/code&gt;，并去掉指定的负载策略即可。如果使用其他&lt;code&gt;handler&lt;/code&gt;需要逐个解决。&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;1. &lt;code&gt;micro/main.go&lt;/code&gt;添加&lt;code&gt;ClientWrapper&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func main() {
+	cmd.Init(
+		// 链路染色
+		micro.WrapClient(chain.NewClientWrapper()),
+	)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;2. &lt;code&gt;go-micro/api/handler/api.go&lt;/code&gt;去掉&lt;code&gt;strategy&lt;/code&gt;，&lt;code&gt;rpc handler&lt;/code&gt;类似&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// create strategy
+// so := selector.WithStrategy(strategy(service.Services))
+
+// if err := c.Call(cx, req, rsp, client.WithSelectOption(so)); err != nil {
+if err := c.Call(cx, req, rsp); err != nil {
+	
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Web网关&lt;/strong&gt;相对麻烦，不能方便的使用&lt;code&gt;micro&lt;/code&gt;的&lt;code&gt;options&lt;/code&gt;，暂时测试在&lt;code&gt;web&lt;/code&gt;模块实现&lt;code&gt;filter&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;1. &lt;code&gt;micro/web/web.go&lt;/code&gt;修改&lt;code&gt;func (s *srv) proxy() http.Handler&lt;/code&gt;，增加&lt;code&gt;SelectOption&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func (s *srv) proxy() http.Handler {
+	sel := s.service.Client().Options().Selector
+
+	director := func(r *http.Request) {
+		kill := func() {
+			r.URL.Host = &amp;quot;&amp;quot;
+			r.URL.Path = &amp;quot;&amp;quot;
+			r.URL.Scheme = &amp;quot;&amp;quot;
+			r.Host = &amp;quot;&amp;quot;
+			r.RequestURI = &amp;quot;&amp;quot;
+		}
+
+		parts := strings.Split(r.URL.Path, &amp;quot;/&amp;quot;)
+		if len(parts) &amp;lt; 2 {
+			kill()
+			return
+		}
+		if !re.MatchString(parts[1]) {
+			kill()
+			return
+		}
+
+		// NOTE: 添加SelectorOption
+		val := r.Header.Get(&amp;quot;X-Micro-Chain&amp;quot;)
+		chains := strings.Split(val, &amp;quot;;&amp;quot;)
+
+		next, err := sel.Select(Namespace+&amp;quot;.&amp;quot;+parts[1], selector.WithFilter(filterChain(chains)))
+		if err != nil {
+			kill()
+			return
+		}
+
+		s, err := next()
+		if err != nil {
+			kill()
+			return
+		}
+
+		r.Header.Set(BasePathHeader, &amp;quot;/&amp;quot;+parts[1])
+		r.URL.Host = s.Address
+		r.URL.Path = &amp;quot;/&amp;quot; + strings.Join(parts[2:], &amp;quot;/&amp;quot;)
+		r.URL.Scheme = &amp;quot;http&amp;quot;
+		r.Host = r.URL.Host
+	}
+
+	return &amp;amp;proxy{
+		Default:  &amp;amp;httputil.ReverseProxy{Director: director},
+		Director: director,
+	}
+}
+
+// NOTE: SelectOption的filter实现
+func filterChain(chains []string) selector.Filter {
+	return func(old []*registry.Service) []*registry.Service {
+		if len(chains) == 0 {
+			return old
+		}
+
+		var services []*registry.Service
+
+		chain := &amp;quot;&amp;quot;
+		idx := 0
+		for _, service := range old {
+			serv := new(registry.Service)
+			var nodes []*registry.Node
+
+			for _, node := range service.Nodes {
+				if node.Metadata == nil {
+					continue
+				}
+
+				val := node.Metadata[&amp;quot;chain&amp;quot;]
+				if len(val) == 0 {
+					continue
+				}
+
+				if len(chain) &amp;gt; 0 &amp;amp;&amp;amp; idx == 0 {
+					if chain == val {
+						nodes = append(nodes, node)
+					}
+					continue
+				}
+
+				// chains按顺序优先匹配
+				ok, i := inArray(val, chains)
+				if ok &amp;amp;&amp;amp; idx &amp;gt; i {
+					// 出现优先链路，services清空，nodes清空
+					idx = i
+					services = services[:0]
+					nodes = nodes[:0]
+				}
+
+				if ok {
+					chain = val
+					nodes = append(nodes, node)
+				}
+			}
+
+			// only add service if there&#39;s some nodes
+			if len(nodes) &amp;gt; 0 {
+				// copy
+				*serv = *service
+				serv.Nodes = nodes
+				services = append(services, serv)
+			}
+		}
+
+		if len(services) == 0 {
+			return old
+		}
+
+		return services
+	}
+}
+
+func inArray(s string, d []string) (bool, int) {
+	for k, v := range d {
+		if s == v {
+			return true, k
+		}
+	}
+	return false, 0
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;服务筛选&#34;&gt;服务筛选&lt;/h3&gt;
+
+&lt;p&gt;普通服务低啊用的筛选框架支持没有什么问题，首先要为服务添加&lt;code&gt;metadata&lt;/code&gt;信息，不赘述。其次要对&lt;code&gt;Client&lt;/code&gt;进行包装，服务调用时添加&lt;code&gt;SelectOption&lt;/code&gt;，
+实现参考我的&lt;a href=&#34;https://github.com/hb-go/micro-plugins/tree/master/wrapper/select/chain&#34;&gt;chain&lt;/a&gt;插件。&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;1. 添加&lt;code&gt;metadata&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;md := make(map[string]string)
+md[&amp;quot;chain&amp;quot;] = &amp;quot;v2.0&amp;quot;
+
+// New Service
+service := micro.NewService(
+	micro.Name(&amp;quot;go.micro.api.xxx&amp;quot;),
+	micro.Version(&amp;quot;latest&amp;quot;),
+	micro.Metadata(md),
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;2. Wrap Client&lt;/em&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;需要注意的是&lt;code&gt;service&lt;/code&gt;初始过程，有类似&lt;code&gt;micro new&lt;/code&gt;模块将service client注入到context的方法，需要分两次Init()，先WrapClient，再WrapHandler，
+否则注入的&lt;code&gt;client&lt;/code&gt;将是未被包装的。这也是micro比较常遇到的&lt;strong&gt;坑&lt;/strong&gt;！&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// Initialise service
+// NOTE: 注意有类似micro new模块将service client注入到context的方法，需要分两次Init()，否则注入的Client并未被包装
+service.Init(
+	micro.WrapClient(chain.NewClientWrapper()),
+)
+service.Init(
+	// create wrap for the Example srv client
+	micro.WrapHandler(client.AccountWrapper(service)),
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;ref&#34;&gt;Ref&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://mp.weixin.qq.com/s/UBoRKt3l91ffPagtjExmYw&#34;&gt;大规模微服务场景下灰度发布与流量染色实践&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【go-micro】Network mTLS &amp; 自签名证书</title>
       <link>http://hbchen.com/post/microservice/2019-11-27-go-micro-network-mtls/</link>
       <pubDate>Wed, 27 Nov 2019 20:39:14 +0800</pubDate>
@@ -4087,49 +4395,6 @@ artifact /{elasticsearch-hadoop-path}/elasticsearch-hadoop-6.3.2/dist/elasticsea
 &lt;h3 id=&#34;go-plugins-https-github-com-micro-go-plugins&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-plugins&#34;&gt;go-plugins&lt;/a&gt;&lt;/h3&gt;
 
 &lt;p&gt;go-plugins是Micro的插件库，除go-micro相应组件的扩展外，还有其他如Trace、KV存储、监控等&lt;/p&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>Centos VSFTP配置</title>
-      <link>http://hbchen.com/post/2014-10-17-centos-vsftp/</link>
-      <pubDate>Fri, 17 Oct 2014 16:18:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2014-10-17-centos-vsftp/</guid>
-      
-        <description>&lt;p&gt;安装&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;yum install vsftp
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;配置&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#/etc/vsftpd/vsftpd.conf
-#关闭匿名登录
-#anonymous_enable=NO
-
-user_list中的说明是userlist_deny
-#userlist_enable=NO
-
-FTP root
-#local_root=/mnt/ftp
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;添加登录用户&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;添加用户
-$ useradd Hobo
-设置密码
-$ passwd Hobo
-$加入user_list
-$ echo Hobo &amp;gt;&amp;gt; /etc/vsftpd/user_list
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;重启&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$service vsftpd restart
-&lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
     

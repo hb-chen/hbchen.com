@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio 蜀ICP备18021614号-1</copyright>
-    <lastBuildDate>Wed, 27 Nov 2019 20:39:14 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 30 Nov 2019 16:40:32 +0800</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【go-micro】微服务协作开发、灰度发布之流量染色</title>
+      <link>http://hbchen.com/post/microservice/2019-11-30-go-micro-service-chain/</link>
+      <pubDate>Sat, 30 Nov 2019 16:40:32 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/microservice/2019-11-30-go-micro-service-chain/</guid>
+      <description>&lt;p&gt;协作开发与灰度发布是微服务框架在流量治理能力方面的两个体现，本文结合&lt;strong&gt;go-micro&lt;/strong&gt;实践对流量进行染色，实现开发环境的多分支协作，
+以及生产环境的灰度发布。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【go-micro】Network mTLS &amp; 自签名证书</title>
@@ -206,18 +216,6 @@
 
 &lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;yum install vsftp
 &lt;/code&gt;&lt;/pre&gt;</description>
-    </item>
-    
-    <item>
-      <title>MySQL Backup</title>
-      <link>http://hbchen.com/post/2014-10-17-mysql-backup/</link>
-      <pubDate>Fri, 17 Oct 2014 14:04:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2014-10-17-mysql-backup/</guid>
-      <description>&lt;p&gt;MySQL备份脚本，支持mysqldump,mysqlhotcopy,tar三种方式，+定时任务自动备份。&lt;/p&gt;
-
-&lt;p&gt;Gist
-&lt;a href=&#34;https://gist.github.com/Hobo86/effd4b45b50f576bf4d1&#34;&gt;https://gist.github.com/Hobo86/effd4b45b50f576bf4d1&lt;/a&gt;&lt;/p&gt;</description>
     </item>
     
   </channel>
