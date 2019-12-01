@@ -252,7 +252,7 @@ service := micro.NewService(
 
 *2. Wrap Client*
 
-> 需要注意的是`service`初始过程，有类似`micro new`模块将service client注入到context的方法，需要分两次Init()，先WrapClient，再WrapHandler，
+> 需要注意的是`service`初始过程，有类似`micro new`模板将service client注入到context的方法，需要分两次Init()，先WrapClient，再WrapHandler，
 否则注入的`client`将是未被包装的。这也是micro比较常遇到的**坑**！
 
 ```go

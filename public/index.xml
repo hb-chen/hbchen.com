@@ -330,7 +330,7 @@ service := micro.NewService(
 &lt;p&gt;&lt;em&gt;2. Wrap Client&lt;/em&gt;&lt;/p&gt;
 
 &lt;blockquote&gt;
-&lt;p&gt;需要注意的是&lt;code&gt;service&lt;/code&gt;初始过程，有类似&lt;code&gt;micro new&lt;/code&gt;模块将service client注入到context的方法，需要分两次Init()，先WrapClient，再WrapHandler，
+&lt;p&gt;需要注意的是&lt;code&gt;service&lt;/code&gt;初始过程，有类似&lt;code&gt;micro new&lt;/code&gt;模板将service client注入到context的方法，需要分两次Init()，先WrapClient，再WrapHandler，
 否则注入的&lt;code&gt;client&lt;/code&gt;将是未被包装的。这也是micro比较常遇到的&lt;strong&gt;坑&lt;/strong&gt;！&lt;/p&gt;
 &lt;/blockquote&gt;
 

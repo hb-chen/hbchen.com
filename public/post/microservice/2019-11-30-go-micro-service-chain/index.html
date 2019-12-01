@@ -55,7 +55,7 @@
 以及生产环境的灰度发布。" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://hbchen.com/post/microservice/2019-11-30-go-micro-service-chain/" /><meta property="article:published_time" content="2019-11-30T16:40:32&#43;08:00"/>
-<meta property="article:modified_time" content="2019-11-30T16:40:32&#43;08:00"/>
+<meta property="article:modified_time" content="2019-12-01T00:00:00&#43;00:00"/>
 
 <meta itemprop="name" content="【go-micro】微服务协作开发、灰度发布之流量染色">
 <meta itemprop="description" content="协作开发与灰度发布是微服务框架在流量治理能力方面的两个体现，本文结合go-micro实践对流量进行染色，实现开发环境的多分支协作，
@@ -63,7 +63,7 @@
 
 
 <meta itemprop="datePublished" content="2019-11-30T16:40:32&#43;08:00" />
-<meta itemprop="dateModified" content="2019-11-30T16:40:32&#43;08:00" />
+<meta itemprop="dateModified" content="2019-12-01T00:00:00&#43;00:00" />
 <meta itemprop="wordCount" content="1776">
 
 
@@ -465,7 +465,7 @@ service := micro.NewService(
 <p><em>2. Wrap Client</em></p>
 
 <blockquote>
-<p>需要注意的是<code>service</code>初始过程，有类似<code>micro new</code>模块将service client注入到context的方法，需要分两次Init()，先WrapClient，再WrapHandler，
+<p>需要注意的是<code>service</code>初始过程，有类似<code>micro new</code>模板将service client注入到context的方法，需要分两次Init()，先WrapClient，再WrapHandler，
 否则注入的<code>client</code>将是未被包装的。这也是micro比较常遇到的<strong>坑</strong>！</p>
 </blockquote>
 
@@ -496,7 +496,7 @@ service.Init(
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2019-11-30</span>
+    <span class="item-content">2019-12-01</span>
   </p>
   
   <p class="copyright-item">
