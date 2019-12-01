@@ -129,7 +129,7 @@ func (s *srv) proxy() http.Handler {
 			return
 		}
 
-		// NOTE: 添加SelectorOption
+		// NOTE: 添加SelectOption
 		val := r.Header.Get("X-Micro-Chain")
 		chains := strings.Split(val, ";")
 

@@ -206,7 +206,7 @@ if err := c.Call(cx, req, rsp); err != nil {
 			return
 		}
 
-		// NOTE: 添加SelectorOption
+		// NOTE: 添加SelectOption
 		val := r.Header.Get(&amp;quot;X-Micro-Chain&amp;quot;)
 		chains := strings.Split(val, &amp;quot;;&amp;quot;)
 
