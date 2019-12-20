@@ -233,7 +233,7 @@ func inArray(s string, d []string) (bool, int) {
 ```
 ### 服务筛选
 
-普通服务低啊用的筛选框架支持没有什么问题，首先要为服务添加`metadata`信息，不赘述。其次要对`Client`进行包装，服务调用时添加`SelectOption`，
+普通服务的筛选框架支持没有什么问题，首先要为服务添加`metadata`信息，不赘述。其次要对`Client`进行包装，服务调用时添加`SelectOption`，
 实现参考我的[chain](https://github.com/hb-go/micro-plugins/tree/master/wrapper/select/chain)插件。
 
 
