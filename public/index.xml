@@ -311,7 +311,7 @@ func inArray(s string, d []string) (bool, int) {
 
 &lt;h3 id=&#34;服务筛选&#34;&gt;服务筛选&lt;/h3&gt;
 
-&lt;p&gt;普通服务低啊用的筛选框架支持没有什么问题，首先要为服务添加&lt;code&gt;metadata&lt;/code&gt;信息，不赘述。其次要对&lt;code&gt;Client&lt;/code&gt;进行包装，服务调用时添加&lt;code&gt;SelectOption&lt;/code&gt;，
+&lt;p&gt;普通服务的筛选框架支持没有什么问题，首先要为服务添加&lt;code&gt;metadata&lt;/code&gt;信息，不赘述。其次要对&lt;code&gt;Client&lt;/code&gt;进行包装，服务调用时添加&lt;code&gt;SelectOption&lt;/code&gt;，
 实现参考我的&lt;a href=&#34;https://github.com/hb-go/micro-plugins/tree/master/wrapper/select/chain&#34;&gt;chain&lt;/a&gt;插件。&lt;/p&gt;
 
 &lt;p&gt;&lt;em&gt;1. 添加&lt;code&gt;metadata&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
