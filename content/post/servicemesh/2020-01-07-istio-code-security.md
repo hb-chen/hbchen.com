@@ -138,7 +138,7 @@ type Client interface {
 
 秘钥缓存，负责秘钥的轮换
 
-- 默认10min做一次检查，对即将过期的做轮换，默认1小时后过期的证书就做更新
+- 默认`10分钟`做一次检查，对即将过期的做轮换，默认`1小时`后过期的证书就做更新
 	- 如果轮询时`token`过期会返回`secret=nil`，这时SDS服务在收到`notify`后需要将连接断开重连
 - 产生轮换时通过`sds.NotifyProxy`通知到SDS服务，SDS服务通过`connKey`找到对应的`client`，并通过SDS的`StreamSecrets`将新的证书推送到`Pod`
 - 在`generateSecret`时，如果检测到`rootCert`为`nil`或者与`certChainPEM`的不一致，将触发`rootCert`的更新
