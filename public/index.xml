@@ -46,6 +46,253 @@
     </item>
     
     <item>
+      <title>【Istio源码】Citadel &amp; Node Agent</title>
+      <link>http://hbchen.com/post/servicemesh/2020-01-07-istio-code-security/</link>
+      <pubDate>Tue, 07 Jan 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2020-01-07-istio-code-security/</guid>
+      
+        <description>&lt;p&gt;Istio安全主要包括&lt;strong&gt;认证&lt;/strong&gt;和&lt;strong&gt;授权&lt;/strong&gt;，有关授权的&lt;code&gt;RBAC&lt;/code&gt;使用参考之前的文章&lt;a href=&#34;http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/#1-开启授权-clusterrbacconfig&#34;&gt;【Istio安全】服务间访问控制-RBAC&lt;/a&gt;
+，不过&lt;code&gt;RBAC&lt;/code&gt;已经&lt;a href=&#34;https://istio.io/docs/reference/config/security/istio.rbac.v1alpha1/&#34;&gt;准备废弃&lt;/a&gt;被&lt;code&gt;Authorization&lt;/code&gt;替代，
+&lt;strong&gt;认证&lt;/strong&gt;则分为&lt;strong&gt;服务间身份验证&lt;/strong&gt;和&lt;strong&gt;来源身份认证&lt;/strong&gt;，服务间身份验证Istio提供了&lt;strong&gt;双向TLS&lt;/strong&gt;方案，其中涉及的秘钥管理服务，主要由&lt;code&gt;istio/security&lt;/code&gt;模块的
+&lt;code&gt;Citadel&lt;/code&gt;和&lt;code&gt;Node Agent&lt;/code&gt;提供，本文主要分析这部分的源码实现。&lt;/p&gt;
+
+&lt;h1 id=&#34;pki&#34;&gt;PKI&lt;/h1&gt;
+
+&lt;p&gt;首先参考&lt;a href=&#34;https://preliminary.istio.io/zh/docs/concepts/security/#pki&#34;&gt;官方文档&lt;/a&gt;[&lt;a href=&#34;https://istio.io/docs/concepts/security/#pki&#34;&gt;en&lt;/a&gt;]看下几种不同场景的方案，其中&lt;code&gt;Kubernetes 方案&lt;/code&gt;最简单，
+&lt;code&gt;Kubernetes 中的代理节点&lt;/code&gt;更适合生产，具体优势&lt;a href=&#34;https://preliminary.istio.io/zh/docs/tasks/security/citadel-config/auth-sds&#34;&gt;参考&lt;/a&gt;[&lt;a href=&#34;https://istio.io/docs/tasks/security/citadel-config/auth-sds/&#34;&gt;en&lt;/a&gt;]。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;Kubernetes 方案
+
+&lt;ul&gt;
+&lt;li&gt;Citadel 监视 Kubernetes apiserver，为每个现有和新的服务帐户创建 SPIFFE 证书和密钥对。Citadel 将证书和密钥对存储为 Kubernetes secret。&lt;/li&gt;
+&lt;li&gt;创建 pod 时，Kubernetes 会根据其服务帐户通过 Kubernetes secret volume 将证书和密钥对挂载到 pod 上。&lt;/li&gt;
+&lt;li&gt;Citadel 监视每个证书的生命周期，并通过重写 Kubernetes secret 自动轮换证书。&lt;/li&gt;
+&lt;li&gt;Pilot 生成安全命名信息，该信息定义了哪些 Service Account 可以运行哪些服务。Pilot 然后将安全命名信息传递给 envoy sidecar。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;本地机器方案
+
+&lt;ul&gt;
+&lt;li&gt;Citadel 创建 gRPC 服务来接受证书签名请求（CSR）。&lt;/li&gt;
+&lt;li&gt;节点代理生成私钥和 CSR，并将 CSR 及其凭据发送给 Citadel 进行签名。&lt;/li&gt;
+&lt;li&gt;Citadel 验证 CSR 承载的凭证，并签署 CSR 以生成证书。&lt;/li&gt;
+&lt;li&gt;节点代理将从 Citadel 接收的证书和私钥发送给 Envoy。&lt;/li&gt;
+&lt;li&gt;上述 CSR 过程会定期重复进行证书和密钥轮换。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Kubernetes 中的代理节点
+
+&lt;ul&gt;
+&lt;li&gt;Citadel 创建一个 gRPC 服务来接受 CSR 请求。&lt;/li&gt;
+&lt;li&gt;Envoy 通过 Envoy secret 发现服务（SDS）API 发送证书和密钥请求。&lt;/li&gt;
+&lt;li&gt;收到 SDS 请求后，节点代理会创建私钥和 CSR，并将 CSR 及其凭据发送给 Citadel 进行签名。&lt;/li&gt;
+&lt;li&gt;Citadel 验证 CSR 中携带的凭证，并签署 CSR 以生成证书。&lt;/li&gt;
+&lt;li&gt;节点代理通过 Envoy SDS API 将从 Citadel 接收的证书和私钥发送给 Envoy。&lt;/li&gt;
+&lt;li&gt;上述 CSR 过程会定期重复进行证书和密钥轮换。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;h1 id=&#34;ca管理-citadel&#34;&gt;CA管理-Citadel&lt;/h1&gt;
+
+&lt;p&gt;Citadel(源码入口&lt;code&gt;istio/security/cmd/istio_ca&lt;/code&gt;)是Istio自带的秘钥管理服务，使用代理节点也支持外部CA系统，如：VaultCA和GoogleCA。&lt;/p&gt;
+
+&lt;p&gt;包括以下能力：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;证书管理:&lt;code&gt;pki/ca&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#istioca&#34;&gt;IstioCA&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;工作负载的证书轮换:&lt;code&gt;k8s/controller&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#secretcontroller&#34;&gt;SecretController&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;证书签名服务:&lt;code&gt;server/ca&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#server&#34;&gt;Server&lt;/a&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;TODO 配图&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;istioca&#34;&gt;IstioCA&lt;/h2&gt;
+
+&lt;p&gt;IstioCa支持两种方式：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;自签名证书，自动轮换&lt;a href=&#34;#selfsignedca&#34;&gt;SelfSignedCA&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;外部文件证书
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;selfsignedca&#34;&gt;SelfSignedCA&lt;/h3&gt;
+
+&lt;p&gt;自签名证书，自动轮换管理由&lt;code&gt;SelfSignedCARootCertRotator&lt;/code&gt;实现，默认&lt;code&gt;1小时&lt;/code&gt;做一次证书的检查。&lt;/p&gt;
+
+&lt;h2 id=&#34;secretcontroller&#34;&gt;SecretController&lt;/h2&gt;
+
+&lt;p&gt;在Kubernetes方案中工作负载的证书管理，Citadel通过修改&lt;code&gt;secret&lt;/code&gt;对工作负载的证书进行管理，&lt;code&gt;SecretController&lt;/code&gt;监控&lt;code&gt;ServiceAccount&lt;/code&gt;的创建、删除，
+&lt;code&gt;Secret&lt;/code&gt;的删除、更新，以及&lt;code&gt;Namespace&lt;/code&gt;的更新，在产生变更时修改&lt;code&gt;secret&lt;/code&gt;完成证书的轮换，同时&lt;code&gt;Pilot Agent&lt;/code&gt;会监控&lt;code&gt;secret&lt;/code&gt;的变更，并重启Envoy使配置生效，完成证书的轮换。&lt;/p&gt;
+
+&lt;h2 id=&#34;server&#34;&gt;Server&lt;/h2&gt;
+
+&lt;p&gt;证书服务，与&lt;code&gt;nodeagent&lt;/code&gt;的&lt;code&gt;caclient&lt;/code&gt;交互，包括服务的认证及鉴权等&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;gRPC服务如下:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;CertificateService
+
+&lt;ul&gt;
+&lt;li&gt;CreateCertificate(context.Context, *IstioCertificateRequest) (*IstioCertificateResponse, error)&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;CAService&lt;code&gt;废弃&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;HandleCSR(context.Context, *CsrRequest) (*CsrResponse, error)&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;authenticator&#34;&gt;Authenticator&lt;/h3&gt;
+
+&lt;p&gt;gRPC服务认证，默认一个&lt;code&gt;ClientCertAuthenticator&lt;/code&gt;，当启动SDS时添加了&lt;code&gt;KubeJWTAuthenticator&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;authorizer&#34;&gt;Authorizer&lt;/h3&gt;
+
+&lt;p&gt;gRPC服务&lt;code&gt;CAService&lt;/code&gt;和&lt;code&gt;CertificateService&lt;/code&gt;的鉴权&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;服务的&lt;code&gt;Authorizer&lt;/code&gt;都是&lt;code&gt;TODO&lt;/code&gt;状态&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;strong&gt;registry&lt;/strong&gt;提供了一个身份授权的注册表&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;kube/ServiceController
+
+&lt;ul&gt;
+&lt;li&gt;监控&lt;code&gt;Service&lt;/code&gt;创建、删除与修改&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;kube/ServiceAccountController
+
+&lt;ul&gt;
+&lt;li&gt;监控&lt;code&gt;ServiceAccount&lt;/code&gt;创建、删除与修改
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&#34;node-agent-k8s&#34;&gt;Node Agent K8S&lt;/h1&gt;
+
+&lt;p&gt;NodeAgent(源码入口&lt;code&gt;istio/security/cmd/node_agent_k8s&lt;/code&gt;)是Citadel在工作负载&lt;code&gt;node&lt;/code&gt;或者网关&lt;code&gt;pod&lt;/code&gt;中的代理，为Envoy提供&lt;code&gt;SDS&lt;/code&gt;服务，并与Citadel交互发起&lt;code&gt;CSR&lt;/code&gt;请求。
+使用&lt;strong&gt;Kubernetes中的代理节点&lt;/strong&gt;模式时Citadel可以运行为&lt;code&gt;server-only&lt;/code&gt;模式，即不做工作负载的证书管理。&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;TODO 配图&lt;/em&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Node Agent源码均在&lt;code&gt;nodeagent&lt;/code&gt;目录&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;ca-client&#34;&gt;CA Client&lt;/h2&gt;
+
+&lt;p&gt;提供CSR签名接口，服务实现支持&lt;code&gt;citadel&lt;/code&gt;、&lt;code&gt;google&lt;/code&gt;、&lt;code&gt;vault&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Client接口&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// Client interface defines the clients need to implement to talk to CA for CSR.
+type Client interface {
+	CSRSign(ctx context.Context, csrPEM []byte, subjectID string,
+		certValidTTLInSec int64) ([]string /*PEM-encoded certificate chain*/, error)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;secret-fetcher&#34;&gt;Secret Fetcher&lt;/h2&gt;
+
+&lt;p&gt;作为Workload代理时根据不同的Provider实例化CA Client，或者作为Ingress Gateway代理时监控&lt;code&gt;secret&lt;/code&gt;变更，并通知到&lt;code&gt;secretcache&lt;/code&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Workload代理以&lt;code&gt;DaemonSet&lt;/code&gt;在&lt;code&gt;node&lt;/code&gt;上运行，使用CA Client与CA Server交互&lt;/li&gt;
+&lt;li&gt;Ingress Gateway代理与Workload部署方式不同，代理在Pod内运行，而不是&lt;code&gt;DaemonSet&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;监控&lt;code&gt;secret&lt;/code&gt;的创建、删除和更新，用于捕获Ingress Gateway的TLS配置&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;secret&lt;/code&gt;有变更时通过&lt;code&gt;AddCache&lt;/code&gt;、&lt;code&gt;DeleteCache&lt;/code&gt;和&lt;code&gt;UpdateCache&lt;/code&gt;方法通知&lt;code&gt;secretcache&lt;/code&gt;到&lt;code&gt;DeleteK8sSecret&lt;/code&gt;和&lt;code&gt;UpdateK8sSecret&lt;/code&gt;，再由&lt;code&gt;sds.NotifyProxy&lt;/code&gt;通知SDS服务&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://preliminary.istio.io/zh/docs/tasks/traffic-management/ingress/secure-ingress-sds/#configure-a-TLS-ingress-gateway-using-sds&#34;&gt;使用SDS的优势&lt;/a&gt;[&lt;a href=&#34;https://istio.io/docs/tasks/traffic-management/ingress/secure-ingress-sds/#configure-a-tls-ingress-gateway-using-sds&#34;&gt;en&lt;/a&gt;]&lt;/li&gt;
+&lt;li&gt;Ingress Gateway的TLS的默认配置方式是&lt;a href=&#34;https://preliminary.istio.io/zh/docs/tasks/traffic-management/ingress/secure-ingress-mount/&#34;&gt;文件挂载&lt;/a&gt;[&lt;a href=&#34;https://istio.io/docs/tasks/traffic-management/ingress/secure-ingress-mount/&#34;&gt;en&lt;/a&gt;]&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;secret-cache&#34;&gt;Secret Cache&lt;/h2&gt;
+
+&lt;p&gt;秘钥缓存，负责秘钥的轮换&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;默认10min做一次检查，对即将过期的做轮换，默认1小时后过期的证书就做更新
+
+&lt;ul&gt;
+&lt;li&gt;如果轮询时&lt;code&gt;token&lt;/code&gt;过期会返回&lt;code&gt;secret=nil&lt;/code&gt;，这时SDS服务在收到&lt;code&gt;notify&lt;/code&gt;后需要将连接断开重连&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;产生轮换时通过&lt;code&gt;sds.NotifyProxy&lt;/code&gt;通知到SDS服务，SDS服务通过&lt;code&gt;connKey&lt;/code&gt;找到对应的&lt;code&gt;client&lt;/code&gt;，并通过SDS的&lt;code&gt;StreamSecrets&lt;/code&gt;将新的证书推送到&lt;code&gt;Pod&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;在&lt;code&gt;generateSecret&lt;/code&gt;时，如果检测到&lt;code&gt;rootCert&lt;/code&gt;为&lt;code&gt;nil&lt;/code&gt;或者与&lt;code&gt;certChainPEM&lt;/code&gt;的不一致，将触发&lt;code&gt;rootCert&lt;/code&gt;的更新
+
+&lt;ul&gt;
+&lt;li&gt;SDS服务将新的&lt;code&gt;rootCert&lt;/code&gt;加入到可信&lt;code&gt;CA&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;SecretManager接口&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// SecretManager defines secrets management interface which is used by SDS.
+type SecretManager interface {
+	// GenerateSecret generates new secret and cache the secret.
+	GenerateSecret(ctx context.Context, connectionID, resourceName, token string) (*model.SecretItem, error)
+
+	// ShouldWaitForIngressGatewaySecret indicates whether a valid ingress gateway secret is expected.
+	ShouldWaitForIngressGatewaySecret(connectionID, resourceName, token string) bool
+
+	// SecretExist checks if secret already existed.
+	// This API is used for sds server to check if coming request is ack request.
+	SecretExist(connectionID, resourceName, token, version string) bool
+
+	// DeleteSecret deletes a secret by its key from cache.
+	DeleteSecret(connectionID, resourceName string)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;sds-service&#34;&gt;SDS Service&lt;/h2&gt;
+
+&lt;p&gt;SDS服务实现&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;NotifyProxy&lt;/code&gt;接收&lt;code&gt;secret&lt;/code&gt;变更的通知
+
+&lt;ul&gt;
+&lt;li&gt;查找&lt;code&gt;client&lt;/code&gt;的&lt;code&gt;connection&lt;/code&gt;，通过&lt;code&gt;pushChannel&lt;/code&gt;将&lt;code&gt;secret&lt;/code&gt;变更事件分发给SDS服务接口&lt;code&gt;StreamSecrets&lt;/code&gt;，然后推送到Envoy&lt;/li&gt;
+&lt;li&gt;事件类型：
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Secret_TlsCertificate&lt;/code&gt;TLS证书&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Secret_ValidationContext&lt;/code&gt;可信CA&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;接收Envoy对SDS服务&lt;code&gt;StreamSecrets&lt;/code&gt;和&lt;code&gt;FetchSecrets&lt;/code&gt;请求，&lt;code&gt;SecretManager.GenerateSecret()&lt;/code&gt;生成秘钥&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&#34;ref&#34;&gt;Ref&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://zhuanlan.zhihu.com/p/59825498&#34;&gt;深度解析Istio系列之安全模块篇&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.fleeto.us/post/istio-security-notes/&#34;&gt;Istio 安全设置笔记&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【go-micro】微服务协作开发、灰度发布之流量染色</title>
       <link>http://hbchen.com/post/microservice/2019-11-30-go-micro-service-chain/</link>
       <pubDate>Sat, 30 Nov 2019 16:40:32 +0800</pubDate>
@@ -4290,111 +4537,6 @@ artifact /{elasticsearch-hadoop-path}/elasticsearch-hadoop-6.3.2/dist/elasticsea
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;https://github.com/IBM/elasticsearch-spark-recommender&#34;&gt;使用 Apache Spark 和 Elasticsearch 构建一个推荐系统&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>go-micro框架介绍</title>
-      <link>http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/</link>
-      <pubDate>Tue, 27 Mar 2018 19:09:32 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/</guid>
-      
-        <description>&lt;h2 id=&#34;go-micro-https-github-com-micro-go-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-micro&#34;&gt;go-micro&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展。&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;micro实践示例&lt;a href=&#34;https://github.com/hb-go/micro&#34;&gt;github.com/ho-go/micro&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/go-micro.jpg&#34; alt=&#34;go-micro&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;主要有以下组件构成:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;Registry&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;提供一套服务注册、发现、注销、监测机制，服务注册中心支持consul、etcd2/3、zookeeper、gossip、k8s、eureka等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Selector&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;选择器提供了负载均衡，可以通过过滤方法对微服务进行过滤，并通过不同路由算法选择微服务，以及缓存等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Transport&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;微服务间同步请求/响应通信方式，相对Go标准net包做了更高的抽象，支持更多的传输方式，如http、grpc、tcp、udp、Rabbitmq等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Broker&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;微服务间异步发布/订阅通信方式，更好的处理分布式系统解耦问题，默认使用http方式，生产环境通常会使用消息中间件，如Kafka、RabbitMQ、NSQ等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Codec&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;服务间消息的编解码，支持json、protobuf、bson、msgpack等，与普通编码格式不同都是支持RPC格式&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Server&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;用于启动服务，为服务命名、注册Handler、添加中间件等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Client&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;提供微服务客户端，通过Registry、Selector、Transport、Broker实现以服务名来查找服务、负载均衡、同步通信、异步消息等&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&#34;micro-https-github-com-micro-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/micro&#34;&gt;micro&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;Micro的工具包，主要由以下部分构成:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;API&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;API网关提供HTTP服务，并将请求路由到指定的微服务，是Micro的统一入口，可以用作反向代理，或者将HTTP请求转到RPC&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Web&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;为Micro提供一套仪表盘，并可作为Web应用的反向代理，有别于普通API将Web应用作为了Micro的一等公民，其实和API差不多，但同时提供了对socket的支持&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Sidecar&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;通过HTTP的方式实现go-micro全部功能的RPC代理，通过Sidecar可以方便的将其他语言集成到Micro框架中，方便解决解决应用的异构框架问题&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;CLI&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;提供一套命令行工具，可以方便的与Micro服务进行交互，并且可以通过Sidecar代理CLI命令&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;Bot&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;通过Bot可以在Micro环境中方便的与Slack、HipChat、XMPP等进行集成，通过消息的方式模仿CLI功能&lt;/p&gt;
-&lt;/blockquote&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&#34;go-plugins-https-github-com-micro-go-plugins&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-plugins&#34;&gt;go-plugins&lt;/a&gt;&lt;/h3&gt;
-
-&lt;p&gt;go-plugins是Micro的插件库，除go-micro相应组件的扩展外，还有其他如Trace、KV存储、监控等&lt;/p&gt;</description>
       
     </item>
     

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【Istio源码】Citadel &amp; Node Agent - HB-技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="Istio安全主要包括认证和授权，有关授权的RBAC使用参考之前的文章【Istio安全】服务间访问控制-RBAC ，不过RBAC已经准备废弃被Authorization替代， 认证则分为服务间身份验证和来源身份认证，服务间身份验证Istio提供了双向TLS方案，其中涉及的秘钥管理服务，主要由istio/security模块的 Citadel和Node Agent提供，本文主要分析这部分的源码实现。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/servicemesh/2020-01-07-istio-code-security/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【Istio源码】Citadel &amp; Node Agent" />
+<meta property="og:description" content="Istio安全主要包括认证和授权，有关授权的RBAC使用参考之前的文章【Istio安全】服务间访问控制-RBAC
+，不过RBAC已经准备废弃被Authorization替代，
+认证则分为服务间身份验证和来源身份认证，服务间身份验证Istio提供了双向TLS方案，其中涉及的秘钥管理服务，主要由istio/security模块的
+Citadel和Node Agent提供，本文主要分析这部分的源码实现。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/servicemesh/2020-01-07-istio-code-security/" /><meta property="article:published_time" content="2020-01-07T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2020-01-07T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="【Istio源码】Citadel &amp; Node Agent">
+<meta itemprop="description" content="Istio安全主要包括认证和授权，有关授权的RBAC使用参考之前的文章【Istio安全】服务间访问控制-RBAC
+，不过RBAC已经准备废弃被Authorization替代，
+认证则分为服务间身份验证和来源身份认证，服务间身份验证Istio提供了双向TLS方案，其中涉及的秘钥管理服务，主要由istio/security模块的
+Citadel和Node Agent提供，本文主要分析这部分的源码实现。">
+
+
+<meta itemprop="datePublished" content="2020-01-07T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2020-01-07T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="2763">
+
+
+
+<meta itemprop="keywords" content="Service Mesh,Istio,源码," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【Istio源码】Citadel &amp; Node Agent"/>
+<meta name="twitter:description" content="Istio安全主要包括认证和授权，有关授权的RBAC使用参考之前的文章【Istio安全】服务间访问控制-RBAC
+，不过RBAC已经准备废弃被Authorization替代，
+认证则分为服务间身份验证和来源身份认证，服务间身份验证Istio提供了双向TLS方案，其中涉及的秘钥管理服务，主要由istio/security模块的
+Citadel和Node Agent提供，本文主要分析这部分的源码实现。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【Istio源码】Citadel &amp; Node Agent</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2020-01-07 </span>
+        <div class="post-category">
+            
+              <a href="/categories/service-mesh/"> Service Mesh </a>
+            
+          </div>
+        <span class="more-meta"> 约 2763 字 </span>
+        <span class="more-meta"> 预计阅读 6 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li><a href="#pki">PKI</a></li>
+<li><a href="#ca管理-citadel">CA管理-Citadel</a>
+<ul>
+<li><a href="#istioca">IstioCA</a>
+<ul>
+<li><a href="#selfsignedca">SelfSignedCA</a></li>
+</ul></li>
+<li><a href="#secretcontroller">SecretController</a></li>
+<li><a href="#server">Server</a>
+<ul>
+<li><a href="#authenticator">Authenticator</a></li>
+<li><a href="#authorizer">Authorizer</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#node-agent-k8s">Node Agent K8S</a>
+<ul>
+<li><a href="#ca-client">CA Client</a></li>
+<li><a href="#secret-fetcher">Secret Fetcher</a></li>
+<li><a href="#secret-cache">Secret Cache</a></li>
+<li><a href="#sds-service">SDS Service</a></li>
+</ul></li>
+<li><a href="#ref">Ref</a></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>Istio安全主要包括<strong>认证</strong>和<strong>授权</strong>，有关授权的<code>RBAC</code>使用参考之前的文章<a href="/post/servicemesh/2019-03-09-istio-rbac-quick-start/#1-开启授权-clusterrbacconfig">【Istio安全】服务间访问控制-RBAC</a>
+，不过<code>RBAC</code>已经<a href="https://istio.io/docs/reference/config/security/istio.rbac.v1alpha1/">准备废弃</a>被<code>Authorization</code>替代，
+<strong>认证</strong>则分为<strong>服务间身份验证</strong>和<strong>来源身份认证</strong>，服务间身份验证Istio提供了<strong>双向TLS</strong>方案，其中涉及的秘钥管理服务，主要由<code>istio/security</code>模块的
+<code>Citadel</code>和<code>Node Agent</code>提供，本文主要分析这部分的源码实现。</p>
+
+<h1 id="pki">PKI</h1>
+
+<p>首先参考<a href="https://preliminary.istio.io/zh/docs/concepts/security/#pki">官方文档</a>[<a href="https://istio.io/docs/concepts/security/#pki">en</a>]看下几种不同场景的方案，其中<code>Kubernetes 方案</code>最简单，
+<code>Kubernetes 中的代理节点</code>更适合生产，具体优势<a href="https://preliminary.istio.io/zh/docs/tasks/security/citadel-config/auth-sds">参考</a>[<a href="https://istio.io/docs/tasks/security/citadel-config/auth-sds/">en</a>]。</p>
+
+<blockquote>
+<ul>
+<li>Kubernetes 方案
+
+<ul>
+<li>Citadel 监视 Kubernetes apiserver，为每个现有和新的服务帐户创建 SPIFFE 证书和密钥对。Citadel 将证书和密钥对存储为 Kubernetes secret。</li>
+<li>创建 pod 时，Kubernetes 会根据其服务帐户通过 Kubernetes secret volume 将证书和密钥对挂载到 pod 上。</li>
+<li>Citadel 监视每个证书的生命周期，并通过重写 Kubernetes secret 自动轮换证书。</li>
+<li>Pilot 生成安全命名信息，该信息定义了哪些 Service Account 可以运行哪些服务。Pilot 然后将安全命名信息传递给 envoy sidecar。</li>
+</ul></li>
+<li>本地机器方案
+
+<ul>
+<li>Citadel 创建 gRPC 服务来接受证书签名请求（CSR）。</li>
+<li>节点代理生成私钥和 CSR，并将 CSR 及其凭据发送给 Citadel 进行签名。</li>
+<li>Citadel 验证 CSR 承载的凭证，并签署 CSR 以生成证书。</li>
+<li>节点代理将从 Citadel 接收的证书和私钥发送给 Envoy。</li>
+<li>上述 CSR 过程会定期重复进行证书和密钥轮换。</li>
+</ul></li>
+<li>Kubernetes 中的代理节点
+
+<ul>
+<li>Citadel 创建一个 gRPC 服务来接受 CSR 请求。</li>
+<li>Envoy 通过 Envoy secret 发现服务（SDS）API 发送证书和密钥请求。</li>
+<li>收到 SDS 请求后，节点代理会创建私钥和 CSR，并将 CSR 及其凭据发送给 Citadel 进行签名。</li>
+<li>Citadel 验证 CSR 中携带的凭证，并签署 CSR 以生成证书。</li>
+<li>节点代理通过 Envoy SDS API 将从 Citadel 接收的证书和私钥发送给 Envoy。</li>
+<li>上述 CSR 过程会定期重复进行证书和密钥轮换。</li>
+</ul></li>
+</ul>
+</blockquote>
+
+<h1 id="ca管理-citadel">CA管理-Citadel</h1>
+
+<p>Citadel(源码入口<code>istio/security/cmd/istio_ca</code>)是Istio自带的秘钥管理服务，使用代理节点也支持外部CA系统，如：VaultCA和GoogleCA。</p>
+
+<p>包括以下能力：</p>
+
+<ul>
+<li>证书管理:<code>pki/ca</code>
+
+<ul>
+<li><a href="#istioca">IstioCA</a></li>
+</ul></li>
+<li>工作负载的证书轮换:<code>k8s/controller</code>
+
+<ul>
+<li><a href="#secretcontroller">SecretController</a></li>
+</ul></li>
+<li>证书签名服务:<code>server/ca</code>
+
+<ul>
+<li><a href="#server">Server</a>
+<br /></li>
+</ul></li>
+</ul>
+
+<p><em>TODO 配图</em></p>
+
+<h2 id="istioca">IstioCA</h2>
+
+<p>IstioCa支持两种方式：</p>
+
+<ul>
+<li>自签名证书，自动轮换<a href="#selfsignedca">SelfSignedCA</a></li>
+<li>外部文件证书
+<br /></li>
+</ul>
+
+<h3 id="selfsignedca">SelfSignedCA</h3>
+
+<p>自签名证书，自动轮换管理由<code>SelfSignedCARootCertRotator</code>实现，默认<code>1小时</code>做一次证书的检查。</p>
+
+<h2 id="secretcontroller">SecretController</h2>
+
+<p>在Kubernetes方案中工作负载的证书管理，Citadel通过修改<code>secret</code>对工作负载的证书进行管理，<code>SecretController</code>监控<code>ServiceAccount</code>的创建、删除，
+<code>Secret</code>的删除、更新，以及<code>Namespace</code>的更新，在产生变更时修改<code>secret</code>完成证书的轮换，同时<code>Pilot Agent</code>会监控<code>secret</code>的变更，并重启Envoy使配置生效，完成证书的轮换。</p>
+
+<h2 id="server">Server</h2>
+
+<p>证书服务，与<code>nodeagent</code>的<code>caclient</code>交互，包括服务的认证及鉴权等</p>
+
+<p><strong>gRPC服务如下:</strong></p>
+
+<ul>
+<li>CertificateService
+
+<ul>
+<li>CreateCertificate(context.Context, *IstioCertificateRequest) (*IstioCertificateResponse, error)</li>
+</ul></li>
+<li>CAService<code>废弃</code>
+
+<ul>
+<li>HandleCSR(context.Context, *CsrRequest) (*CsrResponse, error)</li>
+</ul></li>
+</ul>
+
+<h3 id="authenticator">Authenticator</h3>
+
+<p>gRPC服务认证，默认一个<code>ClientCertAuthenticator</code>，当启动SDS时添加了<code>KubeJWTAuthenticator</code></p>
+
+<h3 id="authorizer">Authorizer</h3>
+
+<p>gRPC服务<code>CAService</code>和<code>CertificateService</code>的鉴权</p>
+
+<blockquote>
+<p>服务的<code>Authorizer</code>都是<code>TODO</code>状态</p>
+</blockquote>
+
+<p><strong>registry</strong>提供了一个身份授权的注册表</p>
+
+<ul>
+<li>kube/ServiceController
+
+<ul>
+<li>监控<code>Service</code>创建、删除与修改</li>
+</ul></li>
+<li>kube/ServiceAccountController
+
+<ul>
+<li>监控<code>ServiceAccount</code>创建、删除与修改
+<br /></li>
+</ul></li>
+</ul>
+
+<h1 id="node-agent-k8s">Node Agent K8S</h1>
+
+<p>NodeAgent(源码入口<code>istio/security/cmd/node_agent_k8s</code>)是Citadel在工作负载<code>node</code>或者网关<code>pod</code>中的代理，为Envoy提供<code>SDS</code>服务，并与Citadel交互发起<code>CSR</code>请求。
+使用<strong>Kubernetes中的代理节点</strong>模式时Citadel可以运行为<code>server-only</code>模式，即不做工作负载的证书管理。</p>
+
+<p><em>TODO 配图</em></p>
+
+<blockquote>
+<p>Node Agent源码均在<code>nodeagent</code>目录</p>
+</blockquote>
+
+<h2 id="ca-client">CA Client</h2>
+
+<p>提供CSR签名接口，服务实现支持<code>citadel</code>、<code>google</code>、<code>vault</code></p>
+
+<p><strong>Client接口</strong></p>
+
+<pre><code class="language-go">// Client interface defines the clients need to implement to talk to CA for CSR.
+type Client interface {
+	CSRSign(ctx context.Context, csrPEM []byte, subjectID string,
+		certValidTTLInSec int64) ([]string /*PEM-encoded certificate chain*/, error)
+}
+</code></pre>
+
+<h2 id="secret-fetcher">Secret Fetcher</h2>
+
+<p>作为Workload代理时根据不同的Provider实例化CA Client，或者作为Ingress Gateway代理时监控<code>secret</code>变更，并通知到<code>secretcache</code></p>
+
+<ul>
+<li>Workload代理以<code>DaemonSet</code>在<code>node</code>上运行，使用CA Client与CA Server交互</li>
+<li>Ingress Gateway代理与Workload部署方式不同，代理在Pod内运行，而不是<code>DaemonSet</code>
+
+<ul>
+<li>监控<code>secret</code>的创建、删除和更新，用于捕获Ingress Gateway的TLS配置</li>
+<li><code>secret</code>有变更时通过<code>AddCache</code>、<code>DeleteCache</code>和<code>UpdateCache</code>方法通知<code>secretcache</code>到<code>DeleteK8sSecret</code>和<code>UpdateK8sSecret</code>，再由<code>sds.NotifyProxy</code>通知SDS服务</li>
+<li><a href="https://preliminary.istio.io/zh/docs/tasks/traffic-management/ingress/secure-ingress-sds/#configure-a-TLS-ingress-gateway-using-sds">使用SDS的优势</a>[<a href="https://istio.io/docs/tasks/traffic-management/ingress/secure-ingress-sds/#configure-a-tls-ingress-gateway-using-sds">en</a>]</li>
+<li>Ingress Gateway的TLS的默认配置方式是<a href="https://preliminary.istio.io/zh/docs/tasks/traffic-management/ingress/secure-ingress-mount/">文件挂载</a>[<a href="https://istio.io/docs/tasks/traffic-management/ingress/secure-ingress-mount/">en</a>]</li>
+</ul></li>
+</ul>
+
+<h2 id="secret-cache">Secret Cache</h2>
+
+<p>秘钥缓存，负责秘钥的轮换</p>
+
+<ul>
+<li>默认10min做一次检查，对即将过期的做轮换，默认1小时后过期的证书就做更新
+
+<ul>
+<li>如果轮询时<code>token</code>过期会返回<code>secret=nil</code>，这时SDS服务在收到<code>notify</code>后需要将连接断开重连</li>
+</ul></li>
+<li>产生轮换时通过<code>sds.NotifyProxy</code>通知到SDS服务，SDS服务通过<code>connKey</code>找到对应的<code>client</code>，并通过SDS的<code>StreamSecrets</code>将新的证书推送到<code>Pod</code></li>
+<li>在<code>generateSecret</code>时，如果检测到<code>rootCert</code>为<code>nil</code>或者与<code>certChainPEM</code>的不一致，将触发<code>rootCert</code>的更新
+
+<ul>
+<li>SDS服务将新的<code>rootCert</code>加入到可信<code>CA</code></li>
+</ul></li>
+</ul>
+
+<p><strong>SecretManager接口</strong></p>
+
+<pre><code class="language-go">// SecretManager defines secrets management interface which is used by SDS.
+type SecretManager interface {
+	// GenerateSecret generates new secret and cache the secret.
+	GenerateSecret(ctx context.Context, connectionID, resourceName, token string) (*model.SecretItem, error)
+
+	// ShouldWaitForIngressGatewaySecret indicates whether a valid ingress gateway secret is expected.
+	ShouldWaitForIngressGatewaySecret(connectionID, resourceName, token string) bool
+
+	// SecretExist checks if secret already existed.
+	// This API is used for sds server to check if coming request is ack request.
+	SecretExist(connectionID, resourceName, token, version string) bool
+
+	// DeleteSecret deletes a secret by its key from cache.
+	DeleteSecret(connectionID, resourceName string)
+}
+</code></pre>
+
+<h2 id="sds-service">SDS Service</h2>
+
+<p>SDS服务实现</p>
+
+<ul>
+<li><code>NotifyProxy</code>接收<code>secret</code>变更的通知
+
+<ul>
+<li>查找<code>client</code>的<code>connection</code>，通过<code>pushChannel</code>将<code>secret</code>变更事件分发给SDS服务接口<code>StreamSecrets</code>，然后推送到Envoy</li>
+<li>事件类型：
+
+<ul>
+<li><code>Secret_TlsCertificate</code>TLS证书</li>
+<li><code>Secret_ValidationContext</code>可信CA</li>
+</ul></li>
+</ul></li>
+<li>接收Envoy对SDS服务<code>StreamSecrets</code>和<code>FetchSecrets</code>请求，<code>SecretManager.GenerateSecret()</code>生成秘钥</li>
+</ul>
+
+<h1 id="ref">Ref</h1>
+
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/59825498">深度解析Istio系列之安全模块篇</a></li>
+<li><a href="https://blog.fleeto.us/post/istio-security-notes/">Istio 安全设置笔记</a></li>
+</ul>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2020-01-07</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/service-mesh/">Service Mesh</a>
+          
+          <a href="/tags/istio/">Istio</a>
+          
+          <a href="/tags/%E6%BA%90%E7%A0%81/">源码</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/microservice/2019-11-30-go-micro-service-chain/">
+            <span class="next-text nav-default">【go-micro】微服务协作开发、灰度发布之流量染色</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2020
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio 蜀ICP备18021614号-1</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script>
+
+<script type="text/javascript" src="https://unpkg.com/mermaid@8.0.0/dist/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: "forest"
+    });
+</script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

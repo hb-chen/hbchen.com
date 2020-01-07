@@ -7,10 +7,22 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio 蜀ICP备18021614号-1</copyright>
-    <lastBuildDate>Sun, 07 Apr 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 07 Jan 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/%E6%BA%90%E7%A0%81/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio源码】Citadel &amp; Node Agent</title>
+      <link>http://hbchen.com/post/servicemesh/2020-01-07-istio-code-security/</link>
+      <pubDate>Tue, 07 Jan 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2020-01-07-istio-code-security/</guid>
+      <description>&lt;p&gt;Istio安全主要包括&lt;strong&gt;认证&lt;/strong&gt;和&lt;strong&gt;授权&lt;/strong&gt;，有关授权的&lt;code&gt;RBAC&lt;/code&gt;使用参考之前的文章&lt;a href=&#34;http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/#1-开启授权-clusterrbacconfig&#34;&gt;【Istio安全】服务间访问控制-RBAC&lt;/a&gt;
+，不过&lt;code&gt;RBAC&lt;/code&gt;已经&lt;a href=&#34;https://istio.io/docs/reference/config/security/istio.rbac.v1alpha1/&#34;&gt;准备废弃&lt;/a&gt;被&lt;code&gt;Authorization&lt;/code&gt;替代，
+&lt;strong&gt;认证&lt;/strong&gt;则分为&lt;strong&gt;服务间身份验证&lt;/strong&gt;和&lt;strong&gt;来源身份认证&lt;/strong&gt;，服务间身份验证Istio提供了&lt;strong&gt;双向TLS&lt;/strong&gt;方案，其中涉及的秘钥管理服务，主要由&lt;code&gt;istio/security&lt;/code&gt;模块的
+&lt;code&gt;Citadel&lt;/code&gt;和&lt;code&gt;Node Agent&lt;/code&gt;提供，本文主要分析这部分的源码实现。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【Istio源码】Pilot Agent</title>

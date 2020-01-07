@@ -10,6 +10,13 @@
   </url>
   
   <url>
+    <loc>http://hbchen.com/post/servicemesh/2020-01-07-istio-code-security/</loc>
+    <lastmod>2020-01-07T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
     <loc>http://hbchen.com/post/microservice/2019-11-30-go-micro-service-chain/</loc>
     <lastmod>2019-12-01T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -346,7 +353,7 @@
   
   <url>
     <loc>http://hbchen.com/tags/istio/</loc>
-    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
+    <lastmod>2020-01-07T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -374,7 +381,7 @@
   
   <url>
     <loc>http://hbchen.com/post/</loc>
-    <lastmod>2019-12-01T00:00:00+00:00</lastmod>
+    <lastmod>2020-01-07T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -416,14 +423,14 @@
   
   <url>
     <loc>http://hbchen.com/tags/service-mesh/</loc>
-    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
+    <lastmod>2020-01-07T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://hbchen.com/categories/service-mesh/</loc>
-    <lastmod>2019-08-30T00:00:00+00:00</lastmod>
+    <lastmod>2020-01-07T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -570,7 +577,7 @@
   
   <url>
     <loc>http://hbchen.com/tags/%E6%BA%90%E7%A0%81/</loc>
-    <lastmod>2019-04-07T00:00:00+00:00</lastmod>
+    <lastmod>2020-01-07T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
