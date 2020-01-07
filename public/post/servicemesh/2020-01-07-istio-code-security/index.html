@@ -68,7 +68,7 @@ Citadel和Node Agent提供，本文主要分析这部分的源码实现。">
 
 <meta itemprop="datePublished" content="2020-01-07T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2020-01-07T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="2765">
+<meta itemprop="wordCount" content="2764">
 
 
 
@@ -158,7 +158,7 @@ Citadel和Node Agent提供，本文主要分析这部分的源码实现。"/>
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 约 2765 字 </span>
+        <span class="more-meta"> 约 2764 字 </span>
         <span class="more-meta"> 预计阅读 6 分钟 </span>
       </div>
     </header>
@@ -386,7 +386,7 @@ type Client interface {
 <p>秘钥缓存，负责秘钥的轮换</p>
 
 <ul>
-<li>默认10min做一次检查，对即将过期的做轮换，默认1小时后过期的证书就做更新
+<li>默认<code>10分钟</code>做一次检查，对即将过期的做轮换，默认<code>1小时</code>后过期的证书就做更新
 
 <ul>
 <li>如果轮询时<code>token</code>过期会返回<code>secret=nil</code>，这时SDS服务在收到<code>notify</code>后需要将连接断开重连</li>

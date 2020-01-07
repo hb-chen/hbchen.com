@@ -238,7 +238,7 @@ type Client interface {
 &lt;p&gt;秘钥缓存，负责秘钥的轮换&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;默认10min做一次检查，对即将过期的做轮换，默认1小时后过期的证书就做更新
+&lt;li&gt;默认&lt;code&gt;10分钟&lt;/code&gt;做一次检查，对即将过期的做轮换，默认&lt;code&gt;1小时&lt;/code&gt;后过期的证书就做更新
 
 &lt;ul&gt;
 &lt;li&gt;如果轮询时&lt;code&gt;token&lt;/code&gt;过期会返回&lt;code&gt;secret=nil&lt;/code&gt;，这时SDS服务在收到&lt;code&gt;notify&lt;/code&gt;后需要将连接断开重连&lt;/li&gt;
