@@ -57,6 +57,12 @@
 &lt;strong&gt;认证&lt;/strong&gt;则分为&lt;strong&gt;服务间身份验证&lt;/strong&gt;和&lt;strong&gt;来源身份认证&lt;/strong&gt;，服务间身份验证Istio提供了&lt;strong&gt;双向TLS&lt;/strong&gt;方案，其中涉及的秘钥管理服务，主要由&lt;code&gt;istio/security&lt;/code&gt;模块的
 &lt;code&gt;Citadel&lt;/code&gt;和&lt;code&gt;Node Agent&lt;/code&gt;提供，本文主要分析这部分的源码实现。&lt;/p&gt;
 
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;Istio 1.14.0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
 &lt;h1 id=&#34;pki&#34;&gt;PKI&lt;/h1&gt;
 
 &lt;p&gt;首先参考&lt;a href=&#34;https://preliminary.istio.io/zh/docs/concepts/security/#pki&#34;&gt;官方文档&lt;/a&gt;[&lt;a href=&#34;https://istio.io/docs/concepts/security/#pki&#34;&gt;en&lt;/a&gt;]看下几种不同场景的方案，其中&lt;code&gt;Kubernetes 方案&lt;/code&gt;最简单，

@@ -21,6 +21,9 @@ Istio安全主要包括**认证**和**授权**，有关授权的`RBAC`使用参�
 
 <!--more-->
 
+>
+- Istio 1.14.0
+
 # PKI
 首先参考[官方文档](https://preliminary.istio.io/zh/docs/concepts/security/#pki)[[en](https://istio.io/docs/concepts/security/#pki)]看下几种不同场景的方案，其中`Kubernetes 方案`最简单，
 `Kubernetes 中的代理节点`更适合生产，具体优势[参考](https://preliminary.istio.io/zh/docs/tasks/security/citadel-config/auth-sds)[[en](https://istio.io/docs/tasks/security/citadel-config/auth-sds/)]。

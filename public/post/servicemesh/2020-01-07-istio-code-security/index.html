@@ -68,7 +68,7 @@ Citadel和Node Agent提供，本文主要分析这部分的源码实现。">
 
 <meta itemprop="datePublished" content="2020-01-07T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2020-01-07T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="2763">
+<meta itemprop="wordCount" content="2765">
 
 
 
@@ -158,7 +158,7 @@ Citadel和Node Agent提供，本文主要分析这部分的源码实现。"/>
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 约 2763 字 </span>
+        <span class="more-meta"> 约 2765 字 </span>
         <span class="more-meta"> 预计阅读 6 分钟 </span>
       </div>
     </header>
@@ -204,6 +204,12 @@ Citadel和Node Agent提供，本文主要分析这部分的源码实现。"/>
 ，不过<code>RBAC</code>已经<a href="https://istio.io/docs/reference/config/security/istio.rbac.v1alpha1/">准备废弃</a>被<code>Authorization</code>替代，
 <strong>认证</strong>则分为<strong>服务间身份验证</strong>和<strong>来源身份认证</strong>，服务间身份验证Istio提供了<strong>双向TLS</strong>方案，其中涉及的秘钥管理服务，主要由<code>istio/security</code>模块的
 <code>Citadel</code>和<code>Node Agent</code>提供，本文主要分析这部分的源码实现。</p>
+
+<blockquote>
+<ul>
+<li>Istio 1.14.0</li>
+</ul>
+</blockquote>
 
 <h1 id="pki">PKI</h1>
 
