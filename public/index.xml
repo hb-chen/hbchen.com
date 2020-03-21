@@ -46,6 +46,477 @@
     </item>
     
     <item>
+      <title>【Istio】使用istioctl安装</title>
+      <link>http://hbchen.com/post/servicemesh/2020-03-22-istio-install-istioctl/</link>
+      <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2020-03-22-istio-install-istioctl/</guid>
+      
+        <description>&lt;p&gt;&lt;code&gt;istioctl&lt;/code&gt;是当前官方推荐的安装方式，相比&lt;code&gt;helm&lt;/code&gt;有更好的体验，但实践过程中也遇到些问题，在此对&lt;code&gt;1.5.0&lt;/code&gt;版本的使用做个整理。
+包括默认安装、可观察性组件、外部Chart等自定义安装。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;目标&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;安装 Istio 环境&lt;/li&gt;
+&lt;li&gt;部署 httpbin 用例&lt;/li&gt;
+&lt;li&gt;Prometheus、Grafana和Kiali组件&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;环境&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;minikube version: v1.7.2&lt;/li&gt;
+&lt;li&gt;kubernetes version: v1.16.7&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&#34;istioctl&#34;&gt;istioctl&lt;/h1&gt;
+
+&lt;p&gt;参考&lt;a href=&#34;https://istio.io/docs/setup/getting-started/#download&#34;&gt;官方文档&lt;/a&gt;下载或者到&lt;a href=&#34;https://github.com/istio/istio/releases/tag/1.5.0&#34;&gt;Github&lt;/a&gt;选择平台下载，
+然后将&lt;code&gt;bin&lt;/code&gt;目录加入 path 环境变量。&lt;/p&gt;
+
+&lt;p&gt;检验&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;istioctl version
+2020-03-21T10:21:14.012409Z	warn	will use `--remote=false` to retrieve version info due to `no Istio pods in namespace &amp;quot;istio-system&amp;quot;`
+1.5.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;istio-默认安装&#34;&gt;Istio 默认安装&lt;/h1&gt;
+
+&lt;p&gt;默认安装很简单，只需要一个&lt;code&gt;manifest apply&lt;/code&gt;命令&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;istioctl manifest apply
+This will install the default Istio profile into the cluster. Proceed? (y/N) y
+Detected that your cluster does not support third party JWT authentication. Falling back to less secure first party JWT. See https://istio.io/docs/ops/best-practices/security/#configure-third-party-service-account-tokens for details.
+- Applying manifest for component Base...
+✔ Finished applying manifest for component Base.
+- Applying manifest for component Pilot...
+✔ Finished applying manifest for component Pilot.
+  Waiting for resources to become ready...
+  Waiting for resources to become ready...
+- Applying manifest for component IngressGateways...
+- Applying manifest for component AddonComponents...
+✔ Finished applying manifest for component AddonComponents.
+✔ Finished applying manifest for component IngressGateways.
+
+✔ Installation complete
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;如果安装过程遇到镜像无法下载导致失败，可以使用&lt;code&gt;--set&lt;/code&gt;设置替换镜像，默认安装涉及两个镜像源配置:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;istio相关镜像：&lt;code&gt;--set hub=dockerhub.azk8s.cn/istio&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;prometheus镜像：&lt;code&gt;--set values.prometheus.hub=dockerhub.azk8s.cn/prom&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;istioctl manifest apply \
+--set hub=dockerhub.azk8s.cn/istio \
+--set values.prometheus.hub=dockerhub.azk8s.cn/prom
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;检验&lt;code&gt;Pod&lt;/code&gt;，只有三个运行实例&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl get po -n istio-system
+    NAME                                    READY   STATUS    RESTARTS   AGE
+    istio-ingressgateway-78f757846c-7sqg7   1/1     Running   0          69s
+    istiod-65c5b8df9d-qglhr                 1/1     Running   0          87s
+    prometheus-6fd77b7876-dk4xq             2/2     Running   0          67s
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;检验&lt;code&gt;Service&lt;/code&gt;，注意&lt;code&gt;istio-ingressgateway&lt;/code&gt;暴露的端口，后面&lt;code&gt;prometheus&lt;/code&gt;、&lt;code&gt;grafana&lt;/code&gt;和&lt;code&gt;kiali&lt;/code&gt;的&lt;code&gt;gateway&lt;/code&gt;会用到&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ kubectl get svc -n istio-system
+    NAME                   TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                                                                                                                      AGE
+    istio-ingressgateway   LoadBalancer   10.100.77.12     &amp;lt;pending&amp;gt;     15020:31791/TCP,80:31302/TCP,443:31151/TCP,15029:31679/TCP,15030:31818/TCP,15031:31327/TCP,15032:30470/TCP,15443:31898/TCP   101s
+    istio-pilot            ClusterIP      10.98.216.5      &amp;lt;none&amp;gt;        15010/TCP,15011/TCP,15012/TCP,8080/TCP,15014/TCP,443/TCP                                                                     2m3s
+    istiod                 ClusterIP      10.109.224.120   &amp;lt;none&amp;gt;        15012/TCP,443/TCP                                                                                                            2m2s
+    prometheus             ClusterIP      10.105.60.208    &amp;lt;none&amp;gt;        9090/TCP
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这时测试网关&lt;code&gt;80&lt;/code&gt;端口映射的&lt;code&gt;31302&lt;/code&gt;会得到&lt;code&gt;404&lt;/code&gt;，因为我们还没有任何服务，&lt;code&gt;INGRESS_HOST&lt;/code&gt;参考&lt;a href=&#34;https://istio.io/docs/tasks/traffic-management/ingress/ingress-control/#determining-the-ingress-ip-and-ports&#34;&gt;官方文档&lt;/a&gt;根据环境获取，&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;curl -I  http://{INGRESS_HOST}:31302
+    HTTP/1.1 404 Not Found
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;部署httpbin&#34;&gt;部署httpbin&lt;/h1&gt;
+
+&lt;p&gt;首先为&lt;code&gt;namespace&lt;/code&gt;添加&lt;code&gt;istio-injection=enabled&lt;/code&gt;标签，开启自动注入&lt;code&gt;sidecar&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl label namespace default istio-injection=enabled
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;部署&lt;code&gt;httpbin&lt;/code&gt;服务以及网关&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;cd {istio-1.5.0_path}
+kubectl apply -f samples/httpbin/httpbin.yaml -f samples/httpbin/httpbin-gateway.yaml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;检验&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl get po -n default
+    NAME                       READY   STATUS    RESTARTS   AGE
+    httpbin-779c54bf49-dgcs4   2/2     Running   0          39s
+
+kubectl get gateway -n default
+    NAME              AGE
+    httpbin-gateway   2m1s
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;测试服务&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;curl -I  http://192.168.39.130:31302
+    HTTP/1.1 200 OK
+
+curl http://192.168.39.130:31302/get
+    {...}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;可观察性组件&#34;&gt;可观察性组件&lt;/h1&gt;
+
+&lt;p&gt;Istio的一大特点可观察性，主要由&lt;code&gt;Prometheus&lt;/code&gt;、&lt;code&gt;Grafana&lt;/code&gt;、&lt;code&gt;Kiali&lt;/code&gt;和&lt;code&gt;Tracing&lt;/code&gt;，其中&lt;code&gt;Prometheus&lt;/code&gt;是默认安装组件。
+前面在安装后检验&lt;code&gt;Service&lt;/code&gt;时有提到&lt;code&gt;istio-ingressgateway&lt;/code&gt;暴露的端口，其中有四个端口分别对应这4个服务：&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;端口&lt;/th&gt;
+&lt;th&gt;映射&lt;/th&gt;
+&lt;th&gt;服务&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;15029&lt;/td&gt;
+&lt;td&gt;31679&lt;/td&gt;
+&lt;td&gt;kiali&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;15030&lt;/td&gt;
+&lt;td&gt;31818&lt;/td&gt;
+&lt;td&gt;prometheus&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;15031&lt;/td&gt;
+&lt;td&gt;31327&lt;/td&gt;
+&lt;td&gt;grafana&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;15032&lt;/td&gt;
+&lt;td&gt;30470&lt;/td&gt;
+&lt;td&gt;tracing&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;虽然端口已经暴露，但每个服务对应的&lt;code&gt;gateway&lt;/code&gt;需要自定义开启，配置路径为&lt;code&gt;values.gateways.istio-ingressgateway.telemetry_addon_gateways.xxx_gateway&lt;/code&gt;，
+对应&lt;code&gt;yaml&lt;/code&gt;为&lt;code&gt;gateways/istio-ingress/templates/addongateway.yaml&lt;/code&gt;，配置间&lt;code&gt;istio-ingress&lt;/code&gt;的&lt;code&gt;values&lt;/code&gt;。
+在&lt;code&gt;addongateway.yaml&lt;/code&gt;模板中都默认为&lt;code&gt;https&lt;/code&gt;，如果测试不方便需要自己手动修改&lt;code&gt;gateway&lt;/code&gt;，也可以参考后面的&lt;a href=&#34;#外部Chart&#34;&gt;#外部Chart&lt;/a&gt;进行自定义安装。&lt;/p&gt;
+
+&lt;h2 id=&#34;prometheus&#34;&gt;Prometheus&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;Prometheus&lt;/code&gt;默认是安装，所以只需要启用&lt;code&gt;gateway&lt;/code&gt;即可&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;istioctl manifest apply \
+--set values.gateways.istio-ingressgateway.telemetry_addon_gateways.prometheus_gateway.enabled=true
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Gateway改为HTTP服务&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl apply -f - &amp;lt;&amp;lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-prometheus-gateway
+  namespace: istio-system
+  labels:
+    app: prometheus
+    release: istio
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 15030
+        name: https-prometheus
+        protocol: HTTP
+      hosts:
+        - &amp;quot;*&amp;quot;
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;访问 http://{INGRESS_HOST}:31818 即可进入Prometheus的Web页面，先为&lt;code&gt;httpbin&lt;/code&gt;灌入一些流量然后看&lt;code&gt;Prometheus&lt;/code&gt;数据情况&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;hey -z 60s -c 2 http://{INGRESS_HOST}:31302/get
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://hbchen.com/img/istio/prometheus-httpbin.png&#34; alt=&#34;prometheus httpbin&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;grafana-kiali-tracing&#34;&gt;Grafana &amp;amp; Kiali &amp;amp; Tracing&lt;/h2&gt;
+
+&lt;p&gt;这三个服务默认是不启动的，所以需要手动设置&lt;code&gt;enabled&lt;/code&gt;，其中&lt;code&gt;kiali&lt;/code&gt;需要增加一个&lt;code&gt;createDemoSecret=true&lt;/code&gt;的配置，使用默认用户名(admin)和密码(admin)创建密钥，否则会有异常:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The Kiali secret is missing. Users are prohibited from accessing Kiali until an administrator creates a valid secret. Please refer to the Kiali documentation for more details.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;istioctl manifest apply \
+--set values.gateways.istio-ingressgateway.telemetry_addon_gateways.prometheus_gateway.enabled=true \
+--set addonComponents.grafana.enabled=true \
+--set values.gateways.istio-ingressgateway.telemetry_addon_gateways.grafana_gateway.enabled=true \
+--set addonComponents.kiali.enabled=true \
+--set values.kiali.createDemoSecret=true \
+--set values.gateways.istio-ingressgateway.telemetry_addon_gateways.kiali_gateway.enabled=true \
+--set addonComponents.tracing.enabled=true \
+--set values.gateways.istio-ingressgateway.telemetry_addon_gateways.tracing_gateway.enabled=true
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;同样将&lt;code&gt;gateway&lt;/code&gt;改为&lt;code&gt;http&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl apply -f - &amp;lt;&amp;lt;EOF
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-prometheus-gateway
+  namespace: istio-system
+  labels:
+    app: prometheus
+    release: istio
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 15030
+        name: https-prometheus
+        protocol: HTTP
+      hosts:
+        - &amp;quot;*&amp;quot;
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-grafana-gateway
+  namespace: istio-system
+  labels:
+    app: grafana
+    release: istio
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 15031
+        name: https-grafana
+        protocol: HTTP
+      hosts:
+        - &amp;quot;*&amp;quot;
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-kiali-gateway
+  namespace: istio-system
+  labels:
+    app: kiali
+    release: istio
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 15029
+        name: https-kiali
+        protocol: HTTP
+      hosts:
+        - &amp;quot;*&amp;quot;
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-tracing-gateway
+  namespace: istio-system
+  labels:
+    app: tracing
+    release: istio
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 15032
+        name: https-tracing
+        protocol: HTTP
+      hosts:
+        - &amp;quot;*&amp;quot;
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;现在再次给&lt;code&gt;httpbin&lt;/code&gt;灌入流量查看各个服务的效果&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;hey -z 300s -c 2 http://{INGRESS_HOST}:31302/get
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Grafana&lt;/strong&gt;
+&lt;img src=&#34;http://hbchen.com/img/istio/grafana-httpbin.png&#34; alt=&#34;grafana httpbin&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Kiali&lt;/strong&gt;
+&lt;img src=&#34;http://hbchen.com/img/istio/kiali-httpbin.png&#34; alt=&#34;kiali httpbin&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Tracing&lt;/strong&gt;
+&lt;img src=&#34;http://hbchen.com/img/istio/tracing-httpbin.png&#34; alt=&#34;tracing httpbin&#34; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;外部chart-坑&#34;&gt;外部Chart-坑&lt;/h1&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://istio.io/docs/setup/install/istioctl/#install-from-external-charts&#34;&gt;官方文档&lt;/a&gt;有关使用外部Chart的部分存在问题，应该也是istio实现&lt;a href=&#34;https://github.com/istio/istio/issues/22368&#34;&gt;BUG&lt;/a&gt;，
+文档修改和BUG修复的PR &lt;a href=&#34;https://github.com/istio/istio.io/pull/6939&#34;&gt;istio/istio.io#6939&lt;/a&gt; 和 &lt;a href=&#34;https://github.com/istio/istio/pull/22371&#34;&gt;istio/istio#22371&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;addongateway.yaml&lt;/code&gt;的Gateway改为HTTP&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;# Template for telemetry addon gateways
+{{ $gateway := index .Values &amp;quot;gateways&amp;quot; &amp;quot;istio-ingressgateway&amp;quot; }}
+{{ range $addon := $gateway.telemetry_addon_gateways }}
+{{ if $addon.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: istio-{{ $addon.name }}-gateway
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: {{ $addon.name }}
+    release: {{ $.Release.Name }}
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+{{- if $addon.tls }}
+    - port:
+        number: {{ $addon.port }}
+        name: https-{{ $addon.name }}
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+        privateKey: /etc/istio/ingressgateway-certs/tls.key
+      hosts:
+        - &amp;quot;*&amp;quot;
+  {{- else }}
+    - port:
+        number: {{ $addon.port }}
+        name: http-{{ $addon.name }}
+        protocol: HTTP
+        hosts:
+          - &amp;quot;*&amp;quot;
+{{- end }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ $addon.name }}-virtual-service
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: {{ $addon.name }}
+    release: {{ $.Release.Name }}
+spec:
+  hosts:
+    - &amp;quot;*&amp;quot;
+  gateways:
+    - istio-{{ $addon.name }}-gateway
+  http:
+    - match:
+        - port: {{ $addon.port }}
+      route:
+        - destination:
+            host: {{ $addon.name }}.{{ $.Release.Namespace }}.svc.{{ $.Values.global.proxy.clusterDomain }}
+            port:
+              number: {{ $addon.desPort }}
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ $addon.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: {{ $addon.name }}
+    release: {{ $.Release.Name }}
+spec:
+  host: {{ $addon.name }}.{{ $.Release.Namespace }}.svc.{{ $.Values.global.proxy.clusterDomain }}
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+{{- end }}
+{{- end }}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;指定外部Chart部署&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;istioctl manifest apply \
+--set profile=$PWD/install/kubernetes/operator/profiles/default.yaml \
+--set install_package_path=$PWD/install/kubernetes/operator/charts \
+--set values.gateways.istio-ingressgateway.telemetry_addon_gateways.prometheus_gateway.enabled=true \
+--set addonComponents.grafana.enabled=true \
+--set values.gateways.istio-ingressgateway.telemetry_addon_gateways.grafana_gateway.enabled=true \
+--set addonComponents.kiali.enabled=true \
+--set values.kiali.createDemoSecret=true \
+--set values.gateways.istio-ingressgateway.telemetry_addon_gateways.kiali_gateway.enabled=true \
+--set addonComponents.tracing.enabled=true \
+--set values.gateways.istio-ingressgateway.telemetry_addon_gateways.tracing_gateway.enabled=true
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;使用&lt;code&gt;--set&lt;/code&gt;过于麻烦可以使用&lt;code&gt;yaml&lt;/code&gt;文件进行配置，&lt;code&gt;profile&lt;/code&gt;和&lt;code&gt;install_package_path&lt;/code&gt;的路径以istio的下载路径为例&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;$ vi profile.yaml
+
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: istio-operator
+spec:
+  profile: {istio-path}/install/kubernetes/operator/profiles/default.yaml
+  install_package_path: {istio-path}/install/kubernetes/operator/charts
+  
+  addonComponents:
+    prometheus:
+      enabled: true
+    kiali:
+      enabled: true
+    grafana:
+      enabled: true
+    tracing:
+      enabled: true
+
+  values:
+    gateways:
+      istio-ingressgateway:
+        telemetry_addon_gateways:
+          prometheus_gateway:
+            enabled: true
+          grafana_gateway:
+            enabled: true
+          kiali_gateway:
+            enabled: true
+          tracing_gateway:
+            enabled: true
+    kiali:
+      createDemoSecret: true
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;istioctl manifest apply \
+-f profile.yaml
+&lt;/code&gt;&lt;/pre&gt;</description>
+      
+    </item>
+    
+    <item>
       <title>【Istio源码】Citadel &amp; Node Agent</title>
       <link>http://hbchen.com/post/servicemesh/2020-01-07-istio-code-security/</link>
       <pubDate>Tue, 07 Jan 2020 00:00:00 +0000</pubDate>
@@ -4384,165 +4855,6 @@ spec:
         - containerPort: 9080
 ---
 &lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>Spark &#43; Elasticsearch构建推荐系统</title>
-      <link>http://hbchen.com/post/2018-10-24-spark-elasticsearch-recommender/</link>
-      <pubDate>Wed, 24 Oct 2018 16:23:46 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2018-10-24-spark-elasticsearch-recommender/</guid>
-      
-        <description>&lt;p&gt;Github &lt;a href=&#34;https://github.com/hb-chen/spark-elasticsearch-recommender&#34;&gt;hb-chen/spark-elasticsearch-recommender&lt;/a&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Zeppelin &lt;code&gt;0.8.0&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Spark &lt;code&gt;2.3.2&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Elasticsearch &lt;code&gt;6.3.2&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h4 id=&#34;1-环境准备&#34;&gt;1.环境准备&lt;/h4&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Mac OSX&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h5 id=&#34;zeppeline&#34;&gt;Zeppeline&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# http://www.apache.org/dyn/closer.cgi/zeppelin/zeppelin-0.8.0/zeppelin-0.8.0-bin-netinst.tgz
-$ wget http://mirrors.shu.edu.cn/apache/zeppelin/zeppelin-0.8.0/zeppelin-0.8.0-bin-netinst.tgz
-$ tar -zxf zeppelin-0.8.0-bin-netinst.tgz
-$ cd zeppelin-0.8.0-bin-netinst
-
-# 安装必要interpreter
-$ ./bin/install-interpreter.sh --name md,elasticsearch
-$ ./bin/zeppelin-daemon.sh start
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;spark&#34;&gt;Spark&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# http://spark.apache.org/downloads.html
-$ wget https://www.apache.org/dyn/closer.lua/spark/spark-2.3.2/spark-2.3.2-bin-hadoop2.7.tgz
-$ tar -zxf spark-2.3.2-bin-hadoop2.7.tgz
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;elasticsearch&#34;&gt;Elasticsearch&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# https://www.elastic.co/downloads/past-releases
-# Elasticsearch + 6.3.2
-$ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.3.2.zip
-$ unzip elasticsearch-6.3.2.zip
-
-# ES-Hadoop + 6.3.2
-$ wget https://artifacts.elastic.co/downloads/elasticsearch-hadoop/elasticsearch-hadoop-6.3.2.zip
-$ unzip elasticsearch-hadoop-6.3.2.zip
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h6 id=&#34;elasticsearch-矢量评分插件&#34;&gt;Elasticsearch 矢量评分插件&lt;/h6&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/muhleder/elasticsearch-vector-scoring&#34;&gt;muhleder/elasticsearch-vector-scoring&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 修改build.gradle，这样不必Checkout Elasticsearch 
-# https://github.com/muhleder/elasticsearch-vector-scoring/issues/1#issuecomment-415267767
-buildscript {
-  repositories {
-    jcenter()
-    mavenLocal()
-  }
-  dependencies {
-    classpath &amp;quot;org.elasticsearch.gradle:build-tools:6.3.2&amp;quot;
-  }
-}
-
-apply plugin: &#39;idea&#39;
-apply plugin: &#39;java&#39;
-apply plugin: &#39;elasticsearch.esplugin&#39;
-
-licenseFile = rootProject.file(&#39;LICENSE&#39;)
-noticeFile = rootProject.file(&#39;NOTICE&#39;)
-
-esplugin {
-  name &#39;elasticsearch-vector-scoring&#39;
-  description &#39;Provides a fast vector multiplication script.&#39;
-  classname &#39;com.gosololaw.elasticsearch.VectorScoringPlugin&#39;
-}
-
-dependencies {
-  compile &amp;quot;org.elasticsearch:elasticsearch:6.3.2&amp;quot;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 插件安装
-$ ./bin/elasticsearch-plugin install {file:///path/to/plugin.zip}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;python依赖库&#34;&gt;Python依赖库&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ pip install elasticsearch
-$ pip install numpy
-$ pip install tmdbsimple # 忽略，暂时未使用
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;movielens数据集-https-grouplens-org-datasets-movielens-下载&#34;&gt;&lt;a href=&#34;https://grouplens.org/datasets/movielens/&#34;&gt;Movielens数据集&lt;/a&gt;下载&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ cd data # 与zeppelin-0.8.0-bin-netinst同Path，note中配置PATH_TO_DATA = &amp;quot;../data/ml-latest-small&amp;quot;
-$ wget http://files.grouplens.org/datasets/movielens/ml-latest-small.zip
-$ unzip ml-latest-small.zip
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;2-启动服务&#34;&gt;2.启动服务&lt;/h4&gt;
-
-&lt;h5 id=&#34;elasticsearch启动&#34;&gt;Elasticsearch启动&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ ./bin/elasticsearch
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h5 id=&#34;zeppelin配置及启动&#34;&gt;Zeppelin配置及启动&lt;/h5&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ cp conf/shiro.ini.template conf/shiro.ini
-$ vim conf/shiro.ini
-# 管理员账户密码
-[users]
-admin = 123456, admin
-
-$ cp conf/zeppelin-env.sh.template conf/zeppelin-env.sh
-$ vim conf/zeppelin-env.sh
-# Spark配置
-export SPARK_HOME=/{apache-spark-path}/spark-2.3.2-bin-hadoop2.7
-export SPARK_SUBMIT_OPTIONS=&amp;quot;--driver-memory 2G&amp;quot;
-
-$ cp conf/zeppelin-site.xml.template conf/zeppelin-site.xml
-$ vim conf/zeppelin-site.xml
-# 根据需要可以修改zeppelin.server.port等配置
-
-# 启动
-$ ./bin/zeppelin-daemon.sh start
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;3-notebook&#34;&gt;3.Notebook&lt;/h4&gt;
-
-&lt;p&gt;&lt;a href=&#34;http://localhost:8080&#34;&gt;http://localhost:8080&lt;/a&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# Create new interpreter
-# md
-
-# elasticsearch
-elasticsearch.client.type http
-elasticsearch.port	9200
-
-# spark
-# 添加Dependencies
-artifact /{elasticsearch-hadoop-path}/elasticsearch-hadoop-6.3.2/dist/elasticsearch-spark-20_2.11-6.3.2.jar
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h4 id=&#34;参考&#34;&gt;参考&lt;/h4&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/IBM/elasticsearch-spark-recommender&#34;&gt;使用 Apache Spark 和 Elasticsearch 构建一个推荐系统&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</description>
       
     </item>
     

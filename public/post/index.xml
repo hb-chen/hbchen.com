@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio 蜀ICP备18021614号-1</copyright>
-    <lastBuildDate>Tue, 07 Jan 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 21 Mar 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio】使用istioctl安装</title>
+      <link>http://hbchen.com/post/servicemesh/2020-03-22-istio-install-istioctl/</link>
+      <pubDate>Sat, 21 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2020-03-22-istio-install-istioctl/</guid>
+      <description>&lt;p&gt;&lt;code&gt;istioctl&lt;/code&gt;是当前官方推荐的安装方式，相比&lt;code&gt;helm&lt;/code&gt;有更好的体验，但实践过程中也遇到些问题，在此对&lt;code&gt;1.5.0&lt;/code&gt;版本的使用做个整理。
+包括默认安装、可观察性组件、外部Chart等自定义安装。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【Istio源码】Citadel &amp; Node Agent</title>
@@ -205,17 +215,6 @@
 &lt;li&gt;Spark &lt;code&gt;2.3.2&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;Elasticsearch &lt;code&gt;6.3.2&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;</description>
-    </item>
-    
-    <item>
-      <title>go-micro框架介绍</title>
-      <link>http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/</link>
-      <pubDate>Tue, 27 Mar 2018 19:09:32 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2018-03-27-go-micro-%E6%A1%86%E6%9E%B6%E4%BB%8B%E7%BB%8D/</guid>
-      <description>&lt;h2 id=&#34;go-micro-https-github-com-micro-go-micro&#34;&gt;&lt;a href=&#34;https://github.com/micro/go-micro&#34;&gt;go-micro&lt;/a&gt;&lt;/h2&gt;
-
-&lt;p&gt;go-micro是Micro的核心，是一套Go语言的可插拔RPC框架，提供服务发现、负载均衡、同步/异步通信、编码、服务接口等，所有组件均设计为Interface，便于扩展。&lt;/p&gt;</description>
     </item>
     
   </channel>
