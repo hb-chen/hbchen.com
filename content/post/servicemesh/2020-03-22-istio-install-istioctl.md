@@ -1,7 +1,7 @@
 ---
 title: "【Istio】使用istioctl安装"
 date: 2020-03-21
-lastmod: 2020-03-21
+lastmod: 2020-03-22
 draft: false
 mermaid: true
 categories: [
@@ -441,4 +441,6 @@ spec:
 istioctl manifest apply \
 -f profile.yaml
 ```
+
+有关自定义安装的`chart`、`profile`在[hb-chen/istio-operator](https://github.com/hb-chen/istio-operator)有些示例可以参考。
 

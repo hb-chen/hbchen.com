@@ -512,7 +512,9 @@ spec:
 
 &lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;istioctl manifest apply \
 -f profile.yaml
-&lt;/code&gt;&lt;/pre&gt;</description>
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;有关自定义安装的&lt;code&gt;chart&lt;/code&gt;、&lt;code&gt;profile&lt;/code&gt;在&lt;a href=&#34;https://github.com/hb-chen/istio-operator&#34;&gt;hb-chen/istio-operator&lt;/a&gt;有些示例可以参考。&lt;/p&gt;</description>
       
     </item>
     
