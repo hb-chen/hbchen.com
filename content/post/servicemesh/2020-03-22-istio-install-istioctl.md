@@ -1,7 +1,7 @@
 ---
 title: "【Istio】使用istioctl安装"
 date: 2020-03-21
-lastmod: 2020-03-22
+lastmod: 2020-03-25
 draft: false
 mermaid: true
 categories: [
@@ -302,8 +302,10 @@ hey -z 300s -c 2 http://{INGRESS_HOST}:31302/get
 
 # 外部Chart-坑
 
-[官方文档](https://istio.io/docs/setup/install/istioctl/#install-from-external-charts)有关使用外部Chart的部分存在问题，应该也是istio实现[BUG](https://github.com/istio/istio/issues/22368)，
+[官方文档](https://istio.io/docs/setup/install/istioctl/#install-from-external-charts)有关使用外部Chart的部分存在问题，`installPackagePath`无效，需要用`install_package_path`替换，同时需要指定`profile`，应该也是istio实现[BUG](https://github.com/istio/istio/issues/22368)，
 文档修改和BUG修复的PR [istio/istio.io#6939](https://github.com/istio/istio.io/pull/6939) 和 [istio/istio#22371](https://github.com/istio/istio/pull/22371)
+
+> release-1.5 最新版本已经修复此问题(*文档更新PR [istio/istio.io#6939](https://github.com/istio/istio.io/pull/6939)未被采纳*)，所以如果`istioctl`使用的是`1.5.0`的Release版本此问题仍然存在，在使用这一部分文档([install-from-external-charts](https://istio.io/docs/setup/install/istioctl/#install-from-external-charts))时需要要注意
 
 `addongateway.yaml`的Gateway改为HTTP
 ```yaml

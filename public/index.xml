@@ -420,8 +420,12 @@ EOF
 
 &lt;h1 id=&#34;外部chart-坑&#34;&gt;外部Chart-坑&lt;/h1&gt;
 
-&lt;p&gt;&lt;a href=&#34;https://istio.io/docs/setup/install/istioctl/#install-from-external-charts&#34;&gt;官方文档&lt;/a&gt;有关使用外部Chart的部分存在问题，应该也是istio实现&lt;a href=&#34;https://github.com/istio/istio/issues/22368&#34;&gt;BUG&lt;/a&gt;，
+&lt;p&gt;&lt;a href=&#34;https://istio.io/docs/setup/install/istioctl/#install-from-external-charts&#34;&gt;官方文档&lt;/a&gt;有关使用外部Chart的部分存在问题，&lt;code&gt;installPackagePath&lt;/code&gt;无效，需要用&lt;code&gt;install_package_path&lt;/code&gt;替换，同时需要指定&lt;code&gt;profile&lt;/code&gt;，应该也是istio实现&lt;a href=&#34;https://github.com/istio/istio/issues/22368&#34;&gt;BUG&lt;/a&gt;，
 文档修改和BUG修复的PR &lt;a href=&#34;https://github.com/istio/istio.io/pull/6939&#34;&gt;istio/istio.io#6939&lt;/a&gt; 和 &lt;a href=&#34;https://github.com/istio/istio/pull/22371&#34;&gt;istio/istio#22371&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;release-1.5 最新版本已经修复此问题(&lt;em&gt;文档更新PR &lt;a href=&#34;https://github.com/istio/istio.io/pull/6939&#34;&gt;istio/istio.io#6939&lt;/a&gt;未被采纳&lt;/em&gt;)，所以如果&lt;code&gt;istioctl&lt;/code&gt;使用的是&lt;code&gt;1.5.0&lt;/code&gt;的Release版本此问题仍然存在，在使用这一部分文档(&lt;a href=&#34;https://istio.io/docs/setup/install/istioctl/#install-from-external-charts&#34;&gt;install-from-external-charts&lt;/a&gt;)时需要要注意&lt;/p&gt;
+&lt;/blockquote&gt;
 
 &lt;p&gt;&lt;code&gt;addongateway.yaml&lt;/code&gt;的Gateway改为HTTP&lt;/p&gt;
 

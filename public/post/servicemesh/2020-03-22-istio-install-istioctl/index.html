@@ -55,7 +55,7 @@
 包括默认安装、可观察性组件、外部Chart等自定义安装。" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://hbchen.com/post/servicemesh/2020-03-22-istio-install-istioctl/" /><meta property="article:published_time" content="2020-03-21T00:00:00&#43;00:00"/>
-<meta property="article:modified_time" content="2020-03-22T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2020-03-25T00:00:00&#43;00:00"/>
 
 <meta itemprop="name" content="【Istio】使用istioctl安装">
 <meta itemprop="description" content="istioctl是当前官方推荐的安装方式，相比helm有更好的体验，但实践过程中也遇到些问题，在此对1.5.0版本的使用做个整理。
@@ -63,8 +63,8 @@
 
 
 <meta itemprop="datePublished" content="2020-03-21T00:00:00&#43;00:00" />
-<meta itemprop="dateModified" content="2020-03-22T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="2215">
+<meta itemprop="dateModified" content="2020-03-25T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="2404">
 
 
 
@@ -152,7 +152,7 @@
               <a href="/categories/service-mesh/"> Service Mesh </a>
             
           </div>
-        <span class="more-meta"> 约 2215 字 </span>
+        <span class="more-meta"> 约 2404 字 </span>
         <span class="more-meta"> 预计阅读 5 分钟 </span>
       </div>
     </header>
@@ -504,8 +504,12 @@ EOF
 
 <h1 id="外部chart-坑">外部Chart-坑</h1>
 
-<p><a href="https://istio.io/docs/setup/install/istioctl/#install-from-external-charts">官方文档</a>有关使用外部Chart的部分存在问题，应该也是istio实现<a href="https://github.com/istio/istio/issues/22368">BUG</a>，
+<p><a href="https://istio.io/docs/setup/install/istioctl/#install-from-external-charts">官方文档</a>有关使用外部Chart的部分存在问题，<code>installPackagePath</code>无效，需要用<code>install_package_path</code>替换，同时需要指定<code>profile</code>，应该也是istio实现<a href="https://github.com/istio/istio/issues/22368">BUG</a>，
 文档修改和BUG修复的PR <a href="https://github.com/istio/istio.io/pull/6939">istio/istio.io#6939</a> 和 <a href="https://github.com/istio/istio/pull/22371">istio/istio#22371</a></p>
+
+<blockquote>
+<p>release-1.5 最新版本已经修复此问题(<em>文档更新PR <a href="https://github.com/istio/istio.io/pull/6939">istio/istio.io#6939</a>未被采纳</em>)，所以如果<code>istioctl</code>使用的是<code>1.5.0</code>的Release版本此问题仍然存在，在使用这一部分文档(<a href="https://istio.io/docs/setup/install/istioctl/#install-from-external-charts">install-from-external-charts</a>)时需要要注意</p>
+</blockquote>
 
 <p><code>addongateway.yaml</code>的Gateway改为HTTP</p>
 
@@ -655,7 +659,7 @@ spec:
   </p>
   <p class="copyright-item">
     <span class="item-title">上次更新</span>
-    <span class="item-content">2020-03-22</span>
+    <span class="item-content">2020-03-25</span>
   </p>
   
   <p class="copyright-item">
