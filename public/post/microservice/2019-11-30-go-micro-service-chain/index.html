@@ -64,7 +64,7 @@
 
 <meta itemprop="datePublished" content="2019-11-30T16:40:32&#43;08:00" />
 <meta itemprop="dateModified" content="2019-12-01T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="1771">
+<meta itemprop="wordCount" content="1799">
 
 
 
@@ -152,7 +152,7 @@
               <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"> 微服务 </a>
             
           </div>
-        <span class="more-meta"> 约 1771 字 </span>
+        <span class="more-meta"> 约 1799 字 </span>
         <span class="more-meta"> 预计阅读 4 分钟 </span>
       </div>
     </header>
@@ -305,6 +305,10 @@ web.Register(chain.New(chain.WithChainsFunc(func(r *http.Request) []string {
 </code></pre>
 
 <p><em>2. <code>go-micro/api/handler/api.go</code>去掉<code>strategy</code>，<code>rpc handler</code>类似</em></p>
+
+<blockquote>
+<p>仅用于测试，具体原因 vtolstov 在社区提的PR<a href="https://github.com/micro/go-micro/pull/1388">#1388</a>有 asim 的反馈</p>
+</blockquote>
 
 <pre><code class="language-go">// create strategy
 // so := selector.WithStrategy(strategy(service.Services))

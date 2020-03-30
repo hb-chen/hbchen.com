@@ -93,6 +93,9 @@ func main() {
 ```
 
 *2. `go-micro/api/handler/api.go`去掉`strategy`，`rpc handler`类似*
+
+> 仅用于测试，具体原因 vtolstov 在社区提的PR[#1388](https://github.com/micro/go-micro/pull/1388)有 asim 的反馈 
+
 ```go
 // create strategy
 // so := selector.WithStrategy(strategy(service.Services))

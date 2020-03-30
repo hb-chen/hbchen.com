@@ -946,6 +946,10 @@ web.Register(chain.New(chain.WithChainsFunc(func(r *http.Request) []string {
 
 &lt;p&gt;&lt;em&gt;2. &lt;code&gt;go-micro/api/handler/api.go&lt;/code&gt;去掉&lt;code&gt;strategy&lt;/code&gt;，&lt;code&gt;rpc handler&lt;/code&gt;类似&lt;/em&gt;&lt;/p&gt;
 
+&lt;blockquote&gt;
+&lt;p&gt;仅用于测试，具体原因 vtolstov 在社区提的PR&lt;a href=&#34;https://github.com/micro/go-micro/pull/1388&#34;&gt;#1388&lt;/a&gt;有 asim 的反馈&lt;/p&gt;
+&lt;/blockquote&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// create strategy
 // so := selector.WithStrategy(strategy(service.Services))
 
