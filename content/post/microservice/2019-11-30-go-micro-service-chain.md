@@ -1,7 +1,7 @@
 ---
 title: "【go-micro】微服务协作开发、灰度发布之流量染色"
 date: 2019-11-30T16:40:32+08:00
-lastmod: 2019-12-01
+lastmod: 2020-04-14
 draft: false
 mermaid: false
 comments: true
@@ -94,7 +94,9 @@ func main() {
 
 *2. `go-micro/api/handler/api.go`去掉`strategy`，`rpc handler`类似*
 
-> 仅用于测试，具体原因 vtolstov 在社区提的PR[#1388](https://github.com/micro/go-micro/pull/1388)有 asim 的反馈 
+> 
+- 此方法仅用于测试，具体原因 vtolstov 在社区提的PR[#1388](https://github.com/micro/go-micro/pull/1388)有 asim 的反馈
+- 自定义 Router 实现网关对服务筛选的支持，实现参考我 fork 的分支版本 [hb-chen/micro/gateway](https://github.com/hb-chen/micro/tree/gateway-2.4.0/gateway)
 
 ```go
 // create strategy

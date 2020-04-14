@@ -67,7 +67,7 @@
 有了&lt;code&gt;network&lt;/code&gt;的基础剩下的工作就是&lt;code&gt;proxy&lt;/code&gt;的&lt;code&gt;router&lt;/code&gt;筛选功能，实现参考 PR&lt;a href=&#34;https://github.com/micro/go-micro/pull/897&#34;&gt;#897&lt;/a&gt;，
 从实现我们知道通过&lt;code&gt;Micro-Router&lt;/code&gt;、&lt;code&gt;Micro-Network&lt;/code&gt;和&lt;code&gt;Micro-Gateway&lt;/code&gt;三个&lt;code&gt;metadata&lt;/code&gt;可以对&lt;code&gt;router&lt;/code&gt;进行筛选，而使用&lt;code&gt;Micro-Address&lt;/code&gt;以及基于&lt;code&gt;label&lt;/code&gt;的筛选还处于&lt;strong&gt;&lt;em&gt;TODO&lt;/em&gt;&lt;/strong&gt;状态。&lt;/p&gt;&lt;/li&gt;
 
-&lt;li&gt;&lt;p&gt;其次在线上及本地所有服务都需要是用&lt;code&gt;network&lt;/code&gt;做为代理(&lt;code&gt;MICRO_PROXY=go.micro.network&lt;/code&gt;)包括网关(&lt;em&gt;注意默认网关有不支持服务筛选问题&lt;/em&gt;)，这样服务间所有流量都通过&lt;code&gt;network&lt;/code&gt;进行代理转发。&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;其次在线上及本地所有服务都需要是用&lt;code&gt;network&lt;/code&gt;做为代理(&lt;code&gt;MICRO_PROXY=go.micro.network&lt;/code&gt;)包括网关(&lt;em&gt;注意默认网关不支持服务筛选，导致网关不能用network做代理&lt;/em&gt;)，这样服务间所有流量都通过&lt;code&gt;network&lt;/code&gt;进行代理转发。&lt;/p&gt;&lt;/li&gt;
 
 &lt;li&gt;&lt;p&gt;最后考虑所有服务都可以自助路由到个人本地，我们不能直接使用&lt;code&gt;Micro-Router&lt;/code&gt;，因为&lt;code&gt;Micro-Router&lt;/code&gt;会在全链路生效，需要使用&lt;code&gt;metadata&lt;/code&gt;来传递&lt;code&gt;router&lt;/code&gt;筛选信息，
 再通过&lt;code&gt;Client/Call Wrap&lt;/code&gt;实现&lt;code&gt;Micro-Router&lt;/code&gt;的恢复和清理，在识别到调用服务需要筛选时添加&lt;code&gt;Micro-Router&lt;/code&gt;，否则清理&lt;code&gt;Micro-Router&lt;/code&gt;，避免向下传导，实践参考&lt;a href=&#34;https://github.com/micro-in-cn/starter-kit/tree/master/pkg/plugin/wrapper/client/router_filter&#34;&gt;router_filter&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
@@ -80,7 +80,11 @@
 &lt;ul&gt;
 &lt;li&gt;所有服务都要使用&lt;code&gt;network&lt;/code&gt;做代理，如果框架能够在&lt;code&gt;CallOption&lt;/code&gt;中支持动态使用代理将会更好&lt;/li&gt;
 &lt;li&gt;所有服务都需要添加&lt;code&gt;Client/Call Wrap&lt;/code&gt;，需要统一的规范约定&lt;/li&gt;
-&lt;li&gt;在网关层与&lt;a href=&#34;http://hbchen.com/post/microservice/2019-11-30-go-micro-service-chain/#%E7%BD%91%E5%85%B3%E6%9C%8D%E5%8A%A1%E7%AD%9B%E9%80%89-%E5%9D%91&#34;&gt;流量染色&lt;/a&gt;遇到相同的问题即：&lt;strong&gt;&lt;em&gt;不支持服务筛选&lt;/em&gt;&lt;/strong&gt;，需要去掉&lt;code&gt;SelectOption&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;在网关层与&lt;a href=&#34;http://hbchen.com/post/microservice/2019-11-30-go-micro-service-chain/#%E7%BD%91%E5%85%B3%E6%9C%8D%E5%8A%A1%E7%AD%9B%E9%80%89-%E5%9D%91&#34;&gt;流量染色&lt;/a&gt;遇到相同的问题即：&lt;strong&gt;&lt;em&gt;不支持服务筛选，导致网关不能用network做代理&lt;/em&gt;&lt;/strong&gt;，需要去掉&lt;code&gt;SelectOption&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;另一个思路是在本地开&lt;code&gt;micro api&lt;/code&gt; + &lt;code&gt;聚合服务&lt;/code&gt;，聚合服务再通过 network 代理访问线上服务&lt;/strong&gt;，可以满足一般场景的需求&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
 &lt;li&gt;为了避免误协作过程中路由到Ta人本地环境，可以再增加&lt;code&gt;Micro-Network&lt;/code&gt;规则，线上与本地&lt;code&gt;network&lt;/code&gt;使用不同名称(&lt;em&gt;未实测&lt;/em&gt;)
 
 &lt;ul&gt;
@@ -947,7 +951,10 @@ web.Register(chain.New(chain.WithChainsFunc(func(r *http.Request) []string {
 &lt;p&gt;&lt;em&gt;2. &lt;code&gt;go-micro/api/handler/api.go&lt;/code&gt;去掉&lt;code&gt;strategy&lt;/code&gt;，&lt;code&gt;rpc handler&lt;/code&gt;类似&lt;/em&gt;&lt;/p&gt;
 
 &lt;blockquote&gt;
-&lt;p&gt;仅用于测试，具体原因 vtolstov 在社区提的PR&lt;a href=&#34;https://github.com/micro/go-micro/pull/1388&#34;&gt;#1388&lt;/a&gt;有 asim 的反馈&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;此方法仅用于测试，具体原因 vtolstov 在社区提的PR&lt;a href=&#34;https://github.com/micro/go-micro/pull/1388&#34;&gt;#1388&lt;/a&gt;有 asim 的反馈&lt;/li&gt;
+&lt;li&gt;自定义 Router 实现网关对服务筛选的支持，实现参考我 fork 的分支版本 &lt;a href=&#34;https://github.com/hb-chen/micro/tree/gateway-2.4.0/gateway&#34;&gt;hb-chen/micro/gateway&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
 &lt;/blockquote&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// create strategy
