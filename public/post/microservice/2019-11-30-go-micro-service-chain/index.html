@@ -292,6 +292,13 @@ web.Register(chain.New(chain.WithChainsFunc(func(r *http.Request) []string {
 
 <h3 id="网关服务筛选-坑">网关服务筛选-坑</h3>
 
+<blockquote>
+<ul>
+<li>此方法仅用于测试，具体原因 vtolstov 在社区提的PR<a href="https://github.com/micro/go-micro/pull/1388">#1388</a>有 asim 的反馈</li>
+<li>自定义 Router 实现网关对服务筛选的支持，实现参考我 fork 的分支版本 <a href="https://github.com/hb-chen/micro/tree/gateway-2.4.0/gateway">hb-chen/micro/gateway</a></li>
+</ul>
+</blockquote>
+
 <p><strong>API网关</strong>仅尝试了<code>api handler</code>，修改相对简单，只需要增加<code>ClientWrapper</code>，并去掉指定的负载策略即可。如果使用其他<code>handler</code>需要逐个解决。</p>
 
 <p><em>1. <code>micro/main.go</code>添加<code>ClientWrapper</code></em></p>
@@ -305,13 +312,6 @@ web.Register(chain.New(chain.WithChainsFunc(func(r *http.Request) []string {
 </code></pre>
 
 <p><em>2. <code>go-micro/api/handler/api.go</code>去掉<code>strategy</code>，<code>rpc handler</code>类似</em></p>
-
-<blockquote>
-<ul>
-<li>此方法仅用于测试，具体原因 vtolstov 在社区提的PR<a href="https://github.com/micro/go-micro/pull/1388">#1388</a>有 asim 的反馈</li>
-<li>自定义 Router 实现网关对服务筛选的支持，实现参考我 fork 的分支版本 <a href="https://github.com/hb-chen/micro/tree/gateway-2.4.0/gateway">hb-chen/micro/gateway</a></li>
-</ul>
-</blockquote>
 
 <pre><code class="language-go">// create strategy
 // so := selector.WithStrategy(strategy(service.Services))

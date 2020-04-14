@@ -936,6 +936,13 @@ web.Register(chain.New(chain.WithChainsFunc(func(r *http.Request) []string {
 
 &lt;h3 id=&#34;网关服务筛选-坑&#34;&gt;网关服务筛选-坑&lt;/h3&gt;
 
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;此方法仅用于测试，具体原因 vtolstov 在社区提的PR&lt;a href=&#34;https://github.com/micro/go-micro/pull/1388&#34;&gt;#1388&lt;/a&gt;有 asim 的反馈&lt;/li&gt;
+&lt;li&gt;自定义 Router 实现网关对服务筛选的支持，实现参考我 fork 的分支版本 &lt;a href=&#34;https://github.com/hb-chen/micro/tree/gateway-2.4.0/gateway&#34;&gt;hb-chen/micro/gateway&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
 &lt;p&gt;&lt;strong&gt;API网关&lt;/strong&gt;仅尝试了&lt;code&gt;api handler&lt;/code&gt;，修改相对简单，只需要增加&lt;code&gt;ClientWrapper&lt;/code&gt;，并去掉指定的负载策略即可。如果使用其他&lt;code&gt;handler&lt;/code&gt;需要逐个解决。&lt;/p&gt;
 
 &lt;p&gt;&lt;em&gt;1. &lt;code&gt;micro/main.go&lt;/code&gt;添加&lt;code&gt;ClientWrapper&lt;/code&gt;&lt;/em&gt;&lt;/p&gt;
@@ -949,13 +956,6 @@ web.Register(chain.New(chain.WithChainsFunc(func(r *http.Request) []string {
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;em&gt;2. &lt;code&gt;go-micro/api/handler/api.go&lt;/code&gt;去掉&lt;code&gt;strategy&lt;/code&gt;，&lt;code&gt;rpc handler&lt;/code&gt;类似&lt;/em&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;ul&gt;
-&lt;li&gt;此方法仅用于测试，具体原因 vtolstov 在社区提的PR&lt;a href=&#34;https://github.com/micro/go-micro/pull/1388&#34;&gt;#1388&lt;/a&gt;有 asim 的反馈&lt;/li&gt;
-&lt;li&gt;自定义 Router 实现网关对服务筛选的支持，实现参考我 fork 的分支版本 &lt;a href=&#34;https://github.com/hb-chen/micro/tree/gateway-2.4.0/gateway&#34;&gt;hb-chen/micro/gateway&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// create strategy
 // so := selector.WithStrategy(strategy(service.Services))
