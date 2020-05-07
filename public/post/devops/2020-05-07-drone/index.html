@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【DevOps】Drone CI/CD Go &#43; node &#43; kubernetes - HB-技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="本文介绍如何使用 Drone 持续构建与发布 Golang &#43; node &#43; kubernetes 应用。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/devops/2020-05-07-drone/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【DevOps】Drone CI/CD Go &#43; node &#43; kubernetes" />
+<meta property="og:description" content="本文介绍如何使用 Drone 持续构建与发布 Golang &#43; node &#43; kubernetes 应用。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/devops/2020-05-07-drone/" /><meta property="article:published_time" content="2020-05-07T20:38:53&#43;08:00"/>
+<meta property="article:modified_time" content="2020-05-07T20:38:53&#43;08:00"/>
+
+<meta itemprop="name" content="【DevOps】Drone CI/CD Go &#43; node &#43; kubernetes">
+<meta itemprop="description" content="本文介绍如何使用 Drone 持续构建与发布 Golang &#43; node &#43; kubernetes 应用。">
+
+
+<meta itemprop="datePublished" content="2020-05-07T20:38:53&#43;08:00" />
+<meta itemprop="dateModified" content="2020-05-07T20:38:53&#43;08:00" />
+<meta itemprop="wordCount" content="1470">
+
+
+
+<meta itemprop="keywords" content="CI/CD,Go,Docker,Kubernetes,node," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【DevOps】Drone CI/CD Go &#43; node &#43; kubernetes"/>
+<meta name="twitter:description" content="本文介绍如何使用 Drone 持续构建与发布 Golang &#43; node &#43; kubernetes 应用。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【DevOps】Drone CI/CD Go &#43; node &#43; kubernetes</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2020-05-07 </span>
+        <div class="post-category">
+            
+              <a href="/categories/devops/"> DevOps </a>
+            
+          </div>
+        <span class="more-meta"> 约 1470 字 </span>
+        <span class="more-meta"> 预计阅读 3 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#docker-部署-drone">Docker 部署 Drone</a></li>
+<li><a href="#drone-pipeline">Drone Pipeline</a>
+<ul>
+<li><a href="#secret-配置">Secret 配置</a></li>
+<li><a href="#编译-缓存">编译&amp;缓存</a></li>
+<li><a href="#发布镜像-部署">发布镜像&amp;部署</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>本文介绍如何使用 Drone 持续构建与发布 Golang + node + kubernetes 应用。</p>
+
+<h2 id="docker-部署-drone">Docker 部署 Drone</h2>
+
+<p><code>docker-compose.yaml</code>示例， 其中配置项如下：</p>
+
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>说明</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>GITHUB_USER_NAME</td>
+<td>GitHub 的<code>username</code></td>
+</tr>
+
+<tr>
+<td>TOKEN</td>
+<td>API 或 Cli 连接 Drone 服务用的 token，可以随机生成:<code>openssl rand -hex 16</code></td>
+</tr>
+
+<tr>
+<td>GITHUB_CLIENT_ID</td>
+<td>参考 Drone 文档 <a href="https://docs.drone.io/server/provider/github/#create-an-oauth-application">GitHub 引导</a> 创建 <a href="https://github.com/settings/developers">OAuth Application</a>，配置参考如下:<br/><code>Homepage URL</code>为<code>http://{SERVER_HOST}</code>，注意如果不是<code>80</code>端口需要带端口，如<code>http://drone.hbchen.com:8000</code><br/><code>Authorization callback URL</code>为<code>{Homepage URL}/login</code>，如<code>http://drone.hbchen.com:8000/login</code></td>
+</tr>
+
+<tr>
+<td>GITHUB_CLIENT_SECRET</td>
+<td>同上</td>
+</tr>
+
+<tr>
+<td>SERVER_HOST</td>
+<td>绑定的域名，如<code>drone.hbchen.com</code></td>
+</tr>
+
+<tr>
+<td>RPC_SECRET</td>
+<td>Drone server 和 runner 通信用的 secret，可以随机生成:<code>openssl rand -hex 16</code></td>
+</tr>
+
+<tr>
+<td>RUNNER_DASHBOARD_USERNAME</td>
+<td><code>可选</code>，Runner 可以在<code>3000</code>端口提供一个 dashboard，如果需要可以配置用户名和密码</td>
+</tr>
+
+<tr>
+<td>RUNNER_DASHBOARD_PASSWORD</td>
+<td>同上</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+<ul>
+<li>如果外网使用的不是80端口（如此处使用<code>8000</code>），在激活一个 Repo 后需要修改 Repo Webhook 的地址，增加端口</li>
+<li>为用户添加 admin 权限，做 cache 挂载 volume 时需要将 Repo 的 <code>Project settings</code> 设置为 <code>trusted</code>，要 admin 才有此权限</li>
+</ul>
+</blockquote>
+
+<pre><code class="language-yaml">version: '3'
+
+services:
+  drone-server:
+    image: drone/drone:1.6
+    restart: always
+    ports:
+      - 8000:80
+    volumes:
+      - /var/lib/drone:/data
+    environment:
+      - DRONE_USER_CREATE=username:{GITHUB_USER_NAME},machine:false,admin:true,token:{TOKEN}
+      - DRONE_GITHUB_SERVER=https://github.com
+      - DRONE_GITHUB_CLIENT_ID={GITHUB_CLIENT_ID}
+      - DRONE_GITHUB_CLIENT_SECRET={GITHUB_CLIENT_SECRET}
+      - DRONE_GITHUB_SKIP_VERIFY=true
+      - DRONE_SERVER_HOST={SERVER_HOST}
+      - DRONE_SERVER_PROTO=http
+      - DRONE_RPC_SECRET={RPC_SECRET}
+
+  drone-runner:
+    image: drone/drone-runner-docker:1.2
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - drone-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_HOST=drone-server
+      - DRONE_RPC_PROTO=http
+      - DRONE_RPC_SECRET={RPC_SECRET}
+      - DRONE_RUNNER_NAME=drone-runner
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_UI_USERNAME={RUNNER_DASHBOARD_USERNAME}
+      - DRONE_UI_PASSWORD={RUNNER_DASHBOARD_PASSWORD}
+
+</code></pre>
+
+<h2 id="drone-pipeline">Drone Pipeline</h2>
+
+<h3 id="secret-配置">Secret 配置</h3>
+
+<p>Pipeline 涉及到 Secret 配置与我们的目标相关，以<a href="https://github.com/micro-in-cn/starter-kit/blob/master/.drone.yml">micro-in-cn/starter-kit/.drone.yml</a>为例：</p>
+
+<ul>
+<li>Docker 镜像发布
+
+<ul>
+<li>push 镜像需要仓库用户名及密码</li>
+</ul></li>
+<li>k8s 部署
+
+<ul>
+<li>kubectl 需要配置<code>server</code>、<code>ca</code>和<code>token</code></li>
+</ul></li>
+</ul>
+
+<p><strong>k8s 配置获取</strong></p>
+
+<p>1.取一个 Pod 的 Secret 或者单独创建一个 account</p>
+
+<pre><code>kubectl describe po {pod-name} | grep SecretName
+</code></pre>
+
+<p>2.取Secret的ca和token</p>
+
+<pre><code>kubectl get secret {secret-name} -o yaml | egrep 'ca.crt:|token:'
+</code></pre>
+
+<p>3.drone secret 配置</p>
+
+<ul>
+<li><code>k8s_server</code>
+
+<ul>
+<li><code>cat ~/.kube/config</code>，<em>适用于<code>minikube</code>环境</em></li>
+</ul></li>
+<li><code>k8s_ca</code>
+
+<ul>
+<li>ca直接使用</li>
+</ul></li>
+<li><code>k8s_token</code>
+
+<ul>
+<li>token做base64解码后使用</li>
+</ul></li>
+</ul>
+
+<blockquote>
+<p><strong><code>kubectl</code>部署需要对应的account有授权</strong>，根据自己的环境情况配置<br/>
+测试可以将clusterrole=cluster-admin授权给serviceaccount</p>
+
+<pre><code># Error from server (Forbidden): services is forbidden: User &quot;system:serviceaccount:default:default&quot; cannot list resource &quot;services&quot; in API group &quot;&quot; in the namespace &quot;default&quot;
+kubectl create clusterrolebinding cluster-admin-role-bound --clusterrole=cluster-admin --serviceaccount={namespace}:{service-account}
+</code></pre>
+</blockquote>
+
+<p>使用 drone cli 工具连接 drone server</p>
+
+<blockquote>
+<p>喜欢 web 操作可以选择在控制台配置 secret</p>
+</blockquote>
+
+<pre><code class="language-shell">export DRONE_SERVER=http://drone.hbchen.com:8000
+export DRONE_TOKEN={前面配置的TOKEN}
+drone info
+</code></pre>
+
+<pre><code class="language-shell">drone secret add --repository=micro-in-cn/starter-kit --name=ali_registry_username --data={xxx}
+drone secret add --repository=micro-in-cn/starter-kit --name=ali_registry_password --data={xxx}
+drone secret add --repository=micro-in-cn/starter-kit --name=k8s_server --data={xxx}
+drone secret add --repository=micro-in-cn/starter-kit --name=k8s_ca --data={xxx}
+drone secret add --repository=micro-in-cn/starter-kit --name=k8s_token --data={xxx}
+</code></pre>
+
+<h3 id="编译-缓存">编译&amp;缓存</h3>
+
+<p>在项目编译时都会有大量的依赖下载，这些对编译速度影响很大，并且容易导致失败，所以需要使用缓存，避免每次都要重新拉取依赖，以<a href="https://github.com/micro-in-cn/starter-kit/blob/master/console/web">micro-in-cn/starter-kit/console/web</a>为例，有 Golang 和 node 的编译，使用 drone 社区<code>drillster/drone-volume-cache</code>插件对 Golang 和 node 依赖进行缓存。基本过程就是在编译前将<code>cache</code>加载到相应目录，编译后重新将<code>cache</code>写回<code>volume</code>，编译时 Golang 需要指定<code>GOPATH</code>，node 指定<code>global cache</code>。</p>
+
+<pre><code class="language-yaml"># 挂载 host 缓存目录
+volumes:
+  - name: cache
+    host:
+      path: /tmp/drone_cache
+
+steps:
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    settings:
+      restore: true
+      mount:
+        - ./.npm-cache
+        - ./console/web/vue/node_modules
+        - ./_gopath
+    volumes:
+      - name: cache
+        path: /cache
+    when:
+      event:
+        - push
+  - name: build-vue
+    image: node:10.16.3-alpine
+    commands:
+      - cd console/web/vue
+      - npm config set cache ./.npm-cache --global
+      - npm install
+      - export VUE_APP_BASE_API=
+      - npm run build:prod
+    when:
+      event:
+        - push
+  - name: build-golang
+    image: golang:1.13-alpine
+    environment:
+      GOPATH: /drone/src/github.com/micro-in-cn/starter-kit/_gopath
+      GOOS: linux
+      GOARCH: amd64
+      CGO_ENABLED: 0
+      GOPROXY: https://mirrors.aliyun.com/goproxy/,direct
+      GOSUMDB: off
+    commands:
+      - cd console/web
+      - go version
+      - go build -o ./bin/linux_amd64/console-web main.go plugin.go
+    when:
+      event:
+        - push
+  - name: rebuild-cache
+    image: drillster/drone-volume-cache
+    settings:
+      rebuild: true
+      mount:
+        - ./.npm-cache
+        - ./console/web/vue/node_modules
+        - ./_gopath
+    volumes:
+      - name: cache
+        path: /cache
+    when:
+      event:
+        - push
+</code></pre>
+
+<h3 id="发布镜像-部署">发布镜像&amp;部署</h3>
+
+<ul>
+<li>docker username 和 password 通过 secret 获取</li>
+<li>k8s 先用 secret 配置环境变量，使用时再从环境变量去取</li>
+</ul>
+
+<pre><code class="language-yaml">  - name: publish-xxx
+    image: plugins/docker
+    settings:
+      tags: latest
+      dockerfile: ./console/api/Dockerfile
+      context: ./console/web
+      repo: registry.cn-hangzhou.aliyuncs.com/hb-chen/starter-kit-console-api
+      registry: registry.cn-hangzhou.aliyuncs.com
+      username:
+        from_secret: ali_registry_username
+      password:
+        from_secret: ali_registry_password
+    when:
+      event:
+        - push
+  - name: deploy-xxx
+    image: dtzar/helm-kubectl:3.1.1
+    environment:
+      SERVER:
+        from_secret: k8s_server
+      CERTIFICATE_AUTHORITY_DATA:
+        from_secret: k8s_ca
+      USER_TOKEN:
+        from_secret: k8s_token
+    commands:
+      - kubectl config set-cluster k8s --server=&quot;$${SERVER}&quot;
+      - kubectl config set clusters.k8s.certificate-authority-data &quot;$${CERTIFICATE_AUTHORITY_DATA}&quot;
+      - kubectl config set-credentials k8s-admin --token=&quot;$${USER_TOKEN}&quot;
+      - kubectl config set-context default --cluster=k8s --user=k8s-admin
+      - kubectl config use-context default
+      - helm template micro ./deploy/k8s/helm/starter-kit/charts/service --namespace starter-kit --set nameOverride=console-api --set micro.command=/console-api --set image.repository=registry.cn-hangzhou.aliyuncs.com/hb-chen/starter-kit-console-api --set image.tag=${DRONE_TAG=latest} --set image.pullPolicy=Always --set serviceAccount.create=true --set serviceAccount.name=micro-services | kubectl apply -f -
+    when:
+      event:
+        - push
+</code></pre>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2020-05-07</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/ci/cd/">CI/CD</a>
+          
+          <a href="/tags/go/">Go</a>
+          
+          <a href="/tags/docker/">Docker</a>
+          
+          <a href="/tags/kubernetes/">Kubernetes</a>
+          
+          <a href="/tags/node/">node</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/microservice/2020-03-22-micro-dev-local/">
+            <span class="next-text nav-default">【go-micro】开发协作-本地服务接入线上集成环境</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2020
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio 蜀ICP备18021614号-1</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>
