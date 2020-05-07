@@ -46,13 +46,13 @@
     </item>
     
     <item>
-      <title>【DevOps】Drone CI/CD Go &#43; node &#43; docker &#43; kubernetes</title>
+      <title>【DevOps】Drone CI/CD Go &#43; node &#43; kubernetes</title>
       <link>http://hbchen.com/post/devops/2020-05-07-drone/</link>
       <pubDate>Thu, 07 May 2020 20:38:53 +0800</pubDate>
       
       <guid>http://hbchen.com/post/devops/2020-05-07-drone/</guid>
       
-        <description>
+        <description>&lt;p&gt;本文介绍如何使用 Drone 持续构建与发布 Golang + node + kubernetes 应用。&lt;/p&gt;
 
 &lt;h2 id=&#34;docker-部署-drone&#34;&gt;Docker 部署 Drone&lt;/h2&gt;
 
@@ -343,8 +343,7 @@ steps:
     when:
       event:
         - push
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
       
     </item>
     

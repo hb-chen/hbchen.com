@@ -13,12 +13,12 @@
     
     
     <item>
-      <title>【DevOps】Drone CI/CD Go &#43; node &#43; docker &#43; kubernetes</title>
+      <title>【DevOps】Drone CI/CD Go &#43; node &#43; kubernetes</title>
       <link>http://hbchen.com/post/devops/2020-05-07-drone/</link>
       <pubDate>Thu, 07 May 2020 20:38:53 +0800</pubDate>
       
       <guid>http://hbchen.com/post/devops/2020-05-07-drone/</guid>
-      <description>Docker 部署 Drone docker-compose.yaml示例， 其中配置项如下： Key 说明 GITHUB_USER_NAME GitHub 的username TOKEN API 或 Cli 连接 Drone 服务用的 token，可以随机生</description>
+      <description>&lt;p&gt;本文介绍如何使用 Drone 持续构建与发布 Golang + node + kubernetes 应用。&lt;/p&gt;</description>
     </item>
     
     <item>
