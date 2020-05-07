@@ -46,6 +46,309 @@
     </item>
     
     <item>
+      <title>【DevOps】Drone CI/CD Go &#43; node &#43; docker &#43; kubernetes</title>
+      <link>http://hbchen.com/post/devops/2020-05-07-drone/</link>
+      <pubDate>Thu, 07 May 2020 20:38:53 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/devops/2020-05-07-drone/</guid>
+      
+        <description>
+
+&lt;h2 id=&#34;docker-部署-drone&#34;&gt;Docker 部署 Drone&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;docker-compose.yaml&lt;/code&gt;示例， 其中配置项如下：&lt;/p&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Key&lt;/th&gt;
+&lt;th&gt;说明&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;GITHUB_USER_NAME&lt;/td&gt;
+&lt;td&gt;GitHub 的&lt;code&gt;username&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;TOKEN&lt;/td&gt;
+&lt;td&gt;API 或 Cli 连接 Drone 服务用的 token，可以随机生成:&lt;code&gt;openssl rand -hex 16&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;GITHUB_CLIENT_ID&lt;/td&gt;
+&lt;td&gt;参考 Drone 文档 &lt;a href=&#34;https://docs.drone.io/server/provider/github/#create-an-oauth-application&#34;&gt;GitHub 引导&lt;/a&gt; 创建 &lt;a href=&#34;https://github.com/settings/developers&#34;&gt;OAuth Application&lt;/a&gt;，配置参考如下:&lt;br/&gt;&lt;code&gt;Homepage URL&lt;/code&gt;为&lt;code&gt;http://{SERVER_HOST}&lt;/code&gt;，注意如果不是&lt;code&gt;80&lt;/code&gt;端口需要带端口，如&lt;code&gt;http://drone.hbchen.com:8000&lt;/code&gt;&lt;br/&gt;&lt;code&gt;Authorization callback URL&lt;/code&gt;为&lt;code&gt;{Homepage URL}/login&lt;/code&gt;，如&lt;code&gt;http://drone.hbchen.com:8000/login&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;GITHUB_CLIENT_SECRET&lt;/td&gt;
+&lt;td&gt;同上&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;SERVER_HOST&lt;/td&gt;
+&lt;td&gt;绑定的域名，如&lt;code&gt;drone.hbchen.com&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;RPC_SECRET&lt;/td&gt;
+&lt;td&gt;Drone server 和 runner 通信用的 secret，可以随机生成:&lt;code&gt;openssl rand -hex 16&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;RUNNER_DASHBOARD_USERNAME&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;可选&lt;/code&gt;，Runner 可以在&lt;code&gt;3000&lt;/code&gt;端口提供一个 dashboard，如果需要可以配置用户名和密码&lt;/td&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;RUNNER_DASHBOARD_PASSWORD&lt;/td&gt;
+&lt;td&gt;同上&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;如果外网使用的不是80端口（如此处使用&lt;code&gt;8000&lt;/code&gt;），在激活一个 Repo 后需要修改 Repo Webhook 的地址，增加端口&lt;/li&gt;
+&lt;li&gt;为用户添加 admin 权限，做 cache 挂载 volume 时需要将 Repo 的 &lt;code&gt;Project settings&lt;/code&gt; 设置为 &lt;code&gt;trusted&lt;/code&gt;，要 admin 才有此权限&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;version: &#39;3&#39;
+
+services:
+  drone-server:
+    image: drone/drone:1.6
+    restart: always
+    ports:
+      - 8000:80
+    volumes:
+      - /var/lib/drone:/data
+    environment:
+      - DRONE_USER_CREATE=username:{GITHUB_USER_NAME},machine:false,admin:true,token:{TOKEN}
+      - DRONE_GITHUB_SERVER=https://github.com
+      - DRONE_GITHUB_CLIENT_ID={GITHUB_CLIENT_ID}
+      - DRONE_GITHUB_CLIENT_SECRET={GITHUB_CLIENT_SECRET}
+      - DRONE_GITHUB_SKIP_VERIFY=true
+      - DRONE_SERVER_HOST={SERVER_HOST}
+      - DRONE_SERVER_PROTO=http
+      - DRONE_RPC_SECRET={RPC_SECRET}
+
+  drone-runner:
+    image: drone/drone-runner-docker:1.2
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - drone-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_HOST=drone-server
+      - DRONE_RPC_PROTO=http
+      - DRONE_RPC_SECRET={RPC_SECRET}
+      - DRONE_RUNNER_NAME=drone-runner
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_UI_USERNAME={RUNNER_DASHBOARD_USERNAME}
+      - DRONE_UI_PASSWORD={RUNNER_DASHBOARD_PASSWORD}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;drone-pipeline&#34;&gt;Drone Pipeline&lt;/h2&gt;
+
+&lt;h3 id=&#34;secret-配置&#34;&gt;Secret 配置&lt;/h3&gt;
+
+&lt;p&gt;Pipeline 涉及到 Secret 配置与我们的目标相关，以&lt;a href=&#34;https://github.com/micro-in-cn/starter-kit/blob/master/.drone.yml&#34;&gt;micro-in-cn/starter-kit/.drone.yml&lt;/a&gt;为例：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Docker 镜像发布
+
+&lt;ul&gt;
+&lt;li&gt;push 镜像需要仓库用户名及密码&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;k8s 部署
+
+&lt;ul&gt;
+&lt;li&gt;kubectl 需要配置&lt;code&gt;server&lt;/code&gt;、&lt;code&gt;ca&lt;/code&gt;和&lt;code&gt;token&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;k8s 配置获取&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;1.取一个 Pod 的 Secret 或者单独创建一个 account&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;kubectl describe po {pod-name} | grep SecretName
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;2.取Secret的ca和token&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;kubectl get secret {secret-name} -o yaml | egrep &#39;ca.crt:|token:&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;3.drone secret 配置&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;k8s_server&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;cat ~/.kube/config&lt;/code&gt;，&lt;em&gt;适用于&lt;code&gt;minikube&lt;/code&gt;环境&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;k8s_ca&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;ca直接使用&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;k8s_token&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;token做base64解码后使用&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;kubectl&lt;/code&gt;部署需要对应的account有授权&lt;/strong&gt;，根据自己的环境情况配置&lt;br/&gt;
+测试可以将clusterrole=cluster-admin授权给serviceaccount&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Error from server (Forbidden): services is forbidden: User &amp;quot;system:serviceaccount:default:default&amp;quot; cannot list resource &amp;quot;services&amp;quot; in API group &amp;quot;&amp;quot; in the namespace &amp;quot;default&amp;quot;
+kubectl create clusterrolebinding cluster-admin-role-bound --clusterrole=cluster-admin --serviceaccount={namespace}:{service-account}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;使用 drone cli 工具连接 drone server&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;喜欢 web 操作可以选择在控制台配置 secret&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;export DRONE_SERVER=http://drone.hbchen.com:8000
+export DRONE_TOKEN={前面配置的TOKEN}
+drone info
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;drone secret add --repository=micro-in-cn/starter-kit --name=ali_registry_username --data={xxx}
+drone secret add --repository=micro-in-cn/starter-kit --name=ali_registry_password --data={xxx}
+drone secret add --repository=micro-in-cn/starter-kit --name=k8s_server --data={xxx}
+drone secret add --repository=micro-in-cn/starter-kit --name=k8s_ca --data={xxx}
+drone secret add --repository=micro-in-cn/starter-kit --name=k8s_token --data={xxx}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;编译-缓存&#34;&gt;编译&amp;amp;缓存&lt;/h3&gt;
+
+&lt;p&gt;在项目编译时都会有大量的依赖下载，这些对编译速度影响很大，并且容易导致失败，所以需要使用缓存，避免每次都要重新拉取依赖，以&lt;a href=&#34;https://github.com/micro-in-cn/starter-kit/blob/master/console/web&#34;&gt;micro-in-cn/starter-kit/console/web&lt;/a&gt;为例，有 Golang 和 node 的编译，使用 drone 社区&lt;code&gt;drillster/drone-volume-cache&lt;/code&gt;插件对 Golang 和 node 依赖进行缓存。基本过程就是在编译前将&lt;code&gt;cache&lt;/code&gt;加载到相应目录，编译后重新将&lt;code&gt;cache&lt;/code&gt;写回&lt;code&gt;volume&lt;/code&gt;，编译时 Golang 需要指定&lt;code&gt;GOPATH&lt;/code&gt;，node 指定&lt;code&gt;global cache&lt;/code&gt;。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;# 挂载 host 缓存目录
+volumes:
+  - name: cache
+    host:
+      path: /tmp/drone_cache
+
+steps:
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    settings:
+      restore: true
+      mount:
+        - ./.npm-cache
+        - ./console/web/vue/node_modules
+        - ./_gopath
+    volumes:
+      - name: cache
+        path: /cache
+    when:
+      event:
+        - push
+  - name: build-vue
+    image: node:10.16.3-alpine
+    commands:
+      - cd console/web/vue
+      - npm config set cache ./.npm-cache --global
+      - npm install
+      - export VUE_APP_BASE_API=
+      - npm run build:prod
+    when:
+      event:
+        - push
+  - name: build-golang
+    image: golang:1.13-alpine
+    environment:
+      GOPATH: /drone/src/github.com/micro-in-cn/starter-kit/_gopath
+      GOOS: linux
+      GOARCH: amd64
+      CGO_ENABLED: 0
+      GOPROXY: https://mirrors.aliyun.com/goproxy/,direct
+      GOSUMDB: off
+    commands:
+      - cd console/web
+      - go version
+      - go build -o ./bin/linux_amd64/console-web main.go plugin.go
+    when:
+      event:
+        - push
+  - name: rebuild-cache
+    image: drillster/drone-volume-cache
+    settings:
+      rebuild: true
+      mount:
+        - ./.npm-cache
+        - ./console/web/vue/node_modules
+        - ./_gopath
+    volumes:
+      - name: cache
+        path: /cache
+    when:
+      event:
+        - push
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;发布镜像-部署&#34;&gt;发布镜像&amp;amp;部署&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;docker username 和 password 通过 secret 获取&lt;/li&gt;
+&lt;li&gt;k8s 先用 secret 配置环境变量，使用时再从环境变量去取&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;  - name: publish-xxx
+    image: plugins/docker
+    settings:
+      tags: latest
+      dockerfile: ./console/api/Dockerfile
+      context: ./console/web
+      repo: registry.cn-hangzhou.aliyuncs.com/hb-chen/starter-kit-console-api
+      registry: registry.cn-hangzhou.aliyuncs.com
+      username:
+        from_secret: ali_registry_username
+      password:
+        from_secret: ali_registry_password
+    when:
+      event:
+        - push
+  - name: deploy-xxx
+    image: dtzar/helm-kubectl:3.1.1
+    environment:
+      SERVER:
+        from_secret: k8s_server
+      CERTIFICATE_AUTHORITY_DATA:
+        from_secret: k8s_ca
+      USER_TOKEN:
+        from_secret: k8s_token
+    commands:
+      - kubectl config set-cluster k8s --server=&amp;quot;$${SERVER}&amp;quot;
+      - kubectl config set clusters.k8s.certificate-authority-data &amp;quot;$${CERTIFICATE_AUTHORITY_DATA}&amp;quot;
+      - kubectl config set-credentials k8s-admin --token=&amp;quot;$${USER_TOKEN}&amp;quot;
+      - kubectl config set-context default --cluster=k8s --user=k8s-admin
+      - kubectl config use-context default
+      - helm template micro ./deploy/k8s/helm/starter-kit/charts/service --namespace starter-kit --set nameOverride=console-api --set micro.command=/console-api --set image.repository=registry.cn-hangzhou.aliyuncs.com/hb-chen/starter-kit-console-api --set image.tag=${DRONE_TAG=latest} --set image.pullPolicy=Always --set serviceAccount.create=true --set serviceAccount.name=micro-services | kubectl apply -f -
+    when:
+      event:
+        - push
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+      
+    </item>
+    
+    <item>
       <title>【go-micro】开发协作-本地服务接入线上集成环境</title>
       <link>http://hbchen.com/post/microservice/2020-03-22-micro-dev-local/</link>
       <pubDate>Sun, 22 Mar 2020 10:53:43 +0800</pubDate>
@@ -4505,277 +4808,6 @@ func (e *Ephemeral) BuildSnapshot() (*Snapshot, error) {
   G--&amp;gt;|&amp;quot;③updatePolicyCache()&amp;quot;|H
   end
 &lt;/code&gt;&lt;/pre&gt;</description>
-      
-    </item>
-    
-    <item>
-      <title>【Istio】自定义 Mixer Adapter示例教程(附源码)</title>
-      <link>http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/</link>
-      <pubDate>Tue, 05 Mar 2019 20:44:07 +0800</pubDate>
-      
-      <guid>http://hbchen.com/post/2019-03-05-custom-istio-mixer-adapter/</guid>
-      
-        <description>&lt;blockquote&gt;
-&lt;p&gt;快速开始:&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth&#34;&gt;micro-mesh/examples/adapter/auth&lt;/a&gt;源码传送门&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;研究Istio下构建简洁的微服务架构，对Istio的研究也更深入，自定义Mixer Adapter必不少，以下结合使用场景做一个自定义适配器的实践分享。&lt;/p&gt;
-
-&lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/micro-mesh.jpg&#34; alt=&#34;auth-adapter&#34; /&gt;
-结合&lt;a href=&#34;https://github.com/hb-go/micro-mesh#micro-mesh&#34;&gt;micro-mesh&lt;/a&gt;的实践场景，需要在&lt;code&gt;ingressgateway&lt;/code&gt;与&lt;code&gt;API service&lt;/code&gt;间加入认证&amp;amp;鉴权(JWT&amp;amp;RBAC)，自然考虑Istio提供的&lt;a href=&#34;https://istio.io/zh/docs/concepts/security/&#34;&gt;安全&lt;/a&gt;方案，但使用JWT做认证鉴权在后端是无状态的，这样在使用场景上有一定限制，如:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;密码修改、终端连接限制等场景下无法踢除&lt;/li&gt;
-&lt;li&gt;访问控制策略无法实时生效&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;默认方案只是在一些场景下不合适，根据具体需求考虑&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;基于这样的场景可以自定义Adapter来实现，目标:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Token-JWT
-
-&lt;ul&gt;
-&lt;li&gt;服务端验证token有效性&lt;/li&gt;
-&lt;li&gt;应对密码修改、终端数量限制等场景&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;ACL-&lt;a href=&#34;http://github.com/casbin/casbin&#34;&gt;Casbin&lt;/a&gt;
-
-&lt;ul&gt;
-&lt;li&gt;服务端获取用户角色，做API访问控制&lt;/li&gt;
-&lt;li&gt;用户角色及接口授权策略实时生效
-&lt;br /&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;以下示例对token验证、访问控制不做具体设计，重点介绍如何自定义一个&lt;code&gt;auth-adapter&lt;/code&gt;&lt;/p&gt;
-
-&lt;h2 id=&#34;自定义adapter介绍&#34;&gt;自定义Adapter介绍&lt;/h2&gt;
-
-&lt;p&gt;配置关系及执行流程如图：
-&lt;img src=&#34;https://raw.githubusercontent.com/hb-go/micro-mesh/master/doc/img/auth-adapter.jpg&#34; alt=&#34;auth-adapter&#34; /&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;属性：使用&lt;code&gt;istio&lt;/code&gt;的&lt;code&gt;attributes&lt;/code&gt;，&lt;code&gt;istio/mixer/testdata/config/attributes.yaml&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;属性与适配器输入映射模板：使用&lt;code&gt;istio&lt;/code&gt;的&lt;code&gt;authorization&lt;/code&gt;模板，&lt;code&gt;istio/mixer/template/authorization/template.yaml&lt;/code&gt;，通过&lt;code&gt;template.proto&lt;/code&gt;查看协议内容&lt;/li&gt;
-&lt;li&gt;适配器，&lt;code&gt;micro-mesh/examples/adapter/auth/config/auth-adapter.yaml&lt;/code&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;go generate ./...&lt;/code&gt;自动生成&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;适配器服务启动配置，&lt;code&gt;micro-mesh/examples/adapter/auth/config/config.proto&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;适配器服务实例，&lt;code&gt;micro-mesh/examples/adapter/auth/operatorconfig/cluster-service.yaml&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;适配器配置，&lt;code&gt;micro-mesh/examples/adapter/auth/operatorconfig/operator-cfg.yaml&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&#34;目录结构&#34;&gt;目录结构&lt;/h3&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;bin                         执行文件
-cmd                         
-  └ main.go                 适配器入口
-config                      配置协议
-  ├ adapter.auth.config.pb.html                 #go generate ./... 自动生成
-  ├ auth-adapter.yaml       适配器描述文件       #go generate ./... 自动生成
-  ├ config.pb.go                                #go generate ./... 自动生成
-  ├ config.proto            适配器服务启动配置
-  └ config.proto_descriptor                     #go generate ./... 自动生成
-operatorconfig              k8s配置
-  ├ attributes.yaml         属性                  #copy istio/mixer/testdata/config/attributes.yaml
-  ├ cluster-service.yaml    适配器服务实例
-  ├ operator-cfg.yaml       适配器配置
-  └ template.yaml           属性与适配器输入模板    #copy istio/mixer/template/authorization/template.yaml
-testdata                    测试配置
-  ├ attributes.yaml         属性                  #copy istio/mixer/testdata/config/attributes.yaml
-  ├ auth-adapter.yaml       适配器描述文件         #copy config/auth-adapter.yaml
-  ├ operator-cfg.yaml       适配器配置
-  └ template.yaml           属性与适配器输入模板    #copy istio/mixer/template/authorization/template.yaml
-auth.go                     适配器服务实现
-Dockerfile                  Docker镜像
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;有3处与适配器实现相关：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;适配器服务启动配置&lt;code&gt;config/config.proto&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;适配器服务实现&lt;code&gt;auth.go&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;适配器入口&lt;code&gt;cmd/main.go&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;接下来使用&lt;a href=&#34;https://github.com/hb-go/micro-mesh/tree/master/examples/adapter/auth&#34;&gt;micro-mesh/examples/adapter/auth&lt;/a&gt;源码按步骤操作，实现本地及&lt;code&gt;GKE&lt;/code&gt;环境的测试部署&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&#34;步骤&#34;&gt;步骤&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;开发环境&lt;/strong&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;OSX&lt;/li&gt;
-&lt;li&gt;Go &lt;strong&gt;1.11.1&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;protoc &lt;strong&gt;libprotoc 3.6.1&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;Istio &lt;strong&gt;1.1.0&lt;/strong&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&#34;1-istio源码&#34;&gt;1.Istio源码&lt;/h3&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;mkdir -p $GOPATH/src/istio.io/
-cd $GOPATH/src/istio.io/
-git clone https://github.com/istio/istio.git
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h3 id=&#34;2-micro-mesh源码&#34;&gt;2.micro-mesh源码&lt;/h3&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;git clone https://github.com/hb-go/micro-mesh.git
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h3 id=&#34;3-mixer开发工具&#34;&gt;3.Mixer开发工具&lt;/h3&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# build mixer server &amp;amp; client 
-cd istio
-make mixs
-make mixc
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;在&lt;code&gt;$GOPATH/out/darwin_amd64/release/&lt;/code&gt;生成&lt;code&gt;mixs&lt;/code&gt;、&lt;code&gt;mixc&lt;/code&gt;&lt;/p&gt;
-
-&lt;h3 id=&#34;4-构建auth-adapter项目&#34;&gt;4.构建Auth adapter项目&lt;/h3&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# copy auth adapter example
-cp {micro-mesh path}/examples/adapter/auth mixer/adapter/auth
-
-cd mixer/adapter/auth
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;&lt;strong&gt;Optional&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;可以删除&lt;code&gt;config&lt;/code&gt;目录除&lt;code&gt;config.proto&lt;/code&gt;外的其他文件，看执行go generate后的结果&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;go generate ./...
-go build ./...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;go generate&lt;/code&gt;根据&lt;code&gt;config/config.proto&lt;/code&gt;以及&lt;code&gt;auth.go&lt;/code&gt;的注释自动生成&lt;code&gt;config&lt;/code&gt;目录下的其他文件:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;adapter.auth.config.pb.html&lt;/li&gt;
-&lt;li&gt;auth-adapter.yaml&lt;/li&gt;
-&lt;li&gt;config.pb.go&lt;/li&gt;
-&lt;li&gt;config.proto_descriptor&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;根据&lt;code&gt;auth.go&lt;/code&gt;的以下注释，&lt;code&gt;mixer_codegen.sh&lt;/code&gt;使用&lt;code&gt;authorization&lt;/code&gt;模板生成&lt;code&gt;name&lt;/code&gt;为&lt;code&gt;auth-adapter&lt;/code&gt;的适配器&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// nolint:lll
-// Generates the auth adapter&#39;s resource yaml. It contains the adapter&#39;s configuration, name, supported template
-// names (metric in this case), and whether it is session or no-session based.
-//go:generate $GOPATH/src/istio.io/istio/bin/mixer_codegen.sh -a mixer/adapter/auth/config/config.proto -x &amp;quot;-s=false -n auth-adapter -t authorization&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/blockquote&gt;
-
-&lt;h3 id=&#34;5-本地测试&#34;&gt;5.本地测试&lt;/h3&gt;
-
-&lt;p&gt;本地测试使用testdata下的配置，其中&lt;code&gt;operator-cfg.yaml&lt;/code&gt;有几处与正式部署不同：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;handler&lt;/code&gt;的&lt;code&gt;address&lt;/code&gt;使用本地服务&lt;code&gt;&amp;quot;[::]:44225&amp;quot;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;为了方便测试&lt;code&gt;instance&lt;/code&gt;的&lt;code&gt;params&lt;/code&gt;参数以及&lt;code&gt;rule&lt;/code&gt;的&lt;code&gt;math&lt;/code&gt;条件做了简化&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 启动适配器服务
-go run cmd/main.go 44225
-
-# 使用testdata下配置启动mixer server
-$GOPATH/out/darwin_amd64/release/mixs server \
---configStoreURL=fs://$GOPATH/src/istio.io/istio/mixer/adapter/auth/testdata \
---log_output_level=default:debug,attributes:debug
-
-# 测试Adapter是否生效
-$GOPATH/out/darwin_amd64/release/mixc check -s request.host=&amp;quot;localhost&amp;quot; --stringmap_attributes &amp;quot;request.headers=x-custom-token:efg&amp;quot;
-# Check RPC completed successfully. Check status was PERMISSION_DENIED (mm-example-auth.handler.istio-system:Unauthorized...)
-
-$GOPATH/out/darwin_amd64/release/mixc check -s request.host=&amp;quot;localhost&amp;quot; --stringmap_attributes &amp;quot;request.headers=x-custom-token:abc&amp;quot;
-# Check RPC completed successfully. Check status was OK
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;NOTE:出现预期结果不一致可能是由于mixer cache导致&lt;code&gt;Valid use count: 10000, valid duration: 9.726875254s&lt;/code&gt;，请参考&lt;a href=&#34;http://www.servicemesher.com/categories/istio-mixer-cache&#34;&gt;Istio Mixer Cache&lt;/a&gt;系列文章了解&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h3 id=&#34;6-打包镜像&#34;&gt;6.打包镜像&lt;/h3&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# build执行文件
-CGO_ENABLED=0 GOOS=linux \
-    go build -a -installsuffix cgo -v -o bin/auth ./cmd/
-    
-# docker镜像
-docker build -t hbchen/micro-mesh-example-adapter-auth:v0.0.1 .
-docker push hbchen/micro-mesh-example-adapter-auth:v0.0.1
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h3 id=&#34;7-istio环境部署&#34;&gt;7.Istio环境部署&lt;/h3&gt;
-
-&lt;p&gt;&lt;strong&gt;部署环境&lt;/strong&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;GKE &lt;strong&gt;1.12.5-gke.10&lt;/strong&gt;&lt;/li&gt;
-&lt;li&gt;Istio &lt;strong&gt;1.1.0&lt;/strong&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 属性、模板
-# attributes.yaml -&amp;gt; istio/mixer/testdata/config/attributes.yaml 
-# template.yaml -&amp;gt; istio/mixer/template/authorization/template.yaml
-kubectl apply -f examples/adapter/auth/testdata/attributes.yaml -f examples/adapter/auth/testdata/template.yaml
-
-# 适配器
-kubectl apply -f examples/adapter/auth/config/auth-adapter.yaml
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;这里是以&lt;a href=&#34;https://github.com/hb-go/micro-mesh&#34;&gt;micro-mesh&lt;/a&gt;示例为基础的配置，如果使用&lt;code&gt;bookinfo&lt;/code&gt;或者自己的服务需要做相应的修改&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;&lt;code&gt;operator-cfg.yaml&lt;/code&gt;与本地测试配置不同：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;handler&lt;/code&gt;的&lt;code&gt;address&lt;/code&gt;使用集群服务&lt;code&gt;&amp;quot;mm-example-auth-adapter-service:44225&amp;quot;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;instance&lt;/code&gt;的&lt;code&gt;params&lt;/code&gt;根据&lt;code&gt;authorization&lt;/code&gt;模板及&lt;code&gt;auth-adapter&lt;/code&gt;服务的需求配置&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;rule&lt;/code&gt;的&lt;code&gt;match&lt;/code&gt;条件使用&lt;code&gt;destination.service.name == &amp;quot;mm-example-api&amp;quot;&lt;/code&gt;或&lt;code&gt;destination.service.host == &amp;quot;mm-example-api.default.svc.cluster.local&amp;quot;&lt;/code&gt;，仅对&lt;code&gt;mm-example-api&lt;/code&gt;服务生效&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# 适配器服务实例部署
-kubectl apply -f examples/adapter/auth/operatorconfig/cluster-service.yaml
-
-# 适配器配置
-kubectl apply -f examples/adapter/auth/operatorconfig/operator-cfg.yaml
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h3 id=&#34;8-istio环境部署测试&#34;&gt;8.Istio环境部署测试&lt;/h3&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;如果没有开Gateway的JWT验证可以忽略&lt;code&gt;Authorization&lt;/code&gt;，其实做了自定义Auth后是多余的😂&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;TOKEN=$(curl https://raw.githubusercontent.com/istio/istio/release-1.1/security/tools/jwt/samples/demo.jwt -s)
-
-curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-token: efg&amp;quot; -H &amp;quot;Grpc-Metadata-x-tier: 2&amp;quot; -X GET http://35.192.111.18/v1/example/call/Hobo
-curl -H &amp;quot;Authorization: Bearer $TOKEN&amp;quot; -H &amp;quot;x-custom-token: abc&amp;quot; -H &amp;quot;Grpc-Metadata-x-tier: 2&amp;quot; -X GET http://35.192.111.18/v1/example/call/Hobo
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;参考&#34;&gt;参考&lt;/h2&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/istio/istio/wiki/Mixer-Out-of-Process-Adapter-Walkthrough&#34;&gt;Mixer Out of Process Adapter Walkthrough&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://medium.com/google-cloud/simple-istio-mixer-out-of-process-authorization-adapter-5f9363cd9bbc&#34;&gt;Simple Istio Mixer Out of Process Authorization Adapter&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</description>
       
     </item>
     

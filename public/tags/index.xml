@@ -31,6 +31,24 @@
     </item>
     
     <item>
+      <title>Ci/Cd</title>
+      <link>http://hbchen.com/tags/ci-cd/</link>
+      <pubDate>Thu, 07 May 2020 20:38:53 +0800</pubDate>
+      
+      <guid>http://hbchen.com/tags/ci-cd/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Docker</title>
+      <link>http://hbchen.com/tags/docker/</link>
+      <pubDate>Thu, 07 May 2020 20:38:53 +0800</pubDate>
+      
+      <guid>http://hbchen.com/tags/docker/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Elasticsearch</title>
       <link>http://hbchen.com/tags/elasticsearch/</link>
       <pubDate>Mon, 29 Apr 2019 18:42:22 +0800</pubDate>
@@ -78,7 +96,7 @@
     <item>
       <title>Go</title>
       <link>http://hbchen.com/tags/go/</link>
-      <pubDate>Sun, 05 May 2019 00:00:00 +0000</pubDate>
+      <pubDate>Thu, 07 May 2020 20:38:53 +0800</pubDate>
       
       <guid>http://hbchen.com/tags/go/</guid>
       <description></description>
@@ -130,6 +148,15 @@
     </item>
     
     <item>
+      <title>Kubernetes</title>
+      <link>http://hbchen.com/tags/kubernetes/</link>
+      <pubDate>Thu, 07 May 2020 20:38:53 +0800</pubDate>
+      
+      <guid>http://hbchen.com/tags/kubernetes/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Mongodb</title>
       <link>http://hbchen.com/tags/mongodb/</link>
       <pubDate>Tue, 11 Mar 2014 18:00:00 +0800</pubDate>
@@ -148,47 +175,20 @@
     </item>
     
     <item>
+      <title>Node</title>
+      <link>http://hbchen.com/tags/node/</link>
+      <pubDate>Thu, 07 May 2020 20:38:53 +0800</pubDate>
+      
+      <guid>http://hbchen.com/tags/node/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Rbac</title>
       <link>http://hbchen.com/tags/rbac/</link>
       <pubDate>Fri, 22 Mar 2019 00:00:00 +0000</pubDate>
       
       <guid>http://hbchen.com/tags/rbac/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Redis</title>
-      <link>http://hbchen.com/tags/redis/</link>
-      <pubDate>Sun, 05 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>http://hbchen.com/tags/redis/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Redmine</title>
-      <link>http://hbchen.com/tags/redmine/</link>
-      <pubDate>Tue, 15 Apr 2014 12:09:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/tags/redmine/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Revel</title>
-      <link>http://hbchen.com/tags/revel/</link>
-      <pubDate>Sat, 24 Aug 2013 09:22:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/tags/revel/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Rockmongo</title>
-      <link>http://hbchen.com/tags/rockmongo/</link>
-      <pubDate>Tue, 11 Mar 2014 18:00:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/tags/rockmongo/</guid>
       <description></description>
     </item>
     

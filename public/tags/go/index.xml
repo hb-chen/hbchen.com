@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio 蜀ICP备18021614号-1</copyright>
-    <lastBuildDate>Sun, 05 May 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 07 May 2020 20:38:53 +0800</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/go/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【DevOps】Drone CI/CD Go &#43; node &#43; docker &#43; kubernetes</title>
+      <link>http://hbchen.com/post/devops/2020-05-07-drone/</link>
+      <pubDate>Thu, 07 May 2020 20:38:53 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/devops/2020-05-07-drone/</guid>
+      <description>Docker 部署 Drone docker-compose.yaml示例， 其中配置项如下： Key 说明 GITHUB_USER_NAME GitHub 的username TOKEN API 或 Cli 连接 Drone 服务用的 token，可以随机生</description>
+    </item>
     
     <item>
       <title>分布式系统限流服务-Golang&amp;Redis</title>
