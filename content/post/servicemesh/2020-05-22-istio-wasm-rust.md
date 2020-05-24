@@ -246,7 +246,7 @@ $ wasme undeploy istio \
 
 CRD
 ```shell script
-$kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
+$ kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
 
 customresourcedefinition.apiextensions.k8s.io/filterdeployments.wasme.io created
 ```
