@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【Istio】Rust 开发 wasm 扩展 - HB-技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="Istio 1.5 开始支持在数据面支持Wasm扩展，相关规范以及SDK在proxy-wasm，目前提供有三种 SDK 实现，分别是C&#43;&#43;、Rust和AssemblyScript，其中AssemblyScript在solo-io/proxy-runtime。除了 SDK Solo 还发布了 WebAssembly Hub，并配有wasme CLI 工具，为 Wasm 扩展的开发提供了不错体验。本文主要介绍如何使用 Rust SDK 开发 Istio Wasm 扩展。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/servicemesh/2020-05-22-istio-wasm-rust/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【Istio】Rust 开发 wasm 扩展" />
+<meta property="og:description" content="Istio 1.5 开始支持在数据面支持Wasm扩展，相关规范以及SDK在proxy-wasm，目前提供有三种 SDK 实现，分别是C&#43;&#43;、Rust和AssemblyScript，其中AssemblyScript在solo-io/proxy-runtime。除了 SDK Solo 还发布了 WebAssembly Hub，并配有wasme CLI 工具，为 Wasm 扩展的开发提供了不错体验。本文主要介绍如何使用 Rust SDK 开发 Istio Wasm 扩展。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/servicemesh/2020-05-22-istio-wasm-rust/" /><meta property="article:published_time" content="2020-05-22T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2020-05-24T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="【Istio】Rust 开发 wasm 扩展">
+<meta itemprop="description" content="Istio 1.5 开始支持在数据面支持Wasm扩展，相关规范以及SDK在proxy-wasm，目前提供有三种 SDK 实现，分别是C&#43;&#43;、Rust和AssemblyScript，其中AssemblyScript在solo-io/proxy-runtime。除了 SDK Solo 还发布了 WebAssembly Hub，并配有wasme CLI 工具，为 Wasm 扩展的开发提供了不错体验。本文主要介绍如何使用 Rust SDK 开发 Istio Wasm 扩展。">
+
+
+<meta itemprop="datePublished" content="2020-05-22T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2020-05-24T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="1178">
+
+
+
+<meta itemprop="keywords" content="Service Mesh,Istio,wasm,envoy,Rust," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【Istio】Rust 开发 wasm 扩展"/>
+<meta name="twitter:description" content="Istio 1.5 开始支持在数据面支持Wasm扩展，相关规范以及SDK在proxy-wasm，目前提供有三种 SDK 实现，分别是C&#43;&#43;、Rust和AssemblyScript，其中AssemblyScript在solo-io/proxy-runtime。除了 SDK Solo 还发布了 WebAssembly Hub，并配有wasme CLI 工具，为 Wasm 扩展的开发提供了不错体验。本文主要介绍如何使用 Rust SDK 开发 Istio Wasm 扩展。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【Istio】Rust 开发 wasm 扩展</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2020-05-22 </span>
+        <div class="post-category">
+            
+              <a href="/categories/service-mesh/"> Service Mesh </a>
+            
+          </div>
+        <span class="more-meta"> 约 1178 字 </span>
+        <span class="more-meta"> 预计阅读 3 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#wasme-工具">Wasme 工具</a></li>
+<li><a href="#rust-项目">Rust 项目</a></li>
+<li><a href="#wasm-扩展">Wasm 扩展</a></li>
+<li><a href="#本地测试-envoy">本地测试 Envoy</a></li>
+<li><a href="#webassembly-hub-使用">WebAssembly Hub 使用</a></li>
+<li><a href="#发布到-istio">发布到 Istio</a>
+<ul>
+<li><a href="#cli-手动添加">CLI 手动添加</a></li>
+<li><a href="#operator">Operator</a></li>
+</ul></li>
+<li><a href="#ref">Ref</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>Istio <strong>1.5</strong> 开始支持在数据面支持<code>Wasm</code>扩展，相关规范以及SDK在<a href="https://github.com/proxy-wasm">proxy-wasm</a>，目前提供有三种 SDK 实现，分别是<code>C++</code>、<code>Rust</code>和<code>AssemblyScript</code>，其中<code>AssemblyScript</code>在<a href="https://github.com/solo-io/proxy-runtime">solo-io/proxy-runtime</a>。除了 SDK Solo 还发布了 <a href="https://webassemblyhub.io/">WebAssembly Hub</a>，并配有<code>wasme</code> CLI 工具，为 Wasm 扩展的开发提供了不错体验。本文主要介绍如何使用 Rust SDK 开发 Istio Wasm 扩展。</p>
+
+<h2 id="wasme-工具">Wasme 工具</h2>
+
+<blockquote>
+<p><a href="https://docs.solo.io/web-assembly-hub/latest/tutorial_code/getting_started/">WebAssembly Hub Getting Started</a></p>
+</blockquote>
+
+<pre><code class="language-shell">curl -sL https://run.solo.io/wasme/install | sh
+export PATH=$HOME/.wasme/bin:$PATH
+</code></pre>
+
+<pre><code class="language-shell">wasme --version
+wasme version 0.0.14
+</code></pre>
+
+<h2 id="rust-项目">Rust 项目</h2>
+
+<blockquote>
+<p><a href="https://www.rust-lang.org/zh-CN/tools/install">Rust安装</a></p>
+
+<pre><code class="language-shell">rustc --version
+rustc 1.43.1 (8d69840ab 2020-05-04)
+</code></pre>
+</blockquote>
+
+<p>创建Rust项目</p>
+
+<p>使用<code>lib</code>模板创建项目</p>
+
+<pre><code class="language-shell">cargo new hello-wold --lib 
+</code></pre>
+
+<p>编辑<code>Cargo.toml</code></p>
+
+<p>添加依赖</p>
+
+<pre><code class="language-toml">[dependencies]
+log = &quot;0.4.8&quot;
+proxy-wasm = &quot;0.1.0&quot; # The Rust SDK for proxy-wasm
+</code></pre>
+
+<p>配置动态库编译</p>
+
+<pre><code class="language-toml">[lib]
+path = &quot;src/lib.rs&quot;
+crate-type = [&quot;cdylib&quot;]
+</code></pre>
+
+<h2 id="wasm-扩展">Wasm 扩展</h2>
+
+<blockquote>
+<p>源码<a href="https://github.com/hb-chen/wasm-hello-world-rust">hb-chen/wasm-hello-world-rust</a></p>
+</blockquote>
+
+<p>先通过 Rust SDK 了解扩展功能，编辑<code>src/lib.rs</code></p>
+
+<pre><code class="language-rust">use proxy_wasm as wasm;
+
+struct HelloWorld {
+    context_id: u32,
+}
+
+impl wasm::traits::Context for HelloWorld {}
+impl wasm::traits::RootContext for HelloWorld{}
+impl wasm::traits::StreamContext for HelloWorld{}
+impl wasm::traits::HttpContext for HelloWorld{}
+</code></pre>
+
+<p>安装依赖</p>
+
+<pre><code class="language-shell">cargo build
+</code></pre>
+
+<p>要了解扩展看下几个 Context 的结构，其中<code>on_*</code>开头的便是扩展点，其他<code>get_*</code>、<code>set_*</code>、<code>add_*</code>等提供了不能接口能力。</p>
+
+<p>为 Request 添加自定义 Header</p>
+
+<pre><code class="language-rust">use log::info;
+use proxy_wasm as wasm;
+
+#[no_mangle]
+pub fn _start() {
+    proxy_wasm::set_log_level(wasm::types::LogLevel::Trace);
+    proxy_wasm::set_http_context(
+        |context_id, _root_context_id| -&gt; Box&lt;dyn wasm::traits::HttpContext&gt; {
+            Box::new(HelloWorld { context_id })
+        },
+    )
+}
+
+struct HelloWorld {
+    context_id: u32,
+}
+
+impl wasm::traits::Context for HelloWorld {}
+
+impl wasm::traits::HttpContext for HelloWorld {
+    fn on_http_request_headers(&amp;mut self, num_headers: usize) -&gt; wasm::types::Action {
+        info!(&quot;Got {} HTTP headers in #{}.&quot;, num_headers, self.context_id);
+        let headers = self.get_http_request_headers();
+        let mut authority = &quot;&quot;;
+
+        for (name, value) in &amp;headers {
+            if name == &quot;:authority&quot; {
+                authority = value;
+            }
+        }
+
+        self.set_http_request_header(&quot;x-hello&quot;, Some(&amp;format!(&quot;Hello world from {}&quot;, authority)));
+
+        wasm::types::Action::Continue
+    }
+}
+</code></pre>
+
+<p>编译</p>
+
+<pre><code class="language-shell">cargo build --target wasm32-unknown-unknown --release
+</code></pre>
+
+<p><code>runtime-config.json</code>是<code>wasme build</code>时需要的，可以通过<code>wasme init</code>创建一个<code>cpp</code>项目获得</p>
+
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;envoy_proxy&quot;,
+  &quot;abiVersions&quot;: [
+    &quot;v0-097b7f2e4cc1fb490cc1943d0d633655ac3c522f&quot;
+  ],
+  &quot;config&quot;: {
+    &quot;rootIds&quot;: [
+      &quot;hello_world&quot;
+    ]
+  }
+}
+</code></pre>
+
+<p>打包</p>
+
+<pre><code class="language-shell">wasme build precompiled target/wasm32-unknown-unknown/release/hello_world.wasm --tag webassemblyhub.io/hbchen/hello_world:v0.1
+</code></pre>
+
+<pre><code class="language-shell">wasme list                                                                                           
+NAME                          TAG  SIZE   SHA      UPDATED
+webassemblyhub.io/hbchen/hello_world v0.1 1.9 MB 2e95e556 22 May 20 10:27 CST
+</code></pre>
+
+<blockquote>
+<p><code>wasme build</code>三种方式，</p>
+
+<pre><code class="language-shell">wasme build -h
+
+Available Commands:
+  assemblyscript Build a wasm image from an AssemblyScript filter using NPM-in-Docker
+  cpp            Build a wasm image from a CPP filter using Bazel-in-Docker
+  precompiled    Build a wasm image from a Precompiled filter.
+</code></pre>
+</blockquote>
+
+<h2 id="本地测试-envoy">本地测试 Envoy</h2>
+
+<pre><code class="language-shell">wasme deploy envoy webassemblyhub.io/hbchen/hello_world:v0.1 --envoy-image=istio/proxyv2:1.6.0 --bootstrap=envoy-bootstrap.yml
+</code></pre>
+
+<pre><code class="language-shell">[2020-05-24 03:03:41.736][12][info][wasm] [external/envoy/source/extensions/common/wasm/context.cc:1103] wasm log hello_world hello_world : Got 16 HTTP headers in #9.
+</code></pre>
+
+<p><a href="http://localhost:8080/headers">http://localhost:8080/headers</a></p>
+
+<pre><code class="language-json">{
+  &quot;headers&quot; : {
+    &quot;X-Hello&quot; : &quot;Hello world from localhost:8080&quot;
+  }
+}
+</code></pre>
+
+<blockquote>
+<p><code>wasme deploy</code>三种方式</p>
+
+<pre><code class="language-shell">wasme deploy -h
+
+Available Commands:
+  envoy       Run Envoy locally in Docker and attach a WASM Filter.
+  gloo        Deploy an Envoy WASM Filter to the Gloo Gateway Proxies (Envoy).
+  istio       Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).
+</code></pre>
+</blockquote>
+
+<h2 id="webassembly-hub-使用">WebAssembly Hub 使用</h2>
+
+<blockquote>
+<p><a href="https://docs.solo.io/web-assembly-hub/latest/tutorial_code/getting_started/#create-a-user-on-webassemblyhub-io-https-webassemblyhub-io">Create a User on webassemblyhub.io &amp; Log In from the wasme command line</a></p>
+</blockquote>
+
+<p>Push 镜像</p>
+
+<pre><code class="language-shell">wasme push webassemblyhub.io/hbchen/hello_world:v0.1
+</code></pre>
+
+<h2 id="发布到-istio">发布到 Istio</h2>
+
+<blockquote>
+<p>httpbin 用例自己部署，本例<code>namespace=ns-httpbin</code></p>
+</blockquote>
+
+<p>可以分别通过<code>wasme</code>工具或<code>operator</code>添加扩展</p>
+
+<h3 id="cli-手动添加">CLI 手动添加</h3>
+
+<pre><code class="language-shell">wasme deploy istio webassemblyhub.io/hbchen/hello_world:v0.1 \
+  --id=hello-world-filter \
+  --namespace=ns-httpbin
+</code></pre>
+
+<p>http://{ingress-host}:{port}/headers</p>
+
+<pre><code class="language-json">{
+  &quot;headers&quot; : {
+    &quot;X-Hello&quot; : &quot;Hello world from {ingress-host}&quot;
+  }
+}
+</code></pre>
+
+<p>卸载</p>
+
+<pre><code class="language-shell">wasme undeploy istio \
+  --id=hello-world-filter \
+  --namespace=ns-httpbin
+</code></pre>
+
+<h3 id="operator">Operator</h3>
+
+<p>CRD</p>
+
+<pre><code class="language-shell">kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
+customresourcedefinition.apiextensions.k8s.io/filterdeployments.wasme.io created
+</code></pre>
+
+<p>Operator</p>
+
+<pre><code class="language-shell">kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme-default.yaml
+namespace/wasme created
+configmap/wasme-cache created
+serviceaccount/wasme-cache created
+serviceaccount/wasme-operator created
+clusterrole.rbac.authorization.k8s.io/wasme-operator created
+clusterrole.rbac.authorization.k8s.io/wasme-cache created
+clusterrolebinding.rbac.authorization.k8s.io/wasme-operator created
+clusterrolebinding.rbac.authorization.k8s.io/wasme-cache created
+daemonset.apps/wasme-cache created
+deployment.apps/wasme-operator created
+</code></pre>
+
+<p>Filter</p>
+
+<pre><code class="language-yaml">kubectl apply -f - &lt;&lt;EOF
+apiVersion: wasme.io/v1
+kind: FilterDeployment
+metadata:
+  name: hello-world-filter
+  namespace: ns-httpbin
+spec:
+  deployment:
+    istio:
+      kind: Deployment
+  filter:
+    image: webassemblyhub.io/hbchen/hello_world:v0.1
+EOF
+</code></pre>
+
+<p>Filter 状态</p>
+
+<pre><code class="language-shell">kubectl get filterdeployments.wasme.io -n ns-httpbin -o yaml hello-world-filter
+status:
+  observedGeneration: &quot;1&quot;
+  workloads:
+    httpbin:
+      state: Succeeded
+</code></pre>
+
+<blockquote>
+<p>注意看下 Pod 是否成功，如果<code>READY 1/2</code>可能是<code>istio-proxy</code>没有启动，测试时这里遇到问题<code>wasme-cache</code>经常失败，可能是网络问题，并且失败后不能续传。可以进入 Pod 看缓存的尺寸是否和<code>hello_world.wasm</code>尺寸一致，缓存路径<code>/var/local/lib/wasme-cache/</code>，不一致就等缓存完成后再测试。</p>
+</blockquote>
+
+<p>http://{ingress-host}:{port}/headers</p>
+
+<pre><code class="language-json">{
+  &quot;headers&quot; : {
+    &quot;X-Hello&quot; : &quot;Hello world from {ingress-host}&quot;
+  }
+}
+</code></pre>
+
+<p>卸载</p>
+
+<pre><code class="language-shell">kubectl delete FilterDeployment -n ns-httpbin hello-world-filter
+</code></pre>
+
+<h2 id="ref">Ref</h2>
+
+<ul>
+<li><a href="https://docs.solo.io/web-assembly-hub/latest/tutorial_code/">WebAssembly Hub Tutorials</a></li>
+<li><a href="https://istio.io/blog/2020/deploy-wasm-declarative/">Declarative WebAssembly deployment for Istio</a></li>
+<li><a href="https://blog.red-badger.com/extending-istio-with-rust-and-webassembly">Extending Istio with Rust and WebAssembly</a></li>
+<li><a href="https://docs.solo.io/web-assembly-hub/latest/tutorial_code/deploy_tutorials/deploying_with_istio/">Deploying Wasm Filters to Istio</a></li>
+<li><a href="https://istio.io/blog/2020/wasmhub-istio/">Extended and Improved WebAssemblyHub to Bring the Power of WebAssembly to Envoy and Istio</a></li>
+</ul>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2020-05-24</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/service-mesh/">Service Mesh</a>
+          
+          <a href="/tags/istio/">Istio</a>
+          
+          <a href="/tags/wasm/">wasm</a>
+          
+          <a href="/tags/envoy/">envoy</a>
+          
+          <a href="/tags/rust/">Rust</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/devops/2020-05-07-drone/">
+            <span class="next-text nav-default">【DevOps】Drone CI/CD Go &#43; node &#43; kubernetes</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2020
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio 蜀ICP备18021614号-1</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

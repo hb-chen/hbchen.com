@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio 蜀ICP备18021614号-1</copyright>
-    <lastBuildDate>Sat, 21 Mar 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 22 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/istio/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Istio】Rust 开发 wasm 扩展</title>
+      <link>http://hbchen.com/post/servicemesh/2020-05-22-istio-wasm-rust/</link>
+      <pubDate>Fri, 22 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/servicemesh/2020-05-22-istio-wasm-rust/</guid>
+      <description>&lt;p&gt;Istio &lt;strong&gt;1.5&lt;/strong&gt; 开始支持在数据面支持&lt;code&gt;Wasm&lt;/code&gt;扩展，相关规范以及SDK在&lt;a href=&#34;https://github.com/proxy-wasm&#34;&gt;proxy-wasm&lt;/a&gt;，目前提供有三种 SDK 实现，分别是&lt;code&gt;C++&lt;/code&gt;、&lt;code&gt;Rust&lt;/code&gt;和&lt;code&gt;AssemblyScript&lt;/code&gt;，其中&lt;code&gt;AssemblyScript&lt;/code&gt;在&lt;a href=&#34;https://github.com/solo-io/proxy-runtime&#34;&gt;solo-io/proxy-runtime&lt;/a&gt;。除了 SDK Solo 还发布了 &lt;a href=&#34;https://webassemblyhub.io/&#34;&gt;WebAssembly Hub&lt;/a&gt;，并配有&lt;code&gt;wasme&lt;/code&gt; CLI 工具，为 Wasm 扩展的开发提供了不错体验。本文主要介绍如何使用 Rust SDK 开发 Istio Wasm 扩展。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【Istio】使用istioctl安装</title>
