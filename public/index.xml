@@ -60,11 +60,12 @@
 &lt;p&gt;&lt;a href=&#34;https://docs.solo.io/web-assembly-hub/latest/tutorial_code/getting_started/&#34;&gt;WebAssembly Hub Getting Started&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;curl -sL https://run.solo.io/wasme/install | sh
-export PATH=$HOME/.wasme/bin:$PATH
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ curl -sL https://run.solo.io/wasme/install | sh
+$ export PATH=$HOME/.wasme/bin:$PATH
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;wasme --version
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ wasme --version
+
 wasme version 0.0.14
 &lt;/code&gt;&lt;/pre&gt;
 
@@ -73,7 +74,8 @@ wasme version 0.0.14
 &lt;blockquote&gt;
 &lt;p&gt;&lt;a href=&#34;https://www.rust-lang.org/zh-CN/tools/install&#34;&gt;Rust安装&lt;/a&gt;&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;rustc --version
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ rustc --version
+
 rustc 1.43.1 (8d69840ab 2020-05-04)
 &lt;/code&gt;&lt;/pre&gt;
 &lt;/blockquote&gt;
@@ -82,7 +84,7 @@ rustc 1.43.1 (8d69840ab 2020-05-04)
 
 &lt;p&gt;使用&lt;code&gt;lib&lt;/code&gt;模板创建项目&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;cargo new hello-wold --lib 
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ cargo new hello-wold --lib 
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;编辑&lt;code&gt;Cargo.toml&lt;/code&gt;&lt;/p&gt;
@@ -123,7 +125,7 @@ impl wasm::traits::HttpContext for HelloWorld{}
 
 &lt;p&gt;安装依赖&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;cargo build
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ cargo build
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;要了解扩展看下几个 Context 的结构，其中&lt;code&gt;on_*&lt;/code&gt;开头的便是扩展点，其他&lt;code&gt;get_*&lt;/code&gt;、&lt;code&gt;set_*&lt;/code&gt;、&lt;code&gt;add_*&lt;/code&gt;等提供了不能接口能力。&lt;/p&gt;
@@ -170,7 +172,7 @@ impl wasm::traits::HttpContext for HelloWorld {
 
 &lt;p&gt;编译&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;cargo build --target wasm32-unknown-unknown --release
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ cargo build --target wasm32-unknown-unknown --release
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;code&gt;runtime-config.json&lt;/code&gt;是&lt;code&gt;wasme build&lt;/code&gt;时需要的，可以通过&lt;code&gt;wasme init&lt;/code&gt;创建一个&lt;code&gt;cpp&lt;/code&gt;项目获得&lt;/p&gt;
@@ -190,10 +192,11 @@ impl wasm::traits::HttpContext for HelloWorld {
 
 &lt;p&gt;打包&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;wasme build precompiled target/wasm32-unknown-unknown/release/hello_world.wasm --tag webassemblyhub.io/hbchen/hello_world:v0.1
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ wasme build precompiled target/wasm32-unknown-unknown/release/hello_world.wasm --tag webassemblyhub.io/hbchen/hello_world:v0.1
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;wasme list                                                                                           
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ wasme list
+
 NAME                          TAG  SIZE   SHA      UPDATED
 webassemblyhub.io/hbchen/hello_world v0.1 1.9 MB 2e95e556 22 May 20 10:27 CST
 &lt;/code&gt;&lt;/pre&gt;
@@ -201,7 +204,7 @@ webassemblyhub.io/hbchen/hello_world v0.1 1.9 MB 2e95e556 22 May 20 10:27 CST
 &lt;blockquote&gt;
 &lt;p&gt;&lt;code&gt;wasme build&lt;/code&gt;三种方式，&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;wasme build -h
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ wasme build -h
 
 Available Commands:
   assemblyscript Build a wasm image from an AssemblyScript filter using NPM-in-Docker
@@ -212,7 +215,7 @@ Available Commands:
 
 &lt;h2 id=&#34;本地测试-envoy&#34;&gt;本地测试 Envoy&lt;/h2&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;wasme deploy envoy webassemblyhub.io/hbchen/hello_world:v0.1 --envoy-image=istio/proxyv2:1.6.0 --bootstrap=envoy-bootstrap.yml
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ wasme deploy envoy webassemblyhub.io/hbchen/hello_world:v0.1 --envoy-image=istio/proxyv2:1.6.0 --bootstrap=envoy-bootstrap.yml
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;[2020-05-24 03:03:41.736][12][info][wasm] [external/envoy/source/extensions/common/wasm/context.cc:1103] wasm log hello_world hello_world : Got 16 HTTP headers in #9.
@@ -230,7 +233,7 @@ Available Commands:
 &lt;blockquote&gt;
 &lt;p&gt;&lt;code&gt;wasme deploy&lt;/code&gt;三种方式&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;wasme deploy -h
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ wasme deploy -h
 
 Available Commands:
   envoy       Run Envoy locally in Docker and attach a WASM Filter.
@@ -247,7 +250,7 @@ Available Commands:
 
 &lt;p&gt;Push 镜像&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;wasme push webassemblyhub.io/hbchen/hello_world:v0.1
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ wasme push webassemblyhub.io/hbchen/hello_world:v0.1
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;h2 id=&#34;发布到-istio&#34;&gt;发布到 Istio&lt;/h2&gt;
@@ -260,7 +263,7 @@ Available Commands:
 
 &lt;h3 id=&#34;cli-手动添加&#34;&gt;CLI 手动添加&lt;/h3&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;wasme deploy istio webassemblyhub.io/hbchen/hello_world:v0.1 \
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ wasme deploy istio webassemblyhub.io/hbchen/hello_world:v0.1 \
   --id=hello-world-filter \
   --namespace=ns-httpbin
 &lt;/code&gt;&lt;/pre&gt;
@@ -276,7 +279,7 @@ Available Commands:
 
 &lt;p&gt;卸载&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;wasme undeploy istio \
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ wasme undeploy istio \
   --id=hello-world-filter \
   --namespace=ns-httpbin
 &lt;/code&gt;&lt;/pre&gt;
@@ -285,13 +288,15 @@ Available Commands:
 
 &lt;p&gt;CRD&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
+
 customresourcedefinition.apiextensions.k8s.io/filterdeployments.wasme.io created
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Operator&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme-default.yaml
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme-default.yaml
+
 namespace/wasme created
 configmap/wasme-cache created
 serviceaccount/wasme-cache created
@@ -306,7 +311,7 @@ deployment.apps/wasme-operator created
 
 &lt;p&gt;Filter&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;kubectl apply -f - &amp;lt;&amp;lt;EOF
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;$ kubectl apply -f - &amp;lt;&amp;lt;EOF
 apiVersion: wasme.io/v1
 kind: FilterDeployment
 metadata:
@@ -323,7 +328,8 @@ EOF
 
 &lt;p&gt;Filter 状态&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl get filterdeployments.wasme.io -n ns-httpbin -o yaml hello-world-filter
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ kubectl get filterdeployments.wasme.io -n ns-httpbin -o yaml hello-world-filter
+
 status:
   observedGeneration: &amp;quot;1&amp;quot;
   workloads:
@@ -346,7 +352,7 @@ status:
 
 &lt;p&gt;卸载&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl delete FilterDeployment -n ns-httpbin hello-world-filter
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ kubectl delete FilterDeployment -n ns-httpbin hello-world-filter
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;h2 id=&#34;ref&#34;&gt;Ref&lt;/h2&gt;

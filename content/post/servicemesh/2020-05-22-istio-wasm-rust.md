@@ -25,12 +25,13 @@ Istio **1.5** 开始支持在数据面支持`Wasm`扩展，相关规范以及SDK
 > [WebAssembly Hub Getting Started](https://docs.solo.io/web-assembly-hub/latest/tutorial_code/getting_started/)
 
 ```shell script
-curl -sL https://run.solo.io/wasme/install | sh
-export PATH=$HOME/.wasme/bin:$PATH
+$ curl -sL https://run.solo.io/wasme/install | sh
+$ export PATH=$HOME/.wasme/bin:$PATH
 ```
 
 ```shell script
-wasme --version
+$ wasme --version
+
 wasme version 0.0.14
 ```
 
@@ -38,7 +39,8 @@ wasme version 0.0.14
 
 > [Rust安装](https://www.rust-lang.org/zh-CN/tools/install)
 ```shell script
-rustc --version
+$ rustc --version
+
 rustc 1.43.1 (8d69840ab 2020-05-04)
 ```
 
@@ -46,7 +48,7 @@ rustc 1.43.1 (8d69840ab 2020-05-04)
 
 使用`lib`模板创建项目
 ```shell script
-cargo new hello-wold --lib 
+$ cargo new hello-wold --lib 
 ```
 
 编辑`Cargo.toml`
@@ -85,7 +87,7 @@ impl wasm::traits::HttpContext for HelloWorld{}
 
 安装依赖
 ```shell script
-cargo build
+$ cargo build
 ```
 
 要了解扩展看下几个 Context 的结构，其中`on_*`开头的便是扩展点，其他`get_*`、`set_*`、`add_*`等提供了不能接口能力。
@@ -132,7 +134,7 @@ impl wasm::traits::HttpContext for HelloWorld {
 
 编译
 ```shell script
-cargo build --target wasm32-unknown-unknown --release
+$ cargo build --target wasm32-unknown-unknown --release
 ```
 
 `runtime-config.json`是`wasme build`时需要的，可以通过`wasme init`创建一个`cpp`项目获得
@@ -152,18 +154,19 @@ cargo build --target wasm32-unknown-unknown --release
 
 打包
 ```shell script
-wasme build precompiled target/wasm32-unknown-unknown/release/hello_world.wasm --tag webassemblyhub.io/hbchen/hello_world:v0.1
+$ wasme build precompiled target/wasm32-unknown-unknown/release/hello_world.wasm --tag webassemblyhub.io/hbchen/hello_world:v0.1
 ```
 
 ```shell script
-wasme list                                                                                           
+$ wasme list
+
 NAME                          TAG  SIZE   SHA      UPDATED
 webassemblyhub.io/hbchen/hello_world v0.1 1.9 MB 2e95e556 22 May 20 10:27 CST
 ```
 
 > `wasme build`三种方式，
 ```shell script
-wasme build -h
+$ wasme build -h
 
 Available Commands:
   assemblyscript Build a wasm image from an AssemblyScript filter using NPM-in-Docker
@@ -174,7 +177,7 @@ Available Commands:
 ## 本地测试 Envoy
 
 ```shell script
-wasme deploy envoy webassemblyhub.io/hbchen/hello_world:v0.1 --envoy-image=istio/proxyv2:1.6.0 --bootstrap=envoy-bootstrap.yml
+$ wasme deploy envoy webassemblyhub.io/hbchen/hello_world:v0.1 --envoy-image=istio/proxyv2:1.6.0 --bootstrap=envoy-bootstrap.yml
 ```
 
 ```shell script
@@ -193,7 +196,7 @@ http://localhost:8080/headers
 
 > `wasme deploy`三种方式
 ```shell script
-wasme deploy -h
+$ wasme deploy -h
 
 Available Commands:
   envoy       Run Envoy locally in Docker and attach a WASM Filter.
@@ -207,7 +210,7 @@ Available Commands:
 
 Push 镜像
 ```shell script
-wasme push webassemblyhub.io/hbchen/hello_world:v0.1
+$ wasme push webassemblyhub.io/hbchen/hello_world:v0.1
 ```
 
 ## 发布到 Istio
@@ -218,7 +221,7 @@ wasme push webassemblyhub.io/hbchen/hello_world:v0.1
 
 ### CLI 手动添加
 ```shell script
-wasme deploy istio webassemblyhub.io/hbchen/hello_world:v0.1 \
+$ wasme deploy istio webassemblyhub.io/hbchen/hello_world:v0.1 \
   --id=hello-world-filter \
   --namespace=ns-httpbin
 ```
@@ -234,7 +237,7 @@ http://{ingress-host}:{port}/headers
 
 卸载
 ```shell script
-wasme undeploy istio \
+$ wasme undeploy istio \
   --id=hello-world-filter \
   --namespace=ns-httpbin
 ```
@@ -243,14 +246,16 @@ wasme undeploy istio \
 
 CRD
 ```shell script
-kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
+$kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
+
 customresourcedefinition.apiextensions.k8s.io/filterdeployments.wasme.io created
 ```
 
 
 Operator
 ```shell script
-kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme-default.yaml
+$ kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme-default.yaml
+
 namespace/wasme created
 configmap/wasme-cache created
 serviceaccount/wasme-cache created
@@ -265,7 +270,7 @@ deployment.apps/wasme-operator created
 
 Filter
 ```yaml
-kubectl apply -f - <<EOF
+$ kubectl apply -f - <<EOF
 apiVersion: wasme.io/v1
 kind: FilterDeployment
 metadata:
@@ -282,7 +287,8 @@ EOF
 
 Filter 状态
 ```shell script
-kubectl get filterdeployments.wasme.io -n ns-httpbin -o yaml hello-world-filter
+$ kubectl get filterdeployments.wasme.io -n ns-httpbin -o yaml hello-world-filter
+
 status:
   observedGeneration: "1"
   workloads:
@@ -305,7 +311,7 @@ http://{ingress-host}:{port}/headers
 
 卸载
 ```shell script
-kubectl delete FilterDeployment -n ns-httpbin hello-world-filter
+$ kubectl delete FilterDeployment -n ns-httpbin hello-world-filter
 ```
 
 ## Ref
