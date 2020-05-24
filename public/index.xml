@@ -288,7 +288,7 @@ Available Commands:
 
 &lt;p&gt;CRD&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
 
 customresourcedefinition.apiextensions.k8s.io/filterdeployments.wasme.io created
 &lt;/code&gt;&lt;/pre&gt;
