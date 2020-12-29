@@ -17,7 +17,7 @@ paginate = 7                                              # 首页每页显示�
 rssLimit = 20             # Limit Entry Count to Rss file # 限制 Rss 文章输出数量
 disqusShortname = ""      # disqus_shortname
 googleAnalytics = ""      # UA-XXXXXXXX-X
-copyright = "HB Studio 蜀ICP备18021614号-1"            # default: author.name ↓        # 默认为下面配置的author.name ↓
+copyright = "HB Studio <a href=\"https://beian.miit.gov.cn/\" target=\"_blank\">蜀ICP备18021614号-1</a>"            # default: author.name ↓        # 默认为下面配置的author.name ↓
 
 [author]                  # essential                     # 必需
   name = "Hobo Chen"
