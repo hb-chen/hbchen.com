@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Ci/Cd on HB-技术实践</title>
-    <link>http://hbchen.com/tags/ci-cd/</link>
-    <description>Recent content in Ci/Cd on HB-技术实践</description>
+    <title>Cicd on HB-技术实践</title>
+    <link>http://hbchen.com/tags/cicd/</link>
+    <description>Recent content in Cicd on HB-技术实践</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio &lt;a href=&#34;https://beian.miit.gov.cn/&#34; target=&#34;_blank&#34;&gt;蜀ICP备18021614号-1&lt;/a&gt;</copyright>
     <lastBuildDate>Sun, 28 Mar 2021 00:41:51 +0800</lastBuildDate>
     
-	<atom:link href="http://hbchen.com/tags/ci-cd/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://hbchen.com/tags/cicd/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
