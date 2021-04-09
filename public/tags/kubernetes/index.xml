@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio &lt;a href=&#34;https://beian.miit.gov.cn/&#34; target=&#34;_blank&#34;&gt;蜀ICP备18021614号-1&lt;/a&gt;</copyright>
-    <lastBuildDate>Thu, 07 May 2020 20:38:53 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 28 Mar 2021 00:41:51 +0800</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/kubernetes/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>【Tekton】组件介绍及安装部署</title>
+      <link>http://hbchen.com/post/devops/2021-03-28-tekton-install/</link>
+      <pubDate>Sun, 28 Mar 2021 00:41:51 +0800</pubDate>
+      
+      <guid>http://hbchen.com/post/devops/2021-03-28-tekton-install/</guid>
+      <description>&lt;p&gt;Tekton 作为 Kubernetes 原生的 CI/CD 框架，拥有轻量、灵活等特点，接下来本文将介绍如何部署 Tekton 环境，后续以一个 Golang 项目为例，了解 Pipeline 和 Trigger，包括如何使用 Task、Pipeline、PipelineRun、EventListener、TriggerBinding、TriggerTemplate 等 CRDs 完成持续集成和交付的全流程。&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>【DevOps】Drone CI/CD Go &#43; node &#43; kubernetes</title>

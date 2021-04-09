@@ -7,17 +7,17 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio &lt;a href=&#34;https://beian.miit.gov.cn/&#34; target=&#34;_blank&#34;&gt;蜀ICP备18021614号-1&lt;/a&gt;</copyright>
-    <lastBuildDate>Tue, 09 Feb 2021 17:20:49 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 19 Mar 2021 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/tags/delve/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Golang远程调试-Delve</title>
-      <link>http://hbchen.com/post/go/2021-02-09-delve/</link>
-      <pubDate>Tue, 09 Feb 2021 17:20:49 +0800</pubDate>
+      <link>http://hbchen.com/post/go/2021-03-19-delve/</link>
+      <pubDate>Fri, 19 Mar 2021 00:00:00 +0000</pubDate>
       
-      <guid>http://hbchen.com/post/go/2021-02-09-delve/</guid>
+      <guid>http://hbchen.com/post/go/2021-03-19-delve/</guid>
       <description>&lt;p&gt;当线上或其它非本地环境遇到问题无法本地复现时，往往需要远程调试，在服务端运行服务，本地使用 IDE 进行调试，本文介绍在 IDEA 使用 Delve 做远程调试，虽然 IDEA Go Remote 有比较清楚说明，但使用中还是有几点需要注意。&lt;/p&gt;</description>
     </item>
     

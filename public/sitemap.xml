@@ -10,8 +10,15 @@
   </url>
   
   <url>
-    <loc>http://hbchen.com/post/go/2021-02-09-delve/</loc>
-    <lastmod>2021-02-09T17:20:49+08:00</lastmod>
+    <loc>http://hbchen.com/post/devops/2021-03-28-tekton-install/</loc>
+    <lastmod>2021-03-28T00:41:51+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/post/go/2021-03-19-delve/</loc>
+    <lastmod>2021-03-19T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -276,120 +283,6 @@
   </url>
   
   <url>
-    <loc>http://hbchen.com/doc/elk/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/readme/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/ansible/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/git/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/golang/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/istio/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/java/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/k8s/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/knative/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/kubeshpere/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/linux/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/maven/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/minio/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/nginx/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/npm/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/rancher/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/rpm/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/supervisord/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/tekton/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
     <loc>http://hbchen.com/tags/bae/</loc>
     <lastmod>2014-03-06T19:00:00+08:00</lastmod>
     <changefreq>weekly</changefreq>
@@ -411,7 +304,7 @@
   
   <url>
     <loc>http://hbchen.com/tags/ci-cd/</loc>
-    <lastmod>2020-05-07T20:38:53+08:00</lastmod>
+    <lastmod>2021-03-28T00:41:51+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -425,21 +318,21 @@
   
   <url>
     <loc>http://hbchen.com/tags/debug/</loc>
-    <lastmod>2021-02-09T17:20:49+08:00</lastmod>
+    <lastmod>2021-03-19T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://hbchen.com/tags/delve/</loc>
-    <lastmod>2021-02-09T17:20:49+08:00</lastmod>
+    <lastmod>2021-03-19T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://hbchen.com/categories/devops/</loc>
-    <lastmod>2020-05-07T20:38:53+08:00</lastmod>
+    <lastmod>2021-03-28T00:41:51+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -447,12 +340,6 @@
   <url>
     <loc>http://hbchen.com/tags/docker/</loc>
     <lastmod>2020-05-07T20:38:53+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>http://hbchen.com/doc/</loc>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -508,14 +395,14 @@
   
   <url>
     <loc>http://hbchen.com/tags/go/</loc>
-    <lastmod>2021-02-09T17:20:49+08:00</lastmod>
+    <lastmod>2021-03-19T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://hbchen.com/categories/go/</loc>
-    <lastmod>2021-02-09T17:20:49+08:00</lastmod>
+    <lastmod>2021-03-19T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -564,7 +451,7 @@
   
   <url>
     <loc>http://hbchen.com/tags/kubernetes/</loc>
-    <lastmod>2020-05-07T20:38:53+08:00</lastmod>
+    <lastmod>2021-03-28T00:41:51+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -599,7 +486,7 @@
   
   <url>
     <loc>http://hbchen.com/post/</loc>
-    <lastmod>2021-02-09T17:20:49+08:00</lastmod>
+    <lastmod>2021-03-28T00:41:51+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>
@@ -698,6 +585,13 @@
   <url>
     <loc>http://hbchen.com/tags/</loc>
     <lastmod>2014-03-06T19:00:00+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://hbchen.com/tags/tekton/</loc>
+    <lastmod>2021-03-28T00:41:51+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0</priority>
   </url>

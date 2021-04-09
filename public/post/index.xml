@@ -7,17 +7,26 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <copyright>HB Studio &lt;a href=&#34;https://beian.miit.gov.cn/&#34; target=&#34;_blank&#34;&gt;蜀ICP备18021614号-1&lt;/a&gt;</copyright>
-    <lastBuildDate>Tue, 09 Feb 2021 17:20:49 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 28 Mar 2021 00:41:51 +0800</lastBuildDate>
     
 	<atom:link href="http://hbchen.com/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Golang远程调试-Delve</title>
-      <link>http://hbchen.com/post/go/2021-02-09-delve/</link>
-      <pubDate>Tue, 09 Feb 2021 17:20:49 +0800</pubDate>
+      <title>【Tekton】组件介绍及安装部署</title>
+      <link>http://hbchen.com/post/devops/2021-03-28-tekton-install/</link>
+      <pubDate>Sun, 28 Mar 2021 00:41:51 +0800</pubDate>
       
-      <guid>http://hbchen.com/post/go/2021-02-09-delve/</guid>
+      <guid>http://hbchen.com/post/devops/2021-03-28-tekton-install/</guid>
+      <description>&lt;p&gt;Tekton 作为 Kubernetes 原生的 CI/CD 框架，拥有轻量、灵活等特点，接下来本文将介绍如何部署 Tekton 环境，后续以一个 Golang 项目为例，了解 Pipeline 和 Trigger，包括如何使用 Task、Pipeline、PipelineRun、EventListener、TriggerBinding、TriggerTemplate 等 CRDs 完成持续集成和交付的全流程。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Golang远程调试-Delve</title>
+      <link>http://hbchen.com/post/go/2021-03-19-delve/</link>
+      <pubDate>Fri, 19 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/post/go/2021-03-19-delve/</guid>
       <description>&lt;p&gt;当线上或其它非本地环境遇到问题无法本地复现时，往往需要远程调试，在服务端运行服务，本地使用 IDE 进行调试，本文介绍在 IDEA 使用 Delve 做远程调试，虽然 IDEA Go Remote 有比较清楚说明，但使用中还是有几点需要注意。&lt;/p&gt;</description>
     </item>
     
@@ -198,15 +207,6 @@
       <guid>http://hbchen.com/post/servicemesh/2019-03-17-istio-code-pilot-discovery/</guid>
       <description>&lt;p&gt;流量管理是网格的基础，Pilot负责三个主要功能：服务治理&lt;code&gt;istio-pilot&lt;/code&gt;、Sidecar注入&lt;code&gt;istio-sidecar-injector&lt;/code&gt;、以及Sidecar&lt;code&gt;istio-proxy&lt;/code&gt;，
 分别由三个模块负责：&lt;code&gt;pilot-discovery&lt;/code&gt;、&lt;code&gt;sidecar-injector&lt;/code&gt;、&lt;code&gt;pilot-agent&lt;/code&gt;，这里从&lt;code&gt;pilot-discovery&lt;/code&gt;开始。&lt;/p&gt;</description>
-    </item>
-    
-    <item>
-      <title>【Istio安全】服务间访问控制-RBAC</title>
-      <link>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</link>
-      <pubDate>Fri, 22 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>http://hbchen.com/post/servicemesh/2019-03-09-istio-rbac-quick-start/</guid>
-      <description>&lt;p&gt;Istio提供了非常易用的安全解决方案，包括服务间身份验证&lt;code&gt;mTLS&lt;/code&gt;，服务间访问控制&lt;code&gt;RBAC&lt;/code&gt;，以及终端用户身份验证&lt;code&gt;JWT&lt;/code&gt;等，本文主要介绍如何使用服务间访问控制，同时涉及&lt;code&gt;双向TLS&lt;/code&gt;。&lt;/p&gt;</description>
     </item>
     
   </channel>

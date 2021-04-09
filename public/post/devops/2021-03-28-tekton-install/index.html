@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【Tekton】组件介绍及安装部署 - HB-技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="Tekton 作为 Kubernetes 原生的 CI/CD 框架，拥有轻量、灵活等特点，接下来本文将介绍如何部署 Tekton 环境，后续以一个 Golang 项目为例，了解 Pipeline 和 Trigger，包括如何使用 Task、Pipeline、PipelineRun、EventListener、TriggerBinding、TriggerTemplate 等 CRDs 完成持续集成和交付的全流程。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/devops/2021-03-28-tekton-install/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【Tekton】组件介绍及安装部署" />
+<meta property="og:description" content="Tekton 作为 Kubernetes 原生的 CI/CD 框架，拥有轻量、灵活等特点，接下来本文将介绍如何部署 Tekton 环境，后续以一个 Golang 项目为例，了解 Pipeline 和 Trigger，包括如何使用 Task、Pipeline、PipelineRun、EventListener、TriggerBinding、TriggerTemplate 等 CRDs 完成持续集成和交付的全流程。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/devops/2021-03-28-tekton-install/" /><meta property="article:published_time" content="2021-03-28T00:41:51&#43;08:00"/>
+<meta property="article:modified_time" content="2021-03-28T00:41:51&#43;08:00"/>
+
+<meta itemprop="name" content="【Tekton】组件介绍及安装部署">
+<meta itemprop="description" content="Tekton 作为 Kubernetes 原生的 CI/CD 框架，拥有轻量、灵活等特点，接下来本文将介绍如何部署 Tekton 环境，后续以一个 Golang 项目为例，了解 Pipeline 和 Trigger，包括如何使用 Task、Pipeline、PipelineRun、EventListener、TriggerBinding、TriggerTemplate 等 CRDs 完成持续集成和交付的全流程。">
+
+
+<meta itemprop="datePublished" content="2021-03-28T00:41:51&#43;08:00" />
+<meta itemprop="dateModified" content="2021-03-28T00:41:51&#43;08:00" />
+<meta itemprop="wordCount" content="800">
+
+
+
+<meta itemprop="keywords" content="Tekton,CI/CD,Kubernetes," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【Tekton】组件介绍及安装部署"/>
+<meta name="twitter:description" content="Tekton 作为 Kubernetes 原生的 CI/CD 框架，拥有轻量、灵活等特点，接下来本文将介绍如何部署 Tekton 环境，后续以一个 Golang 项目为例，了解 Pipeline 和 Trigger，包括如何使用 Task、Pipeline、PipelineRun、EventListener、TriggerBinding、TriggerTemplate 等 CRDs 完成持续集成和交付的全流程。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【Tekton】组件介绍及安装部署</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2021-03-28 </span>
+        <div class="post-category">
+            
+              <a href="/categories/devops/"> DevOps </a>
+            
+          </div>
+        <span class="more-meta"> 约 800 字 </span>
+        <span class="more-meta"> 预计阅读 2 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>Tekton 作为 Kubernetes 原生的 CI/CD 框架，拥有轻量、灵活等特点，接下来本文将介绍如何部署 Tekton 环境，后续以一个 Golang 项目为例，了解 Pipeline 和 Trigger，包括如何使用 Task、Pipeline、PipelineRun、EventListener、TriggerBinding、TriggerTemplate 等 CRDs 完成持续集成和交付的全流程。</p>
+
+<p>Tekton 包括 Pipeline、Trigger 和 Dashboard 三个部分，最小部署可以只用 Pipeline，Pipeline 是 Tekton 的核心，负责具体任务的流水线工作；Trigger 则主要是 Pipeline 的触发器，如有 Git PR 后通过 Webhook 触发 CI 流水线；Dashboard 则提供了一个 Web 控制台。要部署 Tekton 首先要有一个 K8S 环境，如果没有，可以使用 Minikube 做测试，如果有服务器资源推荐使用 <a href="https://rancher.com/">Rancher</a>，可以选择部署一个 K3S 做 K8S 的多集群管理。</p>
+
+<p>有了 K8S 环境 Tekton 的部署很简单，只需要<code>kubectl apply …</code>，但直接使用官方的<code>yaml</code>会有遇到一个问题GFW使<code>gcr.io</code>镜像无法访问，我在<a href="https://github.com/hb-chen/tekton-practice/tree/main/install">tekton-practice/install</a>提供了国内镜像版本，如果可以科学上网，也可以使用<a href="https://github.com/hb-chen/docker-sync">docker-sync</a>这个工具将镜像同步到自己的镜像仓库。</p>
+
+<p>有了这些准备工作剩下部署很简单，以使用<a href="https://github.com/hb-chen/tekton-practice">tekton-practice</a>为例：</p>
+
+<pre><code class="language-shell">git clone https://github.com/hb-chen/tekton-practice.git
+
+cd tekton-practice
+
+# 版本可以根据情况选择最新版本
+kubectl apply -f install/pipeline_v0.20.0.yaml
+kubectl apply -f install/trigger_v0.10.2.yaml
+kubectl apply -f install/dashboard_v0.15.0.yaml
+</code></pre>
+
+<blockquote>
+<p>版本选择还要注意一点是三个组件间的兼容关系，可以参考<a href="https://github.com/tektoncd/dashboard#which-version-should-i-use">tektoncd/dashboard</a>的 README 文档。</p>
+</blockquote>
+
+<p>部署完成后可以查看下 K8S 的资源情况</p>
+
+<pre><code class="language-shell"># Pod
+kubectl get po -n tekton-pipelines
+NAME                                           READY   STATUS    RESTARTS   AGE
+tekton-dashboard-5fcd8ddb84-qj6hr              1/1     Running   0          11d
+tekton-pipelines-controller-7f7cfd5bdc-xb84j   1/1     Running   0          50d
+tekton-pipelines-webhook-797666b499-dw6vp      1/1     Running   0          50d
+tekton-triggers-controller-7b58bbd6db-6b6l2    1/1     Running   0          50d
+tekton-triggers-webhook-59d767ddb-tk4jr        1/1     Running   0          50d
+
+# Service
+kubectl get svc -n tekton-pipelines
+NAME                                       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                              AGE
+ingress-6a5bd2bac554b1f93e94a6160e460c0d   ClusterIP   10.43.55.190    &lt;none&gt;        9097/TCP                             50d
+tekton-dashboard                           ClusterIP   10.43.134.48    &lt;none&gt;        9097/TCP                             43d
+tekton-pipelines-controller                ClusterIP   10.43.211.12    &lt;none&gt;        9090/TCP,8080/TCP                    50d
+tekton-pipelines-webhook                   ClusterIP   10.43.252.153   &lt;none&gt;        9090/TCP,8008/TCP,443/TCP,8080/TCP   50d
+tekton-triggers-controller                 ClusterIP   10.43.3.54      &lt;none&gt;        9090/TCP                             50d
+tekton-triggers-webhook                    ClusterIP   10.43.110.171   &lt;none&gt;        443/TCP                              50d
+</code></pre>
+
+<blockquote>
+<p>Dashboard 本身没有安全认证，如果是暴露在公网的服务可以使用 nginx ingress 的 <a href="https://kubernetes.github.io/ingress-nginx/examples/auth/basic/">basic-auth</a> 做一个简单的认证。</p>
+</blockquote>
+
+<p>至此 Tekton 的基础部署完成，可以根据自身环境不同给 Dashboard 配置 Ingress 网关。下篇开始以 Golang 项目为例具体介绍如何使用 Pipeline 和 Trigger 完成持续集成与交付。</p>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2021-03-28</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/tekton/">Tekton</a>
+          
+          <a href="/tags/ci/cd/">CI/CD</a>
+          
+          <a href="/tags/kubernetes/">Kubernetes</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/go/2021-03-19-delve/">
+            <span class="next-text nav-default">Golang远程调试-Delve</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2021
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio <a href="https://beian.miit.gov.cn/" target="_blank">蜀ICP备18021614号-1</a></span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>
