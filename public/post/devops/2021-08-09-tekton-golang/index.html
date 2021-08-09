@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>【Tekton】Golang CI/CD 实践 - HB-技术实践</title>
+  <link rel="alternate" hreflang="zh-cn" href="http://hbchen.com" />
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="Hobo Chen" />
+  <meta name="description" content="接上一篇 【Tekton】组件介绍及安装部署，本文介绍如何使用 Tekton 完成 CI/CD 的全流程，包括 WebHook、代码拉取、go test、go build、docker build and push、helm/kubectl k8s 部署，其中涉及 Git/镜像仓库的 Basic 认证、kubeconfig、以及 go mod 缓存和多项目目录结构等实践内容。
+" />
+
+  <meta name="keywords" content="Hobo, hbchen, 微服务, 服务网格, go-micro, Golang, Micro, RPC, Istio, Service mesh" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.53" />
+
+
+<link rel="canonical" href="http://hbchen.com/post/devops/2021-08-09-tekton-golang/" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" href="/favicon.ico" />
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+<link href="/lib/fancybox/jquery.fancybox-3.1.20.min.css" rel="stylesheet">
+
+
+
+
+<meta property="og:title" content="【Tekton】Golang CI/CD 实践" />
+<meta property="og:description" content="接上一篇 【Tekton】组件介绍及安装部署，本文介绍如何使用 Tekton 完成 CI/CD 的全流程，包括 WebHook、代码拉取、go test、go build、docker build and push、helm/kubectl k8s 部署，其中涉及 Git/镜像仓库的 Basic 认证、kubeconfig、以及 go mod 缓存和多项目目录结构等实践内容。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://hbchen.com/post/devops/2021-08-09-tekton-golang/" /><meta property="article:published_time" content="2021-08-09T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2021-08-09T00:00:00&#43;00:00"/>
+
+<meta itemprop="name" content="【Tekton】Golang CI/CD 实践">
+<meta itemprop="description" content="接上一篇 【Tekton】组件介绍及安装部署，本文介绍如何使用 Tekton 完成 CI/CD 的全流程，包括 WebHook、代码拉取、go test、go build、docker build and push、helm/kubectl k8s 部署，其中涉及 Git/镜像仓库的 Basic 认证、kubeconfig、以及 go mod 缓存和多项目目录结构等实践内容。">
+
+
+<meta itemprop="datePublished" content="2021-08-09T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2021-08-09T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="3653">
+
+
+
+<meta itemprop="keywords" content="Tekton,CICD,Kubernetes,Golang," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="【Tekton】Golang CI/CD 实践"/>
+<meta name="twitter:description" content="接上一篇 【Tekton】组件介绍及安装部署，本文介绍如何使用 Tekton 完成 CI/CD 的全流程，包括 WebHook、代码拉取、go test、go build、docker build and push、helm/kubectl k8s 部署，其中涉及 Git/镜像仓库的 Basic 认证、kubeconfig、以及 go mod 缓存和多项目目录结构等实践内容。"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">HB Chen</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a><a href="https://github.com/hb-chen">
+        <li class="mobile-menu-item">GitHub</li>
+      </a>
+  </ul>
+</nav>
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">HB Chen</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="https://github.com/hb-chen">GitHub</a>
+      </li>
+  </ul>
+</nav>
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">【Tekton】Golang CI/CD 实践</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2021-08-09 </span>
+        <div class="post-category">
+            
+              <a href="/categories/devops/"> DevOps </a>
+            
+          </div>
+        <span class="more-meta"> 约 3653 字 </span>
+        <span class="more-meta"> 预计阅读 8 分钟 </span>
+      </div>
+    </header>
+
+    
+    
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#webhook-触发器">Webhook 触发器</a>
+<ul>
+<li><a href="#rbac">RBAC</a></li>
+</ul></li>
+<li><a href="#流水线任务">流水线任务</a>
+<ul>
+<li><a href="#git-clone-yml">git-clone.yml</a></li>
+<li><a href="#golang-test-yml">golang-test.yml</a></li>
+<li><a href="#golang-build-yml">golang-build.yml</a></li>
+<li><a href="#kaniko-yml">kaniko.yml</a></li>
+<li><a href="#helm-kubectl-yml">helm-kubectl.yml</a></li>
+</ul></li>
+<li><a href="#流水线定义">流水线定义</a></li>
+<li><a href="#pvc">PVC</a></li>
+<li><a href="#安全认证">安全认证</a>
+<ul>
+<li><a href="#git">Git</a></li>
+<li><a href="#docker-hub">Docker Hub</a></li>
+<li><a href="#kubeconfig">KubeConfig</a></li>
+<li><a href="#service-account">Service Account</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      <p>接上一篇 <a href="/post/devops/2021-03-28-tekton-install/">【Tekton】组件介绍及安装部署</a>，本文介绍如何使用 Tekton 完成 CI/CD 的全流程，包括 WebHook、代码拉取、go test、go build、docker build and push、helm/kubectl k8s 部署，其中涉及 Git/镜像仓库的 Basic 认证、kubeconfig、以及 go mod 缓存和多项目目录结构等实践内容。</p>
+
+<p>首先看下本文实践的 CI/CD 全部流程：</p>
+
+<pre><code class="language-mermaid">graph LR
+	G(GitHub) --webhook--&gt; EL(EventListener&lt;br&gt;Multi Repo)
+	
+	subgraph Tekton
+	EL --trigger--&gt; P(Pipelines)
+  end
+  
+  P --deploy--&gt; k8s(Kubernetes)
+  
+  style EL fill:#fbf
+</code></pre>
+
+<ul>
+<li>Pipelines</li>
+</ul>
+
+<pre><code class="language-mermaid">graph LR
+	git(Git Clone&lt;br&gt;GitHub) --&gt; test(Go Test)
+  test --&gt; build(Go Build)
+  build --&gt; docker(Docker Build&lt;br&gt;镜像仓库)
+  docker --&gt; deploy(Deploy&lt;br&gt;Helm/Kubectl)  
+</code></pre>
+
+<blockquote>
+<p>示例源码：<a href="https://github.com/hb-chen/tekton-practice">github.com/hb-chen/tekton-practice</a></p>
+</blockquote>
+
+<p>内容如下：</p>
+
+<ul>
+<li>GitHub 仓库通过 Webhook 触发流水线</li>
+<li>支持多项目构建</li>
+<li>多个项目共用 PVC，通过子目录区分</li>
+<li>EventListener 接收 Webhook 后根据 Repo 信息区分项目，并触发不同的 Pipeline</li>
+<li>流水线完成仓库的 克隆、test、build、镜像构建、发布到 K8S 平台</li>
+<li>指定 go mod 目录，避免每次重新拉取依赖，做构建缓存</li>
+<li>秘钥配置
+
+<ul>
+<li>Webhook 秘钥配置</li>
+<li>Git 仓库 Basic 认证</li>
+<li>Docker Hub Basic 认证</li>
+<li>K8S kubeConfig</li>
+</ul></li>
+</ul>
+
+<h2 id="webhook-触发器">Webhook 触发器</h2>
+
+<p>首先从 Trigger 开始，触发器对应的 <code>CRD</code> 为 <code>EventListener</code>，由 <code>TriggerController</code> 负责 <code>EL</code> 实例的生命周期管理，<code>EL</code> 为接收 Webhook 的服务。相关的 <code>CRD</code> 还有 <code>TriggerBinding</code> 和<code>TriggerTemplate</code>，<code>TriggerBinding</code> 用于将 Webhook 请求的数据映射到 <code>TriggerTemplate</code> 的输入参数；<code>TriggerTemplate</code> 则用于定义触发器所要运行的流水线，有关 Triiger 的文档参考 <a href="https://tekton.dev/docs/triggers/">Triggers and EventListeners</a>。具体 <code>CRD</code> 如下：</p>
+
+<ul>
+<li><p><code>kind: Secret</code>: <code>github-secret</code> 定义 Webhook 接口所需要的秘钥</p></li>
+
+<li><p><code>kind: EventListener</code>: <code>github-listener-interceptor</code> 主要在 <code>triggers</code> 中分别定义两个 GitHub 项目的 trigger</p>
+
+<ul>
+<li><p><code>interceptors</code> 中用 <code>github</code> 关联了 Webhook 需要的 <code>secret</code>，用 <code>cel.filter</code> 过滤指定项目的 Repo，用于测试的两个用例分别为 <a href="https://github.com/hb-chen/gateway">hb-chen/gateway</a> 和 <a href="https://github.com/hb-chen/gmqtt">hb-chen/gmqtt</a></p></li>
+
+<li><p><code>template</code> 和 <code>bindings</code> 分别用于关联 <code>TriggerTemplate</code> 和 <code>TriggerBinding</code></p></li>
+
+<li><blockquote>
+<p>Trigger 也可以通过单独 CRD 来定义，用 <code>triggerRef</code> 来关联</p>
+</blockquote></li>
+</ul></li>
+
+<li><p><code>kind: TriggerBinding</code>: 仅从 body 中获取了 Repo 地址，更多信息可以根据 Template 的需求情况进行绑定</p></li>
+
+<li><p><code>kind: TriggerTemplate</code>: 分别定义了两个项目的流水线模板，在触发器出发后使用 <code>resourcetemplates</code> 创建资源，并可以通过 <code>params</code> 定义模板参数，结合 <code>TriggerBinding</code> 便可以获取 Webhook 接口 Request 中的信息</p></li>
+</ul>
+
+<pre><code class="language-yaml">---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-secret
+type: Opaque
+stringData:
+	# Webhook 所用的 secret
+  secretToken: &quot;123456&quot;
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: github-listener-interceptor
+spec:
+  triggers:
+    - name: github-gateway-listener
+      interceptors:
+        - github:
+        		# 绑定 Webhook 所用的 secret
+            secretRef:
+              secretName: github-secret
+              secretKey: secretToken
+            eventTypes:
+        # CEL filter 表达式过滤指定 repo
+        - cel:
+            filter: &quot;body.repository.full_name in ['hb-chen/gateway']&quot;
+      bindings:
+        - ref: pipeline-binding
+      template:
+        ref: grpc-gateway-pipeline-template
+    - name: github-gmqtt-listener
+      interceptors:
+        - github:
+        		# 绑定 Webhook 所用的 secret
+            secretRef:
+              secretName: github-secret
+              secretKey: secretToken
+            eventTypes:
+        # CEL filter 表达式过滤指定 repo
+        - cel:
+            filter: &quot;body.repository.full_name in ['hb-chen/gmqtt']&quot;
+      bindings:
+        - ref: pipeline-binding
+      template:
+        ref: gmqtt-pipeline-template
+  resources:
+    kubernetesResource:
+      spec:
+        template:
+          spec:
+            serviceAccountName: tekton-triggers-example-sa
+            containers:
+              - resources:
+                  requests:
+                    memory: &quot;64Mi&quot;
+                    cpu: &quot;250m&quot;
+                  limits:
+                    memory: &quot;128Mi&quot;
+                    cpu: &quot;500m&quot;
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: pipeline-binding
+spec:
+	# 从 Webhook 的接口请求中获取参数
+  params:
+    - name: gitrepositoryurl
+      value: $(body.repository.clone_url)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: grpc-gateway-pipeline-template
+spec:
+	# 定义模板参数
+  params:
+    - name: gitrevision
+      description: The git revision
+      default: master
+    - name: gitrepositoryurl
+      description: The git repository url
+  # 触发后所要创建的 CRD 资源模板
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: grpc-gateway-pipeline-run-
+      spec:
+        serviceAccountName: build-bot
+        pipelineRef:
+          name: grpc-gateway-pipeline
+        workspaces:
+          - name: shared-workspace
+            persistentvolumeclaim:
+              claimName: golang-source-pvc
+        params:
+          - name: url
+            value: $(tt.params.gitrepositoryurl)
+          - name: revision
+            value: $(tt.params.gitrevision)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: gmqtt-pipeline-template
+spec:
+	# 定义模板参数
+  params:
+    - name: gitrevision
+      description: The git revision
+      default: master
+    - name: gitrepositoryurl
+      description: The git repository url
+  # 触发后所要创建的 CRD 资源模板
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: gmqtt-pipeline-run-
+      spec:
+        serviceAccountName: build-bot
+        pipelineRef:
+          name: gmqtt-pipeline
+        workspaces:
+          - name: shared-workspace
+            persistentvolumeclaim:
+              claimName: golang-source-pvc
+        params:
+          - name: url
+            value: $(tt.params.gitrepositoryurl)
+          - name: revision
+            value: $(tt.params.gitrevision)
+</code></pre>
+
+<h3 id="rbac">RBAC</h3>
+
+<p>前面有了 Trigger 相关的资源，最后还缺一个 <code>ServiceAccount</code> ，并且需要做相应的 <code>RBAC</code> 授权，主要包括：</p>
+
+<ul>
+<li><p><code>triggers.tekton.dev</code> 相关 <code>CRD</code> 资源获取</p></li>
+
+<li><p>允许创建的 <code>CRD</code> 资源</p>
+
+<ul>
+<li>&gt; Trigger 是 Tekton 的一个独立组件，<code>TriggerTemplate</code> 可以用来创建各类 <code>CRD</code> 资源，自然要有相应资源的 <code>create</code> 权限才行</li>
+</ul></li>
+</ul>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-triggers-example-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tekton-triggers-example-minimal
+rules:
+  # EventListeners need to be able to fetch all namespaced resources
+  - apiGroups: [&quot;triggers.tekton.dev&quot;]
+    resources: [&quot;eventlisteners&quot;, &quot;triggerbindings&quot;, &quot;triggertemplates&quot;, &quot;triggers&quot;]
+    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]
+  - apiGroups: [&quot;&quot;]
+    # secrets are only needed for GitHub/GitLab interceptors
+    # configmaps is needed for updating logging config
+    resources: [&quot;configmaps&quot;, &quot;secrets&quot;]
+    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]
+  # Permissions to create resources in associated TriggerTemplates
+  - apiGroups: [&quot;tekton.dev&quot;]
+    resources: [&quot;pipelineruns&quot;, &quot;pipelineresources&quot;, &quot;taskruns&quot;]
+    verbs: [&quot;create&quot;]
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;serviceaccounts&quot;]
+    verbs: [&quot;impersonate&quot;]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-triggers-example-binding
+subjects:
+  - kind: ServiceAccount
+    name: tekton-triggers-example-sa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tekton-triggers-example-minimal
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tekton-triggers-example-clusterrole
+rules:
+  # EventListeners need to be able to fetch any clustertriggerbindings
+  - apiGroups: [&quot;triggers.tekton.dev&quot;]
+    resources: [&quot;clustertriggerbindings&quot;]
+    verbs: [&quot;get&quot;, &quot;list&quot;, &quot;watch&quot;]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-triggers-example-clusterbinding
+subjects:
+  - kind: ServiceAccount
+    name: tekton-triggers-example-sa
+    namespace: tekton-pipelines
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-example-clusterrole
+</code></pre>
+
+<h2 id="流水线任务">流水线任务</h2>
+
+<p>Task 主要参考官方的 <a href="https://github.com/tektoncd/catalog">catalog</a>，结合自身需求做了适当的改造，详细内容如下：</p>
+
+<ul>
+<li><p>增加了 <code>GOPROXY</code> 和 <code>GOMODCACHE</code> 的支持，加速依赖下载速度，使用国内 Proxy，并将 mod cache 指定到 <code>workspace</code> 的独立目录，多个项目共享且避免被清理，路径为 <code>$(workspaces.source.path)/$(params.GOMODCACHE)</code>， <code>GOMODCACHE</code> 参数默认为 <code>pkg/mod</code></p></li>
+
+<li><p>增加对子目录的支持，在同一 <code>workspace</code> 下同时存储多个项目的源码</p>
+
+<ul>
+<li>&gt; 未必是个好的实践方式，不过适合我的需求😂</li>
+</ul></li>
+
+<li><p>镜像构建选用的 <code>kaniko</code> 而没有用 <code>docker-build</code>，都尝试后发现用 <code>kaniko</code> 可以比较方便的获取 <code>image digested</code></p></li>
+
+<li><p>发布到 <code>k8s</code> 没有使用 <code>catalog</code> 中的 Task，而是使用 <code>dtzar/helm-kubectl</code> 镜像自己定义的一个 Task，可以自定义 <code>helm</code> 或 <code>kubectl</code> 命令</p></li>
+</ul>
+
+<blockquote>
+<p>每个 Task 的具体工作在此不做详细的介绍，基本通过源码的参数和步骤可以很快了解每个 Task 的具体任务内容</p>
+</blockquote>
+
+<h3 id="git-clone-yml">git-clone.yml</h3>
+
+<pre><code class="language-yaml">apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: git-clone
+  labels:
+    app.kubernetes.io/version: &quot;0.2&quot;
+  annotations:
+    tekton.dev/pipelines.minVersion: &quot;0.12.1&quot;
+    tekton.dev/tags: git
+    tekton.dev/displayName: &quot;git clone&quot;
+spec:
+  description: &gt;-
+    These Tasks are Git tasks to work with repositories used by other tasks
+    in your Pipeline.
+
+    The git-clone Task will clone a repo from the provided url into the
+    output Workspace. By default the repo will be cloned into the root of
+    your Workspace. You can clone into a subdirectory by setting this Task's
+    subdirectory param.
+
+  workspaces:
+    - name: output
+      description: The git repo will be cloned onto the volume backing this workspace
+  params:
+    - name: url
+      description: git url to clone
+      type: string
+    - name: revision
+      description: git revision to checkout (branch, tag, sha, ref…)
+      type: string
+      default: &quot;&quot;
+    - name: refspec
+      description: (optional) git refspec to fetch before checking out revision
+      default: &quot;&quot;
+    - name: submodules
+      description: defines if the resource should initialize and fetch the submodules
+      type: string
+      default: &quot;true&quot;
+    - name: depth
+      description: performs a shallow clone where only the most recent commit(s) will be fetched
+      type: string
+      default: &quot;1&quot;
+    - name: sslVerify
+      description: defines if http.sslVerify should be set to true or false in the global git config
+      type: string
+      default: &quot;true&quot;
+    - name: subdirectory
+      description: subdirectory inside the &quot;output&quot; workspace to clone the git repo into
+      type: string
+      default: &quot;&quot;
+    - name: deleteExisting
+      description: clean out the contents of the repo's destination directory (if it already exists) before trying to clone the repo there
+      type: string
+      default: &quot;true&quot;
+    - name: httpProxy
+      description: git HTTP proxy server for non-SSL requests
+      type: string
+      default: &quot;&quot;
+    - name: httpsProxy
+      description: git HTTPS proxy server for SSL requests
+      type: string
+      default: &quot;&quot;
+    - name: noProxy
+      description: git no proxy - opt out of proxying HTTP/HTTPS requests
+      type: string
+      default: &quot;&quot;
+    - name: verbose
+      description: log the commands used during execution
+      type: string
+      default: &quot;true&quot;
+    - name: gitInitImage
+      description: the image used where the git-init binary is
+      type: string
+      default: &quot;registry.cn-hangzhou.aliyuncs.com/hb-chen/tektoncd-git-init:v0.20.0@sha256:e8e38d1ad630cc2e435deed289b6283cb0a06d3c00947131f371f151781db2b3&quot;
+  results:
+    - name: commit
+      description: The precise commit SHA that was fetched by this Task
+    - name: url
+      description: The precise URL that was fetched by this Task
+  steps:
+    - name: clone
+      image: $(params.gitInitImage)
+      script: |
+        #!/bin/sh
+        set -eu -o pipefail
+
+        if [[ &quot;$(params.verbose)&quot; == &quot;true&quot; ]] ; then
+          set -x
+        fi
+
+        CHECKOUT_DIR=&quot;$(workspaces.output.path)/$(params.subdirectory)&quot;
+
+        cleandir() {
+          # Delete any existing contents of the repo directory if it exists.
+          #
+          # We don't just &quot;rm -rf $CHECKOUT_DIR&quot; because $CHECKOUT_DIR might be &quot;/&quot;
+          # or the root of a mounted volume.
+          if [[ -d &quot;$CHECKOUT_DIR&quot; ]] ; then
+            # Delete non-hidden files and directories
+            rm -rf &quot;$CHECKOUT_DIR&quot;/*
+            # Delete files and directories starting with . but excluding ..
+            rm -rf &quot;$CHECKOUT_DIR&quot;/.[!.]*
+            # Delete files and directories starting with .. plus any other character
+            rm -rf &quot;$CHECKOUT_DIR&quot;/..?*
+          fi
+        }
+
+        if [[ &quot;$(params.deleteExisting)&quot; == &quot;true&quot; ]] ; then
+          cleandir
+        fi
+
+        test -z &quot;$(params.httpProxy)&quot; || export HTTP_PROXY=$(params.httpProxy)
+        test -z &quot;$(params.httpsProxy)&quot; || export HTTPS_PROXY=$(params.httpsProxy)
+        test -z &quot;$(params.noProxy)&quot; || export NO_PROXY=$(params.noProxy)
+
+        /ko-app/git-init \
+          -url &quot;$(params.url)&quot; \
+          -revision &quot;$(params.revision)&quot; \
+          -refspec &quot;$(params.refspec)&quot; \
+          -path &quot;$CHECKOUT_DIR&quot; \
+          -sslVerify=&quot;$(params.sslVerify)&quot; \
+          -submodules=&quot;$(params.submodules)&quot; \
+          -depth &quot;$(params.depth)&quot;
+        cd &quot;$CHECKOUT_DIR&quot;
+        RESULT_SHA=&quot;$(git rev-parse HEAD)&quot;
+        EXIT_CODE=&quot;$?&quot;
+        if [ &quot;$EXIT_CODE&quot; != 0 ] ; then
+          exit $EXIT_CODE
+        fi
+        # ensure we don't add a trailing newline to the result
+        echo -n &quot;$RESULT_SHA&quot; &gt; $(results.commit.path)
+        echo -n &quot;$(params.url)&quot; &gt; $(results.url.path)
+</code></pre>
+
+<h3 id="golang-test-yml">golang-test.yml</h3>
+
+<pre><code class="language-yaml">apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: golang-test
+  labels:
+    app.kubernetes.io/version: &quot;0.1&quot;
+  annotations:
+    tekton.dev/pipelines.minVersion: &quot;0.12.1&quot;
+    tekton.dev/tags: test
+    tekton.dev/displayName: &quot;golang test&quot;
+spec:
+  description: &gt;-
+    This Task is Golang task to test Go projects.
+
+  params:
+    - name: package
+      description: package (and its children) under test
+    - name: packages
+      description: &quot;packages to test (default: ./...)&quot;
+      default: &quot;./...&quot;
+    - name: subdirectory
+      description: subdirectory inside the &quot;source&quot;
+      type: string
+      default: &quot;&quot;
+    - name: version
+      description: golang version to use for tests
+      default: &quot;latest&quot;
+    - name: flags
+      description: flags to use for the test command
+      default: -race -cover -v
+    - name: GOOS
+      description: &quot;running program's operating system target&quot;
+      default: linux
+    - name: GOARCH
+      description: &quot;running program's architecture target&quot;
+      default: amd64
+    - name: GO111MODULE
+      description: &quot;value of module support&quot;
+      default: auto
+    - name: GOPROXY
+      description: &quot;go proxy&quot;
+      default: &quot;https://mirrors.aliyun.com/goproxy/,direct&quot;
+    - name: GOMODCACHE
+      description: &quot;go mod cache sub directory, base on source path&quot;
+      default: &quot;pkg/mod&quot;
+  workspaces:
+    - name: source
+  steps:
+    - name: unit-test
+      image: docker.io/library/golang:$(params.version)
+      script: |
+        SRC_PATH=&quot;$GOPATH/src/$(params.package)&quot;
+        mkdir -p $SRC_PATH
+        cp -R &quot;$(workspaces.source.path)&quot;/$(params.subdirectory)/* $SRC_PATH
+        cd $SRC_PATH
+        go test $(params.flags) $(params.packages)
+      env:
+        - name: GOOS
+          value: &quot;$(params.GOOS)&quot;
+        - name: GOARCH
+          value: &quot;$(params.GOARCH)&quot;
+        - name: GO111MODULE
+          value: &quot;$(params.GO111MODULE)&quot;
+        - name: GOPROXY
+          value: &quot;$(params.GOPROXY)&quot;
+        - name: GOMODCACHE
+          value: &quot;$(workspaces.source.path)/$(params.GOMODCACHE)&quot;
+</code></pre>
+
+<h3 id="golang-build-yml">golang-build.yml</h3>
+
+<pre><code class="language-yaml"># fork from tektoncd/catalog, add GOPROXY
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: golang-build
+  labels:
+    app.kubernetes.io/version: &quot;0.1&quot;
+  annotations:
+    tekton.dev/pipelines.minVersion: &quot;0.12.1&quot;
+    tekton.dev/tags: build-tool
+    tekton.dev/displayName: &quot;golang build&quot;
+spec:
+  description: &gt;-
+    This Task is Golang task to build Go projects.
+
+  params:
+    - name: package
+      description: base package to build in
+    - name: packages
+      description: &quot;packages to build (default: ./cmd/...)&quot;
+      default: &quot;./cmd/...&quot;
+    - name: subdirectory
+      description: subdirectory inside the &quot;source&quot;
+      type: string
+      default: &quot;&quot;
+    - name: version
+      description: golang version to use for builds
+      default: &quot;latest&quot;
+    - name: flags
+      description: flags to use for the test command
+      default: -v
+    - name: GOOS
+      description: &quot;running program's operating system target&quot;
+      default: linux
+    - name: GOARCH
+      description: &quot;running program's architecture target&quot;
+      default: amd64
+    - name: CGO_ENABLED
+      description: &quot;value of cgo enabled&quot;
+      default: &quot;0&quot;
+    - name: GO111MODULE
+      description: &quot;value of module support&quot;
+      default: auto
+    - name: GOPROXY
+      description: &quot;go proxy&quot;
+      default: &quot;https://mirrors.aliyun.com/goproxy/,direct&quot;
+    - name: GOMODCACHE
+      description: &quot;go mod cache sub directory, base on source path&quot;
+      default: &quot;pkg/mod&quot;
+  workspaces:
+    - name: source
+  steps:
+    - name: build
+      image: docker.io/library/golang:$(params.version)
+      script: |
+        SRC_PATH=&quot;$GOPATH/src/$(params.package)&quot;
+        mkdir -p $SRC_PATH
+        cp -R &quot;$(workspaces.source.path)&quot;/$(params.subdirectory)/* $SRC_PATH
+        cd $SRC_PATH
+        go env
+        go build $(params.flags) $(params.packages)
+      env:
+        - name: GOOS
+          value: &quot;$(params.GOOS)&quot;
+        - name: GOARCH
+          value: &quot;$(params.GOARCH)&quot;
+        - name: CGO_ENABLED
+          value: &quot;$(params.CGO_ENABLED)&quot;
+        - name: GO111MODULE
+          value: &quot;$(params.GO111MODULE)&quot;
+        - name: GOPROXY
+          value: &quot;$(params.GOPROXY)&quot;
+        - name: GOMODCACHE
+          value: &quot;$(workspaces.source.path)/$(params.GOMODCACHE)&quot;
+</code></pre>
+
+<h3 id="kaniko-yml">kaniko.yml</h3>
+
+<pre><code class="language-yaml"># fork from tektoncd/kaniko, add insecure_registry
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: kaniko
+  labels:
+    app.kubernetes.io/version: &quot;0.1&quot;
+  annotations:
+    tekton.dev/pipelines.minVersion: &quot;0.12.1&quot;
+    tekton.dev/tags: image-build
+spec:
+  description: &gt;-
+    This Task builds source into a container image using Google's kaniko tool.
+
+    Kaniko doesn't depend on a Docker daemon and executes each
+    command within a Dockerfile completely in userspace. This enables
+    building container images in environments that can't easily or
+    securely run a Docker daemon, such as a standard Kubernetes cluster.
+
+  params:
+    - name: IMAGE
+      description: Name (reference) of the image to build.
+    - name: DOCKERFILE
+      description: Path to the Dockerfile to build.
+      default: ./Dockerfile
+    - name: CONTEXT
+      description: The build context used by Kaniko.
+      default: ./
+    - name: EXTRA_ARGS
+      default: &quot;&quot;
+    - name: BUILDER_IMAGE
+      description: The image on which builds will run
+      default: registry.cn-hangzhou.aliyuncs.com/hb-chen/kaniko-executor@sha256:e36c9fa99279217c4bb8ee172819b441c3ca8ef946dc0e28b21721eefb2ba70a
+    - name: insecure_registry
+      description: Allows the user to push to an insecure registry that has been specified
+      default: &quot;&quot;
+  workspaces:
+    - name: source
+  results:
+    - name: IMAGE-DIGEST
+      description: Digest of the image just built.
+
+  steps:
+    - name: build-and-push
+      workingDir: $(workspaces.source.path)
+      image: $(params.BUILDER_IMAGE)
+      # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
+      # https://github.com/tektoncd/pipeline/pull/706
+      env:
+        - name: DOCKER_CONFIG
+          value: /tekton/home/.docker
+      command:
+        - /kaniko/executor
+        - $(params.EXTRA_ARGS)
+        - --dockerfile=$(params.DOCKERFILE)
+        - --context=$(workspaces.source.path)/$(params.CONTEXT)  # The user does not need to care the workspace and the source.
+        - --destination=$(params.IMAGE)
+        - --oci-layout-path=$(workspaces.source.path)/$(params.CONTEXT)/image-digest
+      #  - --insecure-registry=$(params.insecure_registry)
+      # kaniko assumes it is running as root, which means this example fails on platforms
+      # that default to run containers as random uid (like OpenShift). Adding this securityContext
+      # makes it explicit that it needs to run as root.
+      securityContext:
+        runAsUser: 0
+    - name: write-digest
+      workingDir: $(workspaces.source.path)
+      image: registry.cn-hangzhou.aliyuncs.com/hb-chen/tektoncd-imagedigestexporter:v0.16.2@sha256:542d437868a0168f0771d840233110fbf860b210b0e9becce5d75628c694b958
+      # output of imagedigestexport [{&quot;key&quot;:&quot;digest&quot;,&quot;value&quot;:&quot;sha256:eed29..660&quot;,&quot;resourceRef&quot;:{&quot;name&quot;:&quot;myrepo/myimage&quot;}}]
+      command: [&quot;/ko-app/imagedigestexporter&quot;]
+      args:
+        - -images=[{&quot;name&quot;:&quot;$(params.IMAGE)&quot;,&quot;type&quot;:&quot;image&quot;,&quot;url&quot;:&quot;$(params.IMAGE)&quot;,&quot;digest&quot;:&quot;&quot;,&quot;OutputImageDir&quot;:&quot;$(workspaces.source.path)/$(params.CONTEXT)/image-digest&quot;}]
+        - -terminationMessagePath=$(params.CONTEXT)/image-digested
+      securityContext:
+        runAsUser: 0
+    - name: digest-to-results
+      workingDir: $(workspaces.source.path)
+      image: docker.io/stedolan/jq@sha256:a61ed0bca213081b64be94c5e1b402ea58bc549f457c2682a86704dd55231e09
+      script: |
+        cat $(params.CONTEXT)/image-digested | jq '.[0].value' -rj | tee /tekton/results/IMAGE-DIGEST
+</code></pre>
+
+<h3 id="helm-kubectl-yml">helm-kubectl.yml</h3>
+
+<pre><code class="language-yaml">apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: helm-kubectl-deploy
+  labels:
+    app.kubernetes.io/version: &quot;0.1&quot;
+  annotations:
+    tekton.dev/pipelines.minVersion: &quot;0.12.1&quot;
+    tekton.dev/tags: helm, kubectl
+    tekton.dev/displayName: helm-kubectl-deploy
+spec:
+  description: &gt;-
+    Use kubectl and helm deploy application
+  params:
+    - name: image
+      default: dtzar/helm-kubectl:3.4.2
+      description: kubectl and helm image
+    - name: kubeconfig
+      default: k8s-kubeconfig
+      description: kubernetes cluster kubeconfig
+    - name: commands
+      default: kubectl version
+  workspaces:
+    - name: source
+  results:
+  steps:
+    - name: helm-kubectl-deploy
+      image: $(params.image)
+      workingDir: $(workspaces.source.path)
+      script: |
+        pwd
+        ls -l
+        $(params.commands)
+      volumeMounts:
+        - name: kubeconfig
+          mountPath: &quot;/tekton/home/.kube&quot;
+          readOnly: true
+  volumes:
+    - name: kubeconfig
+      secret:
+        secretName: $(params.kubeconfig)
+</code></pre>
+
+<h2 id="流水线定义">流水线定义</h2>
+
+<p>Pipeline 基本就是对 Task 的配置，其中最主要的就是根据项目区分 <code>workspace</code> 下的子目录：</p>
+
+<ul>
+<li>统一 <code>subdirectory</code></li>
+<li>Golang build 编译的输出位置<code>-o $(workspaces.source.path)/${subdirectory}</code></li>
+<li>镜像构建的 <code>DOCKERFILE</code> 和 <code>CONTEXT</code> 也是在 <code>./${subdirectory}/</code>目录下</li>
+<li><code>helm</code> 部署时 <code>chart</code> 也是在<code>./${subdirectory}/</code></li>
+</ul>
+
+<p>以下是 <a href="https://github.com/hb-chen/gateway">hb-chen/gateway</a> 的示例：</p>
+
+<pre><code class="language-yaml">---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: grpc-gateway-pipeline
+spec:
+  workspaces:
+    - name: shared-workspace
+  params:
+    - name: url
+    - name: revision
+      default: master
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: url
+          value: $(params.url)
+        - name: revision
+          value: $(params.revision)
+        - name: subdirectory
+          value: &quot;gateway&quot;
+        - name: deleteExisting
+          value: &quot;true&quot;
+    - name: run-test
+      taskRef:
+        name: golang-test
+      runAfter:
+        - fetch-repository
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: package
+          value: github.com/hb-chen/gateway
+        - name: subdirectory
+          value: &quot;gateway&quot;
+        - name: version
+          value: 1.14.15
+    - name: run-build
+      taskRef:
+        name: golang-build
+      runAfter:
+        - run-test
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: package
+          value: github.com/hb-chen/gateway
+        - name: subdirectory
+          value: &quot;gateway&quot;
+        - name: version
+          value: 1.15.11
+        - name: flags
+          value: -v -o $(workspaces.source.path)/gateway/bin/gateway
+    - name: docker-build
+      taskRef:
+        name: kaniko
+      runAfter:
+        - run-build
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: IMAGE
+          value: registry.cn-hangzhou.aliyuncs.com/hb-chen/grpc-gateway:latest
+        - name: DOCKERFILE
+          value: ./gateway/Dockerfile
+        - name: CONTEXT
+          value: ./gateway/
+        - name: EXTRA_ARGS
+          value: &quot;--skip-tls-verify&quot;
+        - name: insecure_registry
+          value: registry.cn-hangzhou.aliyuncs.com
+    - name: helm-kubectl-deploy
+      taskRef:
+        name: helm-kubectl-deploy
+      runAfter:
+        - docker-build
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: commands
+          value: helm upgrade --install grpc-gateway ./gateway/helm --namespace grpc-gateway --no-hooks --set image.repository=registry.cn-hangzhou.aliyuncs.com/hb-chen/grpc-gateway --set image.tag=latest --set image.digest=@$(tasks.docker-build.results.IMAGE-DIGEST)
+</code></pre>
+
+<h2 id="pvc">PVC</h2>
+
+<p>PVC 选择是多个项目共用一个，所以在前面的 Task 和 Pipeline  中需要通过 <code>subdirectory</code> 来规划不同项目的源码位置</p>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: golang-source-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+</code></pre>
+
+<h2 id="安全认证">安全认证</h2>
+
+<p>整个过程涉及到多出认证，Trigger 中 Webhook secret 已经介绍，剩余的还有是和流水线 Task 有关的，其中 Git 和 Docker Hub 使用 Basic 认证，与 <code>ServiceAcount</code> 绑定，Kubernetes 则通过挂在 KubeConfig Secret 实现。</p>
+
+<h3 id="git">Git</h3>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-git-user-pass
+  annotations:
+    tekton.dev/git-0: https://github.com
+type: kubernetes.io/basic-auth
+stringData:
+  username: hobo@hbchen.com
+  password: 123456
+</code></pre>
+
+<h3 id="docker-hub">Docker Hub</h3>
+
+<pre><code class="language-yaml">apiVersion: v1
+kind: Secret
+metadata:
+  name: basic-docker-user-pass
+  annotations:
+    tekton.dev/docker-0: https://registry.cn-hangzhou.aliyuncs.com
+type: kubernetes.io/basic-auth
+stringData:
+  username: hobo@hbchen.com
+  password: 123456
+
+</code></pre>
+
+<h3 id="kubeconfig">KubeConfig</h3>
+
+<p>如果使用本地 KubeConfig 配置可以使用以下命令快速创建</p>
+
+<pre><code class="language-shell">kubectl create secret generic k8s-kubeconfig --from-file=$HOME/.kube/config
+</code></pre>
+
+<pre><code class="language-yaml">---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: k8s-kubeconfig
+type: Opaque
+data:
+  config: {$HOME/.kube/config base64 encode}
+</code></pre>
+
+<h3 id="service-account">Service Account</h3>
+
+<p>将 Docker 和 Git 的 Basic 认证都绑定到 <code>build-bot</code>，这是运行流水线是使用的 ServiceAccount</p>
+
+<pre><code class="language-yaml">---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: build-bot
+secrets:
+  - name: basic-docker-user-pass
+  - name: basic-git-user-pass
+</code></pre>
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">Hobo Chen</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">2021-08-09</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">许可协议</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          
+          <a href="/tags/tekton/">Tekton</a>
+          
+          <a href="/tags/cicd/">CICD</a>
+          
+          <a href="/tags/kubernetes/">Kubernetes</a>
+          
+          <a href="/tags/golang/">Golang</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/devops/2021-03-28-tekton-install/">
+            <span class="next-text nav-default">【Tekton】组件介绍及安装部署</span>
+            <span class="prev-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+    
+
+  
+
+  
+
+  <script src="https://utteranc.es/client.js"
+          repo="hb-chen/hbchen.com"
+          label="utterances"
+          theme="github-light"
+          issue-term="pathname"
+          crossorigin="anonymous"
+          async>
+  </script>
+
+  
+  </article>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:hobo@hbchen.com" rel="me" class="iconfont icon-email" title="email"></a>
+      <a href="https://twitter.com/hobo_chen" rel="me" class="iconfont icon-twitter" title="twitter"></a>
+      <a href="https://github.com/hb-chen" rel="me" class="iconfont icon-github" title="github"></a>
+  <a href="http://hbchen.com/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy; 
+    
+      2013 - 
+    2021
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">HB Studio <a href="https://beian.miit.gov.cn/" target="_blank">蜀ICP备18021614号-1</a></span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script src="/lib/highlight/highlight.pack.js?v=20171001"></script>
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox-3.1.20.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script>
+
+<script type="text/javascript" src="https://unpkg.com/mermaid@8.0.0/dist/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: "forest"
+    });
+</script><script id="tencent_analytics">
+  var _hmt = _hmt || [];
+  (function() {
+    if (window.location.hostname === 'localhost') return;
+    var hm = document.createElement("script"); hm.async = true;
+	hm.src = "//tajs.qq.com/stats?sId=65523817";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+
+
+
+</body>
+</html>

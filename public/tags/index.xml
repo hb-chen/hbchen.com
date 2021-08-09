@@ -33,7 +33,7 @@
     <item>
       <title>Cicd</title>
       <link>http://hbchen.com/tags/cicd/</link>
-      <pubDate>Sun, 28 Mar 2021 00:41:51 +0800</pubDate>
+      <pubDate>Mon, 09 Aug 2021 00:00:00 +0000</pubDate>
       
       <guid>http://hbchen.com/tags/cicd/</guid>
       <description></description>
@@ -148,6 +148,15 @@
     </item>
     
     <item>
+      <title>Golang</title>
+      <link>http://hbchen.com/tags/golang/</link>
+      <pubDate>Mon, 09 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>http://hbchen.com/tags/golang/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Grpc</title>
       <link>http://hbchen.com/tags/grpc/</link>
       <pubDate>Fri, 30 Aug 2019 00:00:00 +0000</pubDate>
@@ -177,18 +186,9 @@
     <item>
       <title>Kubernetes</title>
       <link>http://hbchen.com/tags/kubernetes/</link>
-      <pubDate>Sun, 28 Mar 2021 00:41:51 +0800</pubDate>
+      <pubDate>Mon, 09 Aug 2021 00:00:00 +0000</pubDate>
       
       <guid>http://hbchen.com/tags/kubernetes/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Mongodb</title>
-      <link>http://hbchen.com/tags/mongodb/</link>
-      <pubDate>Tue, 11 Mar 2014 18:00:00 +0800</pubDate>
-      
-      <guid>http://hbchen.com/tags/mongodb/</guid>
       <description></description>
     </item>
     

@@ -136,6 +136,34 @@
     
       <article class="post bg-white">
   <header class="post-header">
+    <h1 class="post-title"><a class="post-link" href="/post/devops/2021-08-09-tekton-golang/">【Tekton】Golang CI/CD 实践</a></h1>
+    <div class="post-meta">
+      <span class="post-time"> 2021-08-09 </span>
+      <div class="post-category">
+          
+            <a href="/categories/devops/"> DevOps </a>
+          
+        </div>
+      <span class="more-meta"> 约 3653 字 </span>
+      <span class="more-meta"> 预计阅读 8 分钟 </span>
+    </div>
+  </header>
+  
+  <div class="post-content">
+    
+    <div class="post-summary">
+      <p>接上一篇 <a href="/post/devops/2021-03-28-tekton-install/">【Tekton】组件介绍及安装部署</a>，本文介绍如何使用 Tekton 完成 CI/CD 的全流程，包括 WebHook、代码拉取、go test、go build、docker build and push、helm/kubectl k8s 部署，其中涉及 Git/镜像仓库的 Basic 认证、kubeconfig、以及 go mod 缓存和多项目目录结构等实践内容。</p>
+    </div>
+    <div class="read-more">
+      <a href="/post/devops/2021-08-09-tekton-golang/" class="read-more-link">阅读全文</a>
+    </div>
+    
+  </div>
+</article>
+
+    
+      <article class="post bg-white">
+  <header class="post-header">
     <h1 class="post-title"><a class="post-link" href="/post/devops/2021-03-28-tekton-install/">【Tekton】组件介绍及安装部署</a></h1>
     <div class="post-meta">
       <span class="post-time"> 2021-03-28 </span>
@@ -299,37 +327,6 @@
     </div>
     <div class="read-more">
       <a href="/post/servicemesh/2020-03-22-istio-install-istioctl/" class="read-more-link">阅读全文</a>
-    </div>
-    
-  </div>
-</article>
-
-    
-      <article class="post bg-white">
-  <header class="post-header">
-    <h1 class="post-title"><a class="post-link" href="/post/servicemesh/2020-01-07-istio-code-security/">【Istio源码】Citadel &amp; Node Agent</a></h1>
-    <div class="post-meta">
-      <span class="post-time"> 2020-01-07 </span>
-      <div class="post-category">
-          
-            <a href="/categories/service-mesh/"> Service Mesh </a>
-          
-        </div>
-      <span class="more-meta"> 约 2764 字 </span>
-      <span class="more-meta"> 预计阅读 6 分钟 </span>
-    </div>
-  </header>
-  
-  <div class="post-content">
-    
-    <div class="post-summary">
-      <p>Istio安全主要包括<strong>认证</strong>和<strong>授权</strong>，有关授权的<code>RBAC</code>使用参考之前的文章<a href="/post/servicemesh/2019-03-09-istio-rbac-quick-start/#1-开启授权-clusterrbacconfig">【Istio安全】服务间访问控制-RBAC</a>
-，不过<code>RBAC</code>已经<a href="https://istio.io/docs/reference/config/security/istio.rbac.v1alpha1/">准备废弃</a>被<code>Authorization</code>替代，
-<strong>认证</strong>则分为<strong>服务间身份验证</strong>和<strong>来源身份认证</strong>，服务间身份验证Istio提供了<strong>双向TLS</strong>方案，其中涉及的秘钥管理服务，主要由<code>istio/security</code>模块的
-<code>Citadel</code>和<code>Node Agent</code>提供，本文主要分析这部分的源码实现。</p>
-    </div>
-    <div class="read-more">
-      <a href="/post/servicemesh/2020-01-07-istio-code-security/" class="read-more-link">阅读全文</a>
     </div>
     
   </div>

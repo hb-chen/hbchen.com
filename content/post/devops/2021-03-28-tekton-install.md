@@ -9,7 +9,7 @@ categories: [
 ]
 tags: [
 "Tekton",
-"CI/CD",
+"CICD",
 "Kubernetes",
 ]
 ---
