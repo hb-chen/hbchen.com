@@ -97,7 +97,7 @@
 &lt;ul&gt;
 &lt;li&gt;Webhook 秘钥配置&lt;/li&gt;
 &lt;li&gt;Git 仓库 Basic 认证&lt;/li&gt;
-&lt;li&gt;Docker Hub Basic 认证&lt;/li&gt;
+&lt;li&gt;Docker Hub &lt;code&gt;config.json&lt;/code&gt; 认证&lt;/li&gt;
 &lt;li&gt;K8S kubeConfig&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
 &lt;/ul&gt;
@@ -133,7 +133,6 @@ metadata:
   name: github-secret
 type: Opaque
 stringData:
-	# Webhook 所用的 secret
   secretToken: &amp;quot;123456&amp;quot;
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
@@ -145,12 +144,11 @@ spec:
     - name: github-gateway-listener
       interceptors:
         - github:
-        		# 绑定 Webhook 所用的 secret
             secretRef:
               secretName: github-secret
               secretKey: secretToken
             eventTypes:
-        # CEL filter 表达式过滤指定 repo
+        # CEL 过滤或扩展 Event
         - cel:
             filter: &amp;quot;body.repository.full_name in [&#39;hb-chen/gateway&#39;]&amp;quot;
       bindings:
@@ -160,12 +158,11 @@ spec:
     - name: github-gmqtt-listener
       interceptors:
         - github:
-        		# 绑定 Webhook 所用的 secret
             secretRef:
               secretName: github-secret
               secretKey: secretToken
             eventTypes:
-        # CEL filter 表达式过滤指定 repo
+        # CEL 过滤或扩展 Event
         - cel:
             filter: &amp;quot;body.repository.full_name in [&#39;hb-chen/gmqtt&#39;]&amp;quot;
       bindings:
@@ -192,7 +189,6 @@ kind: TriggerBinding
 metadata:
   name: pipeline-binding
 spec:
-	# 从 Webhook 的接口请求中获取参数
   params:
     - name: gitrepositoryurl
       value: $(body.repository.clone_url)
@@ -202,14 +198,12 @@ kind: TriggerTemplate
 metadata:
   name: grpc-gateway-pipeline-template
 spec:
-	# 定义模板参数
   params:
     - name: gitrevision
       description: The git revision
       default: master
     - name: gitrepositoryurl
       description: The git repository url
-  # 触发后所要创建的 CRD 资源模板
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
@@ -223,6 +217,12 @@ spec:
           - name: shared-workspace
             persistentvolumeclaim:
               claimName: golang-source-pvc
+          - name: dockerconfig
+            secret:
+              secretName: dockerconfig
+          - name: kubeconfig
+            secret:
+              secretName: k8s-kubeconfig
         params:
           - name: url
             value: $(tt.params.gitrepositoryurl)
@@ -234,14 +234,12 @@ kind: TriggerTemplate
 metadata:
   name: gmqtt-pipeline-template
 spec:
-	# 定义模板参数
   params:
     - name: gitrevision
       description: The git revision
       default: master
     - name: gitrepositoryurl
       description: The git repository url
-  # 触发后所要创建的 CRD 资源模板
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
@@ -255,6 +253,12 @@ spec:
           - name: shared-workspace
             persistentvolumeclaim:
               claimName: golang-source-pvc
+          - name: dockerconfig
+            secret:
+              secretName: dockerconfig
+          - name: kubeconfig
+            secret:
+              secretName: k8s-kubeconfig
         params:
           - name: url
             value: $(tt.params.gitrepositoryurl)
@@ -282,28 +286,6 @@ metadata:
   name: tekton-triggers-example-sa
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: tekton-triggers-example-minimal
-rules:
-  # EventListeners need to be able to fetch all namespaced resources
-  - apiGroups: [&amp;quot;triggers.tekton.dev&amp;quot;]
-    resources: [&amp;quot;eventlisteners&amp;quot;, &amp;quot;triggerbindings&amp;quot;, &amp;quot;triggertemplates&amp;quot;, &amp;quot;triggers&amp;quot;]
-    verbs: [&amp;quot;get&amp;quot;, &amp;quot;list&amp;quot;, &amp;quot;watch&amp;quot;]
-  - apiGroups: [&amp;quot;&amp;quot;]
-    # secrets are only needed for GitHub/GitLab interceptors
-    # configmaps is needed for updating logging config
-    resources: [&amp;quot;configmaps&amp;quot;, &amp;quot;secrets&amp;quot;]
-    verbs: [&amp;quot;get&amp;quot;, &amp;quot;list&amp;quot;, &amp;quot;watch&amp;quot;]
-  # Permissions to create resources in associated TriggerTemplates
-  - apiGroups: [&amp;quot;tekton.dev&amp;quot;]
-    resources: [&amp;quot;pipelineruns&amp;quot;, &amp;quot;pipelineresources&amp;quot;, &amp;quot;taskruns&amp;quot;]
-    verbs: [&amp;quot;create&amp;quot;]
-  - apiGroups: [&amp;quot;&amp;quot;]
-    resources: [&amp;quot;serviceaccounts&amp;quot;]
-    verbs: [&amp;quot;impersonate&amp;quot;]
----
-apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: tekton-triggers-example-binding
@@ -312,18 +294,8 @@ subjects:
     name: tekton-triggers-example-sa
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: tekton-triggers-example-minimal
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: tekton-triggers-example-clusterrole
-rules:
-  # EventListeners need to be able to fetch any clustertriggerbindings
-  - apiGroups: [&amp;quot;triggers.tekton.dev&amp;quot;]
-    resources: [&amp;quot;clustertriggerbindings&amp;quot;]
-    verbs: [&amp;quot;get&amp;quot;, &amp;quot;list&amp;quot;, &amp;quot;watch&amp;quot;]
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-roles
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -336,7 +308,44 @@ subjects:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: tekton-triggers-example-clusterrole
+  name: tekton-triggers-eventlistener-clusterroles
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tekton-triggers-eventlistener-roles
+  labels:
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: tekton-triggers
+rules:
+  - apiGroups: [&amp;quot;triggers.tekton.dev&amp;quot;]
+    resources: [&amp;quot;eventlisteners&amp;quot;, &amp;quot;triggerbindings&amp;quot;, &amp;quot;triggertemplates&amp;quot;, &amp;quot;triggers&amp;quot;]
+    verbs: [&amp;quot;get&amp;quot;, &amp;quot;list&amp;quot;, &amp;quot;watch&amp;quot;]
+  - apiGroups: [&amp;quot;&amp;quot;]
+    resources: [&amp;quot;configmaps&amp;quot;]
+    verbs: [&amp;quot;get&amp;quot;, &amp;quot;list&amp;quot;, &amp;quot;watch&amp;quot;]
+  - apiGroups: [&amp;quot;tekton.dev&amp;quot;]
+    resources: [&amp;quot;pipelineruns&amp;quot;, &amp;quot;pipelineresources&amp;quot;, &amp;quot;taskruns&amp;quot;]
+    verbs: [&amp;quot;create&amp;quot;]
+  - apiGroups: [&amp;quot;&amp;quot;]
+    resources: [&amp;quot;serviceaccounts&amp;quot;]
+    verbs: [&amp;quot;impersonate&amp;quot;]
+  - apiGroups: [&amp;quot;policy&amp;quot;]
+    resources: [&amp;quot;podsecuritypolicies&amp;quot;]
+    resourceNames: [&amp;quot;tekton-triggers&amp;quot;]
+    verbs: [&amp;quot;use&amp;quot;]
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tekton-triggers-eventlistener-clusterroles
+  labels:
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: tekton-triggers
+rules:
+  - apiGroups: [&amp;quot;triggers.tekton.dev&amp;quot;]
+    resources: [&amp;quot;clustertriggerbindings&amp;quot;, &amp;quot;clusterinterceptors&amp;quot;]
+    verbs: [&amp;quot;get&amp;quot;, &amp;quot;list&amp;quot;, &amp;quot;watch&amp;quot;]
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;h2 id=&#34;流水线任务&#34;&gt;流水线任务&lt;/h2&gt;
@@ -362,6 +371,10 @@ roleRef:
 &lt;/blockquote&gt;
 
 &lt;h3 id=&#34;git-clone-yml&#34;&gt;git-clone.yml&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;最新配置以 &lt;a href=&#34;https://github.com/hb-chen/tekton-practice&#34;&gt;github.com/hb-chen/tekton-practice&lt;/a&gt; 为准&lt;/p&gt;
+&lt;/blockquote&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -648,16 +661,17 @@ spec:
 
 &lt;h3 id=&#34;kaniko-yml&#34;&gt;kaniko.yml&lt;/h3&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;# fork from tektoncd/kaniko, add insecure_registry
-apiVersion: tekton.dev/v1beta1
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: kaniko
   labels:
-    app.kubernetes.io/version: &amp;quot;0.1&amp;quot;
+    app.kubernetes.io/version: &amp;quot;0.4&amp;quot;
   annotations:
-    tekton.dev/pipelines.minVersion: &amp;quot;0.12.1&amp;quot;
+    tekton.dev/pipelines.minVersion: &amp;quot;0.17.0&amp;quot;
+    tekton.dev/categories: Image Build
     tekton.dev/tags: image-build
+    tekton.dev/displayName: &amp;quot;Build and upload container image using Kaniko&amp;quot;
 spec:
   description: &amp;gt;-
     This Task builds source into a container image using Google&#39;s kaniko tool.
@@ -677,36 +691,31 @@ spec:
       description: The build context used by Kaniko.
       default: ./
     - name: EXTRA_ARGS
-      default: &amp;quot;&amp;quot;
+      type: array
+      default: []
     - name: BUILDER_IMAGE
       description: The image on which builds will run
-      default: registry.cn-hangzhou.aliyuncs.com/hb-chen/kaniko-executor@sha256:e36c9fa99279217c4bb8ee172819b441c3ca8ef946dc0e28b21721eefb2ba70a
-    - name: insecure_registry
-      description: Allows the user to push to an insecure registry that has been specified
-      default: &amp;quot;&amp;quot;
+      default: registry.cn-hangzhou.aliyuncs.com/hb-chen/kaniko-executor:v1.5.1@sha256:c812530c2ea981d3316c7544b180289abfbd9adf1dde6f1345692b8fb0a65cb0
   workspaces:
     - name: source
+      description: Holds the context and docker file
+    - name: dockerconfig
+      description: Includes a docker `config.json`
+      optional: true
+      mountPath: /kaniko/.docker
   results:
     - name: IMAGE-DIGEST
       description: Digest of the image just built.
-
   steps:
     - name: build-and-push
       workingDir: $(workspaces.source.path)
       image: $(params.BUILDER_IMAGE)
-      # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
-      # https://github.com/tektoncd/pipeline/pull/706
-      env:
-        - name: DOCKER_CONFIG
-          value: /tekton/home/.docker
-      command:
-        - /kaniko/executor
-        - $(params.EXTRA_ARGS)
+      args:
+        - $(params.EXTRA_ARGS[*])
         - --dockerfile=$(params.DOCKERFILE)
         - --context=$(workspaces.source.path)/$(params.CONTEXT)  # The user does not need to care the workspace and the source.
         - --destination=$(params.IMAGE)
         - --oci-layout-path=$(workspaces.source.path)/$(params.CONTEXT)/image-digest
-      #  - --insecure-registry=$(params.insecure_registry)
       # kaniko assumes it is running as root, which means this example fails on platforms
       # that default to run containers as random uid (like OpenShift). Adding this securityContext
       # makes it explicit that it needs to run as root.
@@ -748,30 +757,24 @@ spec:
     - name: image
       default: dtzar/helm-kubectl:3.4.2
       description: kubectl and helm image
-    - name: kubeconfig
-      default: k8s-kubeconfig
-      description: kubernetes cluster kubeconfig
     - name: commands
       default: kubectl version
   workspaces:
     - name: source
+    - name: kubeconfig
+      description: Includes a `.kube/config`
+      optional: true
+      mountPath: /root/.kube
   results:
   steps:
     - name: helm-kubectl-deploy
       image: $(params.image)
       workingDir: $(workspaces.source.path)
       script: |
-        pwd
         ls -l
+        kubectl version
+        helm version
         $(params.commands)
-      volumeMounts:
-        - name: kubeconfig
-          mountPath: &amp;quot;/tekton/home/.kube&amp;quot;
-          readOnly: true
-  volumes:
-    - name: kubeconfig
-      secret:
-        secretName: $(params.kubeconfig)
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;h2 id=&#34;流水线定义&#34;&gt;流水线定义&lt;/h2&gt;
@@ -795,6 +798,8 @@ metadata:
 spec:
   workspaces:
     - name: shared-workspace
+    - name: dockerconfig
+    - name: kubeconfig
   params:
     - name: url
     - name: revision
@@ -846,7 +851,7 @@ spec:
         - name: version
           value: 1.15.11
         - name: flags
-          value: -v -o $(workspaces.source.path)/gateway/bin/gateway
+          value: -v -o $(workspaces.source.path)/gateway/bin/linux/gateway
     - name: docker-build
       taskRef:
         name: kaniko
@@ -855,6 +860,8 @@ spec:
       workspaces:
         - name: source
           workspace: shared-workspace
+        - name: dockerconfig
+          workspace: dockerconfig
       params:
         - name: IMAGE
           value: registry.cn-hangzhou.aliyuncs.com/hb-chen/grpc-gateway:latest
@@ -863,9 +870,9 @@ spec:
         - name: CONTEXT
           value: ./gateway/
         - name: EXTRA_ARGS
-          value: &amp;quot;--skip-tls-verify&amp;quot;
-        - name: insecure_registry
-          value: registry.cn-hangzhou.aliyuncs.com
+          value:
+            - &amp;quot;--skip-tls-verify&amp;quot;
+            - &amp;quot;--insecure-registry=registry.cn-hangzhou.aliyuncs.com&amp;quot;
     - name: helm-kubectl-deploy
       taskRef:
         name: helm-kubectl-deploy
@@ -874,9 +881,18 @@ spec:
       workspaces:
         - name: source
           workspace: shared-workspace
+        - name: kubeconfig
+          workspace: kubeconfig
       params:
         - name: commands
-          value: helm upgrade --install grpc-gateway ./gateway/helm --namespace grpc-gateway --no-hooks --set image.repository=registry.cn-hangzhou.aliyuncs.com/hb-chen/grpc-gateway --set image.tag=latest --set image.digest=@$(tasks.docker-build.results.IMAGE-DIGEST)
+          value: |
+            helm template \
+            --release-name grpc-gateway \
+            --no-hooks \
+            --set image.repository=registry.cn-hangzhou.aliyuncs.com/hb-chen/grpc-gateway \
+            --set image.tag=latest \
+            --set image.digest=@$(tasks.docker-build.results.IMAGE-DIGEST) \
+            ./gateway/helm | kubectl apply -n grpc-gateway -f -
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;h2 id=&#34;pvc&#34;&gt;PVC&lt;/h2&gt;
@@ -913,19 +929,26 @@ stringData:
   password: 123456
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;docker-hub&#34;&gt;Docker Hub&lt;/h3&gt;
+&lt;h3 id=&#34;镜像仓库&#34;&gt;镜像仓库&lt;/h3&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;apiVersion: v1
-kind: Secret
-metadata:
-  name: basic-docker-user-pass
-  annotations:
-    tekton.dev/docker-0: https://registry.cn-hangzhou.aliyuncs.com
-type: kubernetes.io/basic-auth
-stringData:
-  username: hobo@hbchen.com
-  password: 123456
+&lt;p&gt;镜像仓库的认证信息通过挂载 &lt;code&gt;config.json&lt;/code&gt; 的方式，而不使用 Basic Auth，这个改动在 Kaniko task 中有说明：&lt;/p&gt;
 
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/tektoncd/catalog/tree/main/task/kaniko/0.4#changelog&#34;&gt;Changelog&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Replace ServiceAccount based authentication with a workspace based one. Tekton&amp;rsquo;s built-in auth can be disabled, it
+can be hard to debug and it might not work for all type of credentials. Workspaces are available to all deployments, and can be bound to both secrets and PVCs.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;另外注意如果 &lt;code&gt;config.json&lt;/code&gt; 中没有 &lt;code&gt;auth&lt;/code&gt; 信息，删掉 &lt;code&gt;credsStore&lt;/code&gt;，重新 &lt;code&gt;docker login&lt;/code&gt;，参考 &lt;a href=&#34;https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/&#34;&gt;Pull an Image from a Private
+Registry&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;kubectl create secret generic dockerconfig \
+  -n tekton-pipelines \
+  --from-file=config.json=$HOME/.docker/config.json \
+  --type=kubernetes.io/dockerconfig
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;h3 id=&#34;kubeconfig&#34;&gt;KubeConfig&lt;/h3&gt;
@@ -955,7 +978,6 @@ kind: ServiceAccount
 metadata:
   name: build-bot
 secrets:
-  - name: basic-docker-user-pass
   - name: basic-git-user-pass
 &lt;/code&gt;&lt;/pre&gt;</description>
       
